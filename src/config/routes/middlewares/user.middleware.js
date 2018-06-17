@@ -5,7 +5,7 @@ const userMiddleware = async (ctx, next) => {
     await next();
     return;
   }
-
+ console.log(ctx.state.user._id);
   const user = await userService.findById(ctx.state.user._id);
   ctx.assert(user, 'Not authorized: user not found', 401);
 

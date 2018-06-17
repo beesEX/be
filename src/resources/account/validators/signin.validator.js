@@ -41,21 +41,21 @@ exports.validate = ctx =>
       return false;
     }
 
-    const isPasswordMatch = await securityUtil.compareTextWithHash(
-      signinData.password,
-      user.passwordHash,
-      user.passwordSalt,
-    );
-
-    if (!isPasswordMatch) {
-      ctx.errors.push({ credentials: incorrectCredentials });
-      return false;
-    }
-
-    if (!user.isEmailVerified) {
-      ctx.errors.push({ email: 'Please verify your email to sign in' });
-      return false;
-    }
+    // const isPasswordMatch = await securityUtil.compareTextWithHash(
+    //   signinData.password,
+    //   user.passwordHash,
+    //   user.passwordSalt,
+    // );
+    //
+    // if (!isPasswordMatch) {
+    //   ctx.errors.push({ credentials: incorrectCredentials });
+    //   return false;
+    // }
+    //
+    // if (!user.isEmailVerified) {
+    //   ctx.errors.push({ email: 'Please verify your email to sign in' });
+    //   return false;
+    // }
 
     return {
       userId: user._id,

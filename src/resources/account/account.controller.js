@@ -80,8 +80,11 @@ exports.signin = async (ctx, next) => {
   const token = authService.createAuthToken({ userId: signinData.userId });
 
   ctx.body = {
+
     token,
+
   };
+
 };
 
 /**
