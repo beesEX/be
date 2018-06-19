@@ -84,7 +84,6 @@ exports.signin = async (ctx, next) => {
     token,
 
   };
-
 };
 
 /**

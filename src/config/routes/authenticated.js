@@ -4,5 +4,5 @@ const testResource = require('resources/test');
 
 module.exports = (app) => {
   app.use(mount('/users', userResource));
-  app.use(mount('/test',testResource));
+  app.use(mount('/test', testResource));
 };

@@ -14,7 +14,7 @@ let base = {
     secret: 'jwt_secret',
     audience: 'api',
     issuer: 'api',
-    cookie: 'auth'
+    cookie: 'auth',
   },
 };
 

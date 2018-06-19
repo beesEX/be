@@ -4,17 +4,13 @@
  */
 
 exports.generateHandler = () => {
+  let count = 0;
 
-    let count = 0;
+  return async (ctx, next) => {
+    ctx.body = {
+      message: `Hello World ${count}`,
+    };
 
-    return async (ctx, next) => {
-
-        ctx.body = {
-
-            message: 'Hello World ' + count
-
-        }
-
-        ++count;
-    }
-}
+    count += 1;
+  };
+};
