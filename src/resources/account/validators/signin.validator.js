@@ -7,6 +7,8 @@ const securityUtil = require('security.util');
 
 const incorrectCredentials = 'Incorrect email or password.';
 
+const { logger } = global;
+
 const schema = {
   email: Joi.string()
     .email({ minDomainAtoms: 2 })
@@ -56,7 +58,7 @@ exports.validate = ctx =>
     //   ctx.errors.push({ email: 'Please verify your email to sign in' });
     //   return false;
     // }
-
+    logger.info(`signing-in user with email=${signinData.email} found: ${JSON.stringify(user)}`);
     return {
       userId: user._id,
     };
