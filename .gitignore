@@ -1,5 +1,6 @@
 node_modules
 beesEX-BE.iml
+.idea
 .idea/misc.xml
 .idea/modules.xml
 .idea/vcs.xml
