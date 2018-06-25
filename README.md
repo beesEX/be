@@ -90,7 +90,6 @@ All other files, that does not fit that structure should be placed straight in t
 2. [src/app.js](./src/app.js) - starting point of the node.js application. It combine application configuration and start Koa http listener.
 3. [src/auth.service.js](./src/auth.service.js) - JWT based authentication helper. Consist logic of JWT token encryption/decryption. Can consist other authentication related functions.
 4. [src/db.js](./src/db.js) - handles connection to the MongoDB.
-5. [src/email.service.js](./src/email.service.js) - fake service for sending application emails.
-6. [src/logger.js](./src/logger.js) - application logger.
-7. [src/security.util.js](./src/security.util.js) - number of methods for generating secure tokens and comparing passwords with password hash.
+5. [src/logger.js](./src/logger.js) - application logger.
+6. [src/security.util.js](./src/security.util.js) - number of methods for generating secure tokens and comparing passwords with password hash.
 

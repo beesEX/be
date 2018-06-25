@@ -3,7 +3,7 @@ const _ = require('lodash');
 const userService = require('./user.service');
 const validators = require('./validators');
 
-const userOmitFelds = ['passwordHash', 'passwordSalt', 'signupToken', 'resetPasswordToken'];
+const userOmitFelds = ['password', 'passwordResetToken', 'passwordResetExpires'];
 
 exports.getCurrent = async (ctx, next) => {
   const user = await userService.findById(ctx.state.user._id);

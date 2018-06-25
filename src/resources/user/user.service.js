@@ -6,29 +6,6 @@ const constants = require('app.constants');
 const service = db.createService(constants.DATABASE_DOCUMENTS.USERS, schema);
 const securityUtil = require('security.util');
 
-service.markEmailAsVerified = (_id) => {
-  return service.update(
-    {
-      _id,
-    },
-    (doc) => {
-      const userDoc = doc;
-      userDoc.isEmailVerified = true;
-    },
-  );
-};
-
-service.updateResetPasswordToken = (_id, token) => {
-  return service.findOneAndUpdate(
-    { _id },
-    {
-      $set: {
-        resetPasswordToken: token,
-      },
-    },
-  );
-};
-
 service.updatePassword = async (_id, newPassword) => {
   const salt = await securityUtil.generateSalt();
   const hash = await securityUtil.getHash(newPassword, salt);
@@ -39,13 +16,12 @@ service.updatePassword = async (_id, newPassword) => {
     },
     (doc) => {
       const userDoc = doc;
-      userDoc.passwordHash = hash;
-      userDoc.passwordSalt = salt;
+      userDoc.password = hash;
     },
   );
 };
 
-service.updateInfo = (_id, { email, firstName, lastName }) => {
+service.updateInfo = (_id, { email, name }) => {
   return service.update(
     {
       _id,
@@ -53,8 +29,7 @@ service.updateInfo = (_id, { email, firstName, lastName }) => {
     (doc) => {
       const userDoc = doc;
       userDoc.email = email;
-      userDoc.firstName = firstName;
-      userDoc.lastName = lastName;
+      userDoc.name = name;
     },
   );
 };

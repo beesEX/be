@@ -4,18 +4,11 @@ const baseValidator = require('resources/base.validator');
 const userService = require('resources/user/user.service');
 
 const schema = {
-  firstName: Joi.string()
+  name: Joi.string()
     .trim()
     .options({
       language: {
-        any: { empty: '!!Your first name must be longer than 1 letter' },
-      },
-    }),
-  lastName: Joi.string()
-    .trim()
-    .options({
-      language: {
-        any: { empty: '!!Your last name must be longer than 1 letter' },
+        any: { empty: '!!Your name must be longer than 1 letter' },
       },
     }),
   email: Joi.string()

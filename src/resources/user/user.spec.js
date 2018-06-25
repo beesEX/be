@@ -21,7 +21,7 @@ describe('/users', () => {
     await db.get(constants.DATABASE_DOCUMENTS.USERS).drop();
 
     users[0] = await userFactory.verifiedUser();
-    users[1] = await userFactory.unverifiedUser();
+    users[1] = await userFactory.verifiedUser();
     token = await signin(request, users[0]);
   });
 
@@ -41,8 +41,7 @@ describe('/users', () => {
       .put('/users/current')
       .set('Authorization', `Bearer ${token}`)
       .send({
-        firstName: users[0].firstName,
-        lastName: users[0].lastName,
+        name: users[0].name,
         email: users[1].email,
       })
       .expect(400)
@@ -57,13 +56,12 @@ describe('/users', () => {
       .put('/users/current')
       .set('Authorization', `Bearer ${token}`)
       .send({
-        firstName: '123',
-        lastName: 'Test',
+        name: 'Test',
         email: users[0].email,
       })
       .expect(200)
       .expect(({ body }) => {
-        body.lastName.should.be.equal('Test');
+        body.name.should.be.equal('Test');
       })
       .end(done);
   });
