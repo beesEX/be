@@ -3,7 +3,6 @@ const Joi = require('joi');
 const baseValidator = require('resources/base.validator');
 
 const userService = require('resources/user/user.service');
-const securityUtil = require('security.util');
 
 const incorrectCredentials = 'Incorrect email or password.';
 
@@ -38,6 +37,7 @@ const schema = {
 exports.validate = ctx =>
   baseValidator(ctx, schema, async (signinData) => {
     const user = await userService.findOne({ email: signinData.email });
+    logger.debug(`signin validator tries to find user with email=${signinData.email}, found: ${JSON.stringify(user)}`);
     if (!user) {
       ctx.errors.push({ credentials: incorrectCredentials });
       return false;

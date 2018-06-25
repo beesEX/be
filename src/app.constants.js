@@ -1,5 +1,5 @@
 module.exports = {
   DATABASE_DOCUMENTS: {
-    USERS: 'User',
+    USERS: 'users',
   },
 };
