@@ -1,9 +1,7 @@
 // created by Viet Anh Ho
 const { logger } = global;
 
-const db = require('db');
-const schema = require('./order.schema');
-const constants = require('app.constants');
+const orderService = require('./order.service');
 
 exports.orderPlaceHandler = () => {
   let id = 1;
