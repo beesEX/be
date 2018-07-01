@@ -2,9 +2,12 @@
 const Router = require('koa-router');
 
 const router = new Router();
-const controller = require('./order.schema');
+const controller = require('./order.controller');
 
-router.post('/order', controller.orderPostHandler());
-router.get('/order', controller.orderGetHandler());
+router.post('/place', controller.orderPlaceHandler());
+router.post('/update', controller.orderUpdateHandler());
+router.post('/cancel', controller.orderCancelHandler());
+router.post('/place', controller.orderPlaceHandler());
+router.get('/active', controller.orderActiveHandler());
 
 module.exports = router.routes();

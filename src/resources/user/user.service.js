@@ -6,6 +6,9 @@ const constants = require('app.constants');
 const service = db.createService(constants.DATABASE_DOCUMENTS.USERS, schema);
 const securityUtil = require('security.util');
 
+// enable id auto casting
+service._collection.options.castIds = true;
+
 service.updatePassword = async (_id, newPassword) => {
   const salt = await securityUtil.generateSalt();
   const hash = await securityUtil.getHash(newPassword, salt);
