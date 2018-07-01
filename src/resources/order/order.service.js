@@ -42,9 +42,26 @@ module.exports = {
     const maxOrderNumber = 3000;
     logger.info('order.service.js: get active orders of uID:', userId);
 
-    const result = await service.find({userId: userId}, {perPage: maxOrderNumber});
-    logger.info('order.service.js: list of placed orders:', JSON.stringify(result.results, null, 2));
+    let results = [];
 
-    return result.results;
+    const activeStatus = ['PLACED', 'PARTIALLY_FILLED'];
+
+    for(let k=0; k<activeStatus.length; ++k){
+      let result = await service.find({userId: userId, status: activeStatus[k]}, {perPage: maxOrderNumber});
+      results = results.concat(result.results);
+
+      let pagesCount = 1;
+      if(result.pagesCount){
+        pagesCount = result.pagesCount;
+        for(let i=1; i<pagesCount; ++i){
+          result = await service.find({userId: userId}, {page: i, perPage: maxOrderNumber});
+          results = results.concat(result.results);
+        }
+      }
+    }
+
+    logger.info('order.service.js: list of placed orders:', JSON.stringify(results, null, 2));
+
+    return results;
   }
 };
