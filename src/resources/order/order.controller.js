@@ -23,7 +23,8 @@ exports.orderPlaceHandler = () => {
     */
     orderList.push(id.toString()+" "+ctx.request.body.currency+" "+ctx.request.body.quantity.toString());
     ctx.body = {
-      orderHis: orderList,
+      orderList: orderList,
+      currOrder: "CurrOrderInfo"
     };
 
 
@@ -34,7 +35,8 @@ exports.orderUpdateHandler = () => {
 
   return async (ctx, next) => {
     ctx.body = {
-      orderHis: "Update order",
+      orderList: ["Update order"],
+      currOrder: "CurrOrderInfo"
     };
 
   };
@@ -44,7 +46,8 @@ exports.orderCancelHandler = () => {
 
   return async (ctx, next) => {
     ctx.body = {
-      orderHis: "cancel order",
+      orderList: ["cancel order"],
+      currOrder: "CurrOrderInfo"
     };
 
   };
@@ -54,7 +57,8 @@ exports.orderActiveHandler = () => {
 
   return async (ctx, next) => {
     ctx.body = {
-      message: "GetActiveOrder",
+      orderList: ["GetActiveOrder"],
+      currOrder: ""
     };
   };
 };
