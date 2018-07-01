@@ -4,63 +4,51 @@ const { logger } = global;
 const orderService = require('./order.service');
 
 exports.orderPlaceHandler = () => {
-  let id = 1;
-  let orderList = [];
-
   return async (ctx, next) => {
-    logger.info('Receive POST ORDER request');
-    logger.info('ctx.request.body = ',JSON.stringify(ctx.request.body, null, 2));
-    /*
-    orderList.push({
-      id : id++,
-      type: "Limit",
-      currency: "Bitcoin",
-      baseCurrency: ctx.request.body.currency,
+    logger.info('order.controller.js: Receive POST ORDER request');
+
+    const newOrderObj = {
+      type: ctx.request.body.type,
+      side: ctx.request.body.side,
+      currency: ctx.request.body.currency,
+      baseCurrency: ctx.request.body.baseCurrency,
+      limitPrice: ctx.request.body.limitPrice,
       quantity: ctx.request.body.quantity,
-      status: "Active",
-      createdAt : new Date()
-    });
-    */
-
-
-    orderList.push(id.toString()+" "+ctx.request.body.currency+" "+ctx.request.body.quantity.toString() + " " + ctx.state.user._id);
-    ctx.body = {
-      orderList: orderList,
-      currOrder: "CurrOrderInfo"
+      filledQuantity: 0.0,
+      status: 'PLACED',
+      createdAt: new Date(),
+      lastUpdatedAt: new Date(),
+      userId: ctx.state.user._id.toString()
     };
 
-
+    ctx.body = {
+      order: await orderService.placeOrder(newOrderObj)
+    }
   };
 };
 
 exports.orderUpdateHandler = () => {
-
   return async (ctx, next) => {
     ctx.body = {
-      orderList: ["Update order"],
-      currOrder: "CurrOrderInfo"
+      order: await orderService.updateOrder(ctx.request.body.order)
     };
-
   };
 };
 
 exports.orderCancelHandler = () => {
-
   return async (ctx, next) => {
+    const canceledOrder = await orderService.cancelOrder(ctx.request.body.order);
+    //logger.info('order.controller.js: canceled order =', JSON.stringify(canceledOrder, null, 2));
     ctx.body = {
-      orderList: ["cancel order"],
-      currOrder: "CurrOrderInfo"
+      status: (canceledOrder._id === ctx.request.body.order._id && canceledOrder.status === "CANCELED")?"OK":"ERROR"
     };
-
   };
 };
 
 exports.orderActiveHandler = () => {
-
   return async (ctx, next) => {
     ctx.body = {
-      orderList: ["GetActiveOrder"],
-      currOrder: ""
+      orders: await orderService.getActiveOrder(ctx.state.user._id.toString())
     };
   };
 };
