@@ -7,7 +7,6 @@ const controller = require('./order.controller');
 router.post('/place', controller.orderPlaceHandler());
 router.post('/update', controller.orderUpdateHandler());
 router.post('/cancel', controller.orderCancelHandler());
-router.post('/place', controller.orderPlaceHandler());
 router.get('/active', controller.orderActiveHandler());
 
 module.exports = router.routes();

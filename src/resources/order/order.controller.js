@@ -21,7 +21,9 @@ exports.orderPlaceHandler = () => {
       createdAt : new Date()
     });
     */
-    orderList.push(id.toString()+" "+ctx.request.body.currency+" "+ctx.request.body.quantity.toString());
+
+
+    orderList.push(id.toString()+" "+ctx.request.body.currency+" "+ctx.request.body.quantity.toString() + " " + ctx.state.user._id);
     ctx.body = {
       orderList: orderList,
       currOrder: "CurrOrderInfo"
