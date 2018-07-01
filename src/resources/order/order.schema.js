@@ -11,7 +11,9 @@ const orderSchema = {
   quantity: Joi.number().positive().required(),
   filledQuantity: Joi.number().min(0),
   status: Joi.string().allow(['PLACED', 'PARTIALLY_FILLED', 'FILLED', 'CANCELED', 'EXPIRED']),
-  userId: Joi.string(),
+  createdAt: Joi.date(),
+  lastUpdatedAt: Joi.date(),
+  userId: Joi.string()
 };
 
 module.exports = obj => Joi.validate(obj, orderSchema, { allowUnknown: true });
