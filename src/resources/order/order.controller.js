@@ -37,10 +37,11 @@ exports.orderUpdateHandler = () => {
 
 exports.orderCancelHandler = () => {
   return async (ctx, next) => {
+    ctx.request.body.order.userId = ctx.state.user._id.toString();
     const canceledOrder = await orderService.cancelOrder(ctx.request.body.order);
     //logger.info('order.controller.js: canceled order =', JSON.stringify(canceledOrder, null, 2));
     ctx.body = {
-      status: (canceledOrder._id === ctx.request.body.order._id && canceledOrder.status === "CANCELED")?"OK":"ERROR"
+      status: (canceledOrder && canceledOrder._id === ctx.request.body.order._id && canceledOrder.status === "CANCELED")?"OK":"ERROR"
     };
   };
 };

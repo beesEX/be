@@ -29,12 +29,20 @@ module.exports = {
   },
 
   cancelOrder : async (orderObject) => {
-    const updatedOrder = await service.update({ _id: orderObject._id}, (doc) => {
-      doc.status = "CANCELED";
-      doc.lastUpdatedAt = new Date()
-    });
-    logger.info('order.service.js: updated order =', JSON.stringify(updatedOrder, null, 2));
-
+    let updatedOrder = orderObject;
+    try{
+      updatedOrder = await service.update({ _id: orderObject._id, userId: orderObject.userId}, (doc) => {
+        if(doc.userId === orderObject.userId){
+          doc.status = "CANCELED";
+          doc.lastUpdatedAt = new Date()
+        }
+      });
+      logger.info('order.service.js: updated order =', JSON.stringify(updatedOrder, null, 2));  
+    }
+    catch (error) {
+      updatedOrder = orderObject;
+      logger.info('order.service.js: ', error);
+    }
     return updatedOrder;
   },
 
