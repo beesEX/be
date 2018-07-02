@@ -10,57 +10,46 @@ const service = db.createService(constants.DATABASE_DOCUMENTS.ORDERS, schema);
 module.exports = {
 
   placeOrder : async (newOrderObject) => {
-    logger.info('order.service.js: place order:',JSON.stringify(newOrderObject, null, 2));
     service.create(newOrderObject);
+    logger.info('order.service.js: placed order:',JSON.stringify(newOrderObject, null, 2));
 
     return newOrderObject;
   },
 
   updateOrder : async (orderObject) => {
     const updatedOrder = await service.update({ _id: orderObject._id}, (doc) => {
-        doc.limitPrice = orderObject.limitPrice;
-        doc.filledQuantity = orderObject.filledQuantity;
-        doc.status = orderObject.status;
-        doc.lastUpdatedAt = new Date()
+      doc.limitPrice = orderObject.limitPrice;
+      doc.filledQuantity = orderObject.filledQuantity;
+      doc.status = orderObject.status;
+      doc.lastUpdatedAt = new Date()
     });
     logger.info('order.service.js: updated order =', JSON.stringify(updatedOrder, null, 2));
 
     return updatedOrder;
   },
 
-  cancelOrder : async (orderObject) => {
-    let updatedOrder = orderObject;
-    try{
-      updatedOrder = await service.update({ _id: orderObject._id, userId: orderObject.userId}, (doc) => {
-        if(doc.userId === orderObject.userId){
-          doc.status = "CANCELED";
-          doc.lastUpdatedAt = new Date()
-        }
-      });
-      logger.info('order.service.js: updated order =', JSON.stringify(updatedOrder, null, 2));  
-    }
-    catch (error) {
-      updatedOrder = orderObject;
-      logger.info('order.service.js: ', error);
-    }
-    return updatedOrder;
+  cancelOrder : async (orderId, userId) => {
+    await service.update({ _id: orderId, userId: userId}, (doc) => {
+      doc.status = "CANCELED";
+      doc.lastUpdatedAt = new Date();
+      logger.info('order.service.js: canceled order with id =', orderId);
+    });
+    return;
   },
 
   getActiveOrder : async (userId) => {
-    const maxOrderNumber = 3000;
-    logger.info('order.service.js: get active orders of uID:', userId);
-
+    const maxOrderNumber = 3000; // max number of documents per page
     let results = [];
 
     const activeStatus = ['PLACED', 'PARTIALLY_FILLED'];
 
     for(let k=0; k<activeStatus.length; ++k){
-      let result = await service.find({userId: userId, status: activeStatus[k]}, {perPage: maxOrderNumber});
+      let result = await service.find({userId: userId, status: activeStatus[k]}, {perPage: maxOrderNumber}); // page default = 0
       results = results.concat(result.results);
 
       let pagesCount = 1;
       if(result.pagesCount){
-        pagesCount = result.pagesCount;
+        pagesCount = result.pagesCount; // try to take all other pages
         for(let i=1; i<pagesCount; ++i){
           result = await service.find({userId: userId}, {page: i, perPage: maxOrderNumber});
           results = results.concat(result.results);
