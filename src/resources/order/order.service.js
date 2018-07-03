@@ -15,10 +15,11 @@ module.exports = {
    * @returns {Promise<*>}
    */
   placeOrder : async (newOrderObject) => {
+    // cho nay phai viet nhu the nay: const createdOrder = await service.create(newOrderObject);
     service.create(newOrderObject); // cho nay phai co await chu? neu khong em se tra lai newOrderObject trong trang thai nhu khi input vao, khong phai trong trang thai sau khi da saved vao db
     logger.info('order.service.js: placed order:',JSON.stringify(newOrderObject, null, 2));
 
-    return newOrderObject;
+    return newOrderObject; // cho nay thi: return createdOrder;
   },
 
   /**
