@@ -36,7 +36,7 @@ exports.orderCancelHandler = async (ctx, next) => {
   logger.info('order.controller.js: orderCancelHandler(): received request.body', JSON.stringify(ctx.request.body, null, 2));
   await orderService.cancelOrder(ctx.request.body.orderId, ctx.state.user._id.toString());
 
-  ctx.body = {};
+  ctx.body = null;
 };
 
 /* GET /order/active */
