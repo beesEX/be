@@ -16,4 +16,15 @@ const orderSchema = {
   userId: Joi.string()
 };
 
-module.exports = obj => Joi.validate(obj, orderSchema, { allowUnknown: true });
+const ORDER_STATUS = {
+  PLACED: 'PLACED',
+  CANCELED: 'CANCELED',
+  PARTIALLY_FILLED: 'PARTIALLY_FILLED',
+  FILLED: 'FILLED',
+  EXPIRED: 'EXPIRED',
+};
+
+module.exports = {
+  schema: obj => Joi.validate(obj, orderSchema, { allowUnknown: true }),
+  ORDER_STATUS,
+};
