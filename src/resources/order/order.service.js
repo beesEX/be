@@ -55,8 +55,8 @@ module.exports = {
    */
   getActiveOrder : async (userId) => {
     let result = await service.find({userId: userId, status: {$in:orderSchema.CONST.activeOrder_status}});
-    logger.info('order.service.js: getActiveOrder(): list of active orders =', JSON.stringify(result, null, 2));
+    logger.info('order.service.js: getActiveOrder(): list of active orders =', JSON.stringify(result.results, null, 2));
 
-    return result;
+    return result.results;
   }
 };
