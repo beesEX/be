@@ -16,13 +16,15 @@ const orderSchema = {
   userId: Joi.string()
 };
 
-const CONST = {
-  newOrder_status : 'PLACED',
-  cancelOrder_status : 'CANCELED',
-  activeOrder_status : ['PLACED', 'PARTIALLY_FILLED']
+const ORDER_STATUS = {
+  PLACED: 'PLACED',
+  CANCELED: 'CANCELED',
+  PARTIALLY_FILLED: 'PARTIALLY_FILLED',
+  FILLED: 'FILLED',
+  EXPIRED: 'EXPIRED',
 };
 
 module.exports = {
   schema: obj => Joi.validate(obj, orderSchema, { allowUnknown: true }),
-  CONST
+  ORDER_STATUS,
 };
