@@ -1,5 +1,7 @@
 const Joi = require('joi');
 
+const bcrypt = require('bcrypt');
+
 const baseValidator = require('resources/base.validator');
 
 const userService = require('resources/user/user.service');
@@ -43,6 +45,17 @@ exports.validate = ctx =>
       return false;
     }
 
+    bcrypt.compare(signinData.password, user.password, (err, isMatch) => {
+      if (err) return err;
+      if (!isMatch) {
+        ctx.errors.push({ credentials: incorrectCredentials });
+        return false;
+      }
+      logger.info(isMatch);
+      logger.info(`signing-in user with email=${signinData.email} found: ${JSON.stringify(user)}`);
+      return user;
+    });
+
     // const isPasswordMatch = await securityUtil.compareTextWithHash(
     //   signinData.password,
     //   user.passwordHash,
@@ -58,8 +71,4 @@ exports.validate = ctx =>
     //   ctx.errors.push({ email: 'Please verify your email to sign in' });
     //   return false;
     // }
-    logger.info(`signing-in user with email=${signinData.email} found: ${JSON.stringify(user)}`);
-    return {
-      userId: user._id,
-    };
   });
