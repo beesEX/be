@@ -45,7 +45,7 @@ module.exports = class MySortedMap {
    @return array of values for this key
    */
   addAtEnd(key, value){
-    if(typeof value === Array) {
+    if(Array.isArray(value)) {
       this.set(key, this.getValue(key).concat(value));
     }
     else{
@@ -187,7 +187,7 @@ module.exports = class MySortedMap {
         newValues = values.splice(beginIdx, endIdx - beginIdx + 1);
 
       // add new value
-      if(typeof value === Array) {
+      if(Array.isArray(value)) {
         if(newValues.length === 0) newValues=value;
         else newValues = newValues.concat(value);
       }
