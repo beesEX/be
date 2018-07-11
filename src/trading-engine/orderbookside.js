@@ -39,7 +39,7 @@ module.exports = class OrderBookSide {
   */
   updateQuantity(order) {
 
-    // TODO: QUESTION: need to put item to the end or not ???
+    // TODO: QUESTION: need to put item to the end or not ??? (currently YES)
 
     let values = this.book.getValue(order.limitPrice);
     for(let i=0; i<values.length; ++i){
@@ -65,7 +65,7 @@ module.exports = class OrderBookSide {
       let bestObj = this.bestPriceAndOrders();
       if(bestObj && order.fulfill(bestObj.key)){
 
-        // TODO: QUESTION: is this call by reference???
+        // TODO: QUESTION: is this call by reference??? (currently think - YES)
         this.match(order, bestObj.key, bestObj.value);
       }
       else{
