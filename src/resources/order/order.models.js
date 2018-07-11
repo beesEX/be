@@ -31,16 +31,23 @@ class Order {
   }
 
   /**
-   * returns symbol string of the currency pair. e.g. 'BTC/USDT'
+   * returns symbol string of the currency pair. e.g. 'BTC_USDT'
    */
   symbol() {
     return `${this.currency}/${this.baseCurrency}`;
   }
+
+  /**
+   * return number of units that remain unfilled.
+   * @returns {number}
+   */
+  remainingQuantity() { return this.quantity - this.filledQuantity; }
 }
 
 class OrderEvent {
   constructor(orderFromModel) {
     this.order = orderFromModel;
+    this.type = undefined;
   }
   static PLACED_EVENT = 'OrderPlacedEvent';
   static QUANTITY_UPDATED_EVENT = 'OrderQuantityUpdatedEvent';
@@ -51,31 +58,31 @@ class OrderEvent {
 class OrderPlacedEvent extends OrderEvent {
   constructor(orderFromModel) {
     super(orderFromModel);
-    this.type = OrderEvent.PLACED_EVENT;
+    super.type = OrderEvent.PLACED_EVENT;
   }
 }
 
 class OrderQuantityUpdatedEvent extends OrderEvent {
   constructor(orderFromModel) {
     super(orderFromModel);
-    this.type = OrderEvent.QUANTITY_UPDATED_EVENT;
+    super.type = OrderEvent.QUANTITY_UPDATED_EVENT;
   }
 }
 
 class OrderLimitUpdatedEvent extends OrderEvent {
   constructor(orderFromModel) {
     super(orderFromModel);
-    this.type = OrderEvent.LIMIT_UPDATED_EVENT;
+    super.type = OrderEvent.LIMIT_UPDATED_EVENT;
   }
 }
 
 class OrderCanceledEvent extends OrderEvent {
   constructor(orderFromModel) {
     super(orderFromModel);
-    this.type = OrderEvent.CANCELED_EVENT;
+    super.type = OrderEvent.CANCELED_EVENT;
   }
 }
 
 module.exports = {
-  Order, OrderPlacedEvent, OrderQuantityUpdatedEvent, OrderLimitUpdatedEvent, OrderCanceledEvent,
+  Order, OrderEvent, OrderPlacedEvent, OrderQuantityUpdatedEvent, OrderLimitUpdatedEvent, OrderCanceledEvent,
 };

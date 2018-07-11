@@ -1,17 +1,43 @@
-const ZERO = 0.0000000000001;
+const OrderBookSide = require('./orderbookside');
+const { OrderEvent } = require('../resources/order/order.models');
 
-module.exports = class OrderBook {
-  constructor(askSide, bidSide) {
+const { logger } = global;
+
+
+/**
+ * Limit Order Book performs order matching after principals of price/time priority
+ * matching algorithm.
+ */
+class OrderBook {
+  constructor(symbol, askSide, bidSide) {
+    this.symbol = symbol; // e.g 'BTC_USDT'
     this.asks = askSide; // BookSide containing SELL orders
     this.bids = bidSide; // BookSide containing BUY orders
+  }
+
+  /**
+   * checks the order event and dispatches it to appropriate function which processes it.
+   * @param event - OrderEvent
+   */
+  processOrderEvent(event) {
+    logger.info(`receices order event: ${event}`);
+    if (event.order.symbol() !== this.symbol) {
+      logger.warn(`currency pair of order event ${event.order.symbol()} not matches that of order book ${this.symbol}`);
+      return;
+    }
+    if (event.type === OrderEvent.PLACED_EVENT) this.placeLimit(event);
+    else if (event.type === OrderEvent.LIMIT_UPDATED_EVENT) this.updateLimit(event);
+    else if (event.type === OrderEvent.QUANTITY_UPDATED_EVENT) this.updateQuantity(event);
+    else if (event.type === OrderEvent.CANCELED_EVENT) this.updateQuantity(event);
+    else logger.warn(`unknown event type will be rejected: ${event}`);
   }
 
   /*
   processes new LIMIT order placed event
   */
   placeLimit(orderPlacedEvent) {
-    const order = orderPlacedEvent.order;
-    logger.info('processing new LIMIT order placed: `${JSON.stringify(order)}`');
+    const { order } = orderPlacedEvent;
+    logger.info(`processing new LIMIT order placed: ${JSON.stringify(order)}`);
 
     if (order.side === 'BUY') {
       this.asks.tryToMatch(order);
@@ -21,8 +47,8 @@ module.exports = class OrderBook {
     }
 
     // Neu van chua match het hoac ko match duoc teo nao thi cho order len so
-    if (order.remainingQuantity() > ZERO) {
-      logger.info('${order.remainingQuantity()} remaining units of LIMIT order will be put on book');
+    if (order.remainingQuantity() > 0) {
+      logger.info(`${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
 
       if (order.side === 'BUY') {
         this.asks.putOrderOnBook(order);
@@ -37,8 +63,8 @@ module.exports = class OrderBook {
   processes new MARKET order placed event
   */
   placeMarket(orderPlacedEvent) {
-    const order = orderPlacedEvent.order;
-    logger.info('processing new MARKET order placed: `${JSON.stringify(order)}`');
+    const { order } = orderPlacedEvent;
+    logger.info(`processing new MARKET order placed: ${JSON.stringify(order)}`);
 
     if (order.side === 'BUY') {
       this.asks.tryToMatch(order);
@@ -46,9 +72,10 @@ module.exports = class OrderBook {
     else { // SELL
       this.bids.tryToMatch(order);
     }
+
     // remaining units of market order will not be put on book, gets just rejected.
-    if (order.remainingQuantity() > ZERO) {
-      logger.info('${order.remainingQuantity()} remaining units of MARKET order will be rejected');
+    if (order.remainingQuantity() > 0) {
+      logger.info(`${order.remainingQuantity()} remaining units of MARKET order will be rejected`);
     }
   }
 
@@ -56,8 +83,8 @@ module.exports = class OrderBook {
   processes LIMIT order updated event
   */
   updateQuantity(orderUpdatedEvent) {
-    const order = orderUpdatedEvent.order;
-    logger.info('processing updated LIMIT order : `${JSON.stringify(order)}`');
+    const { order } = orderUpdatedEvent;
+    logger.info(`processing updated LIMIT order : ${JSON.stringify(order)}`);
 
     if (order.side === 'BUY') {
       this.asks.updateQuantity(order);
@@ -71,8 +98,8 @@ module.exports = class OrderBook {
   processes LIMIT order updated event, with limit price change
   */
   updateLimit(orderUpdatedEvent) {
-    const order = orderUpdatedEvent.order;
-    logger.info('processing updated LIMIT order with limit price change: `${JSON.stringify(order)}`');
+    const { order } = orderUpdatedEvent;
+    logger.info(`processing updated LIMIT order with limit price change: ${JSON.stringify(order)}`);
 
     // remove existing order with old price from book
     if (order.side === 'BUY') {
@@ -92,8 +119,8 @@ module.exports = class OrderBook {
     }
 
     // Neu van chua match het hoac ko match duoc teo nao thi cho order len so
-    if (order.remainingQuantity() > ZERO) {
-      logger.info('${order.remainingQuantity()} remaining units of LIMIT order will be put on book');
+    if (order.remainingQuantity() > 0) {
+      logger.info(`${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
 
       if (order.side === 'BUY') {
         this.asks.putOrderOnBook(order);
@@ -108,8 +135,8 @@ module.exports = class OrderBook {
   processes LIMIT order canceled event
   */
   cancel(orderCanceledEvent) {
-    const order = orderCanceledEvent.order;
-    logger.info('processing LIMIT order canceled: `${JSON.stringify(order)}`');
+    const { order } = orderCanceledEvent;
+    logger.info(`processing LIMIT order canceled: ${JSON.stringify(order)}`);
 
     if (order.side === 'BUY') {
       this.asks.removeOrder(order);
@@ -118,4 +145,13 @@ module.exports = class OrderBook {
       this.bids.removeOrder(order);
     }
   }
-};
+}
+
+// create an order book instance here, hardcode for currency pair BTC_USDT.
+const orderbook = new OrderBook('BTC_USDT', askSide, bidSide);
+logger.info(`${orderbook.symbol} orderbook ready to accept events`);
+
+// Order Book receives order events from parent process
+process.on('message', (event) => {
+  orderbook.processOrderEvent(event);
+});
