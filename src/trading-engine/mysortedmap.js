@@ -129,7 +129,14 @@ module.exports = class MySortedMap {
    * */
 
   set(key, value){
-    this.map.set(key, value);
+    if(Array.isArray(value)){
+      if(value.lengh === 0) this.removeKey(key);
+      else this.map.set(key, value);
+    }
+    else{
+      if(value) this.map.set(key, [value]);
+      else this.removeKey(key);
+    }
   }
 
   removeKey(key){
