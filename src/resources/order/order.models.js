@@ -47,7 +47,7 @@ class Order {
    * set filled quantity via setting remain quantity
    * @remainValue: remaining quantity need to be filled
    */
-  setRemainingQuantity(remainValue) {this.filledQuantity = this.quantity - remainValue;}
+  setRemainingQuantity(remainValue) { this.filledQuantity = this.quantity - remainValue; }
 }
 
 class OrderEvent {

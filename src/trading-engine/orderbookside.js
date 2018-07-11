@@ -3,13 +3,14 @@
  * One side of the order book ASK or BID, contains data structure to hold the orders of the side.
  *
  */
+const { logger } = global;
 
-const SortedMap = require("./mysortedmap");
+const SortedMap = require('./mysortedmap');
 
 const ZERO = 0.0000000000001;
 
 module.exports = class OrderBookSide {
-  constructor(side){
+  constructor(side) {
     this.side = side; // 'ASK' or 'BID'
     this.book = new SortedMap();
   }
@@ -25,9 +26,9 @@ module.exports = class OrderBookSide {
   remove order from book
   */
   removeOrder(order) {
-    let values = this.book.getValue(order.limitPrice);
-    for(let i=0; i<values.length; ++i){
-      if(values[i]._id === order._id){
+    const values = this.book.getValue(order.limitPrice);
+    for (let i = 0; i < values.length; i += 1) {
+      if (values[i]._id === order._id) {
         this.book.removeValue(order.limitPrice, i, 1);
         return;
       }
@@ -41,9 +42,9 @@ module.exports = class OrderBookSide {
 
     // TODO: QUESTION: need to put item to the end or not ??? (currently YES)
 
-    let values = this.book.getValue(order.limitPrice);
-    for(let i=0; i<values.length; ++i){
-      if(values[i]._id === order._id){
+    const values = this.book.getValue(order.limitPrice);
+    for (let i = 0; i < values.length; i += 1) {
+      if (values[i]._id === order._id) {
         this.book.removeValueAndAddAtEnd(order.limitPrice, order, i, 1);
         return;
       }
@@ -61,26 +62,26 @@ module.exports = class OrderBookSide {
   */
   tryToMatch(order) {
     // NEW: optimize search time: one time for both price and order list of this price
-    while (order.remainingQuantity() > ZERO){
-      let bestObj = this.bestPriceAndOrders();
-      if(bestObj && order.fulfill(bestObj.key)){
+    while (order.remainingQuantity() > ZERO) {
+      const bestObj = this.bestPriceAndOrders();
+      if (bestObj && order.fulfill(bestObj.key)) {
 
         // TODO: QUESTION: is this call by reference??? (currently think - YES)
         this.match(order, bestObj.key, bestObj.value);
       }
-      else{
+      else {
         return;
       }
     }
 
-    logger.info('try to match `${JSON.stringify(order)}` has been done');
+    logger.info(`try to match ${JSON.stringify(order)} has been done`);
   }
 
-  bestPriceAndOrders(){
-    if(this.side === 'ASK'){
+  bestPriceAndOrders() {
+    if (this.side === 'ASK') {
       return this.book.getFirstKeyValue();
     }
-    else{ //this.side ==='BID'
+    else { // this.side ==='BID'
       return this.book.getLastKeyValue();
     }
   }
@@ -91,10 +92,10 @@ module.exports = class OrderBookSide {
   For SELL order: maximum bid price
   */
   bestPrice() {
-    if(this.side === 'ASK'){
+    if (this.side === 'ASK') {
       return this.book.getFirstKey();
     }
-    else{ //this.side ==='BID'
+    else { // this.side ==='BID'
       return this.book.getLastKey();
     }
   }
@@ -105,10 +106,10 @@ module.exports = class OrderBookSide {
   For SELL order: maximum bid price
   */
   ordersOfBestPrice() {
-    if(this.side === 'ASK'){
+    if (this.side === 'ASK') {
       return this.book.getFirstValue();
     }
-    else{ //this.side ==='BID'
+    else { // this.side ==='BID'
       return this.book.getLastValue();
     }
   }
@@ -124,26 +125,28 @@ module.exports = class OrderBookSide {
     // NEW
     // get all order to match at once
 
-    let i=0, tradedQuantity=0.0;
+    let i = 0;
+    let tradedQuantity = 0.0;
 
-    // find the last order in list which match only a part of remaining quantity
-    for(;i<counterOrderList.length; ++i){
-      if(tradedQuantity + counterOrderList[i].remainingQuantity() >= order.remainingQuantity())
-        break;
+    // find the last order in list which is matched only a part of remaining quantity
+    for (; i < counterOrderList.length; i += 1) {
+      if (tradedQuantity + counterOrderList[i].remainingQuantity() >= order.remainingQuantity()) break;
       tradedQuantity += counterOrderList[i].remainingQuantity();
     }
 
-    if(i>=counterOrderList.length){ // match all order in list
-      this.book.removeKey(key); // remove this price level in book
-      order.setRemainingQuantity(order.remainingQuantity() - tradedQuantity); // update remaining quantity of order
+    if (i >= counterOrderList.length) { // match all order in list
+      // remove this price level in book
+      this.book.removeKey(priceLevel);
+      // update remaining quantity of order
+      order.setRemainingQuantity(order.remainingQuantity() - tradedQuantity);
     }
-    else{
+    else {
       // update remaining quantity of this last order in list
       counterOrderList[i].setRemainingQuantity(counterOrderList[i].remainingQuantity() - (order.remainingQuantity() - tradedQuantity));
       // update book
       // - remove i first elements
-      counterOrderList = counterOrderList.splice(0, i);
-      this.book.set(priceLevel, counterOrderList);
+      const newCounterOrderList = counterOrderList.splice(0, i);
+      this.book.set(priceLevel, newCounterOrderList);
       order.setRemainingQuantity(0.0); // update remaining quantity of order
     }
 
@@ -171,6 +174,6 @@ module.exports = class OrderBookSide {
       logger.info('matched `${tradedQuantity}` unit(s) of `${JSON.stringify(order)}` against `${JSON.stringify(headOrder)}` for `${priceLevel}` at ${new Date()}');
     }
     */
-
   }
 };
+

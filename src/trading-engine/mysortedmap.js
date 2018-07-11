@@ -30,11 +30,11 @@
 * - removeValueAndAddAtEnd(key, value, beginIndex=1, length=1) : execute removeValues() then addAtEnd
 */
 
-const SortedMap = require("collections/sorted-map");
+const SortedMap = require('collections/sorted-map');
 // src: http://www.collectionsjs.com/sorted-map
 
 module.exports = class MySortedMap {
-  constructor(){
+  constructor() {
     this.map = new SortedMap();
   }
 
@@ -44,82 +44,76 @@ module.exports = class MySortedMap {
    @param key:
    @return array of values for this key
    */
-  addAtEnd(key, value){
-    if(Array.isArray(value)) {
+  addAtEnd(key, value) {
+    if (Array.isArray(value)) {
       this.set(key, this.getValue(key).concat(value));
     }
-    else{
+    else {
       this.set(key, this.getValue(key).push(value));
     }
   }
 
-  getFirstKey(){
-    let keys = this.getKeys();
-    if(keys && keys.length>0) return keys[0];
+  getFirstKey() {
+    const keys = this.getKeys();
+    if (keys && keys.length > 0) return keys[0];
     return null;
   }
 
-  getLastKey(){
-    let keys = this.getKeys();
-    if(keys && keys.length>0) return keys[keys.length - 1];
+  getLastKey() {
+    const keys = this.getKeys();
+    if (keys && keys.length > 0) return keys[keys.length - 1];
     return null;
   }
 
-  getFirstValue(){
-    let keys = this.getKeys();
-    if(keys && keys.length > 0) return this.getValue(keys[0]);
+  getFirstValue() {
+    const keys = this.getKeys();
+    if (keys && keys.length > 0) return this.getValue(keys[0]);
     return null;
   }
 
-  getLastValue(){
-    let keys = this.getKeys();
-    if(keys && keys.length>0) return this.getValue(keys[keys.length - 1]);
+  getLastValue() {
+    const keys = this.getKeys();
+    if (keys && keys.length > 0) return this.getValue(keys[keys.length - 1]);
     return null;
   }
 
-  getValue(key){
+  getValue(key) {
     return this.map.get(key);
   }
 
-  getFirstKeyValue(){
-    let keys = this.getKeys();
-    if(keys && keys.length>0){
-      let values = this.getValue(keys[0]);
-      if(values && values.length>0){
+  getFirstKeyValue() {
+    const keys = this.getKeys();
+    if (keys && keys.length > 0) {
+      const values = this.getValue(keys[0]);
+      if (values && values.length > 0) {
         return {
-          key : keys[0],
-          value: values
+          key: keys[0],
+          value: values,
         };
-      }
-      else{
-        return null;
       }
     }
     return null;
   }
 
-  getLastKeyValue(){
-    let keys = this.getKeys();
-    if(keys && keys.length>0){
-      let values = this.getValue(keys[keys.length - 1]);
-      if(values && values.length>0){
+  getLastKeyValue() {
+    const keys = this.getKeys();
+    if (keys && keys.length > 0) {
+      const values = this.getValue(keys[keys.length - 1]);
+      if (values && values.length > 0) {
         return {
-          key : keys[keys.length - 1],
-          value: values
+          key: keys[keys.length - 1],
+          value: values,
         };
-      }
-      else{
-        return null;
       }
     }
     return null;
   }
 
-  getKeys(){
+  getKeys() {
     return this.map.keys();
   }
 
-  getValues(){
+  getValues() {
     return this.map.values();
   }
 
@@ -128,29 +122,33 @@ module.exports = class MySortedMap {
    *
    * */
 
-  set(key, value){
-    if(Array.isArray(value)){
-      if(value.lengh === 0) this.removeKey(key);
+  set(key, value) {
+    if (Array.isArray(value)) {
+      if (value.length === 0) this.removeKey(key);
       else this.map.set(key, value);
     }
-    else{
-      if(value) this.map.set(key, [value]);
-      else this.map.set(key, null); // TODO: QUESTION: There is no method to remove key???
+    else if (value) {
+      this.map.set(key, [value]);
+    }
+    else {
+      // TODO: QUESTION: There is no method to remove key???
+      this.map.set(key, null);
     }
   }
 
-  removeKey(key){
+  removeKey(key) {
     this.set(key, null);
   }
 
-  removeValue(key, beginIndex=0, length=1){
-    if(beginIndex<0 || length ===0) return;
+  removeValue(key, beginIndex = 0, length = 1) {
+    if (beginIndex < 0 || length === 0) return;
 
-    let values = this.getValue(key);
+    const values = this.getValue(key);
 
-    if(values && values.length>0 && beginIndex<values.length) {
+    if (values && values.length > 0 && beginIndex < values.length) {
 
-      let beginIdx, endIdx;
+      let beginIdx;
+      let endIdx;
 
       if (length > 0) {
         beginIdx = beginIndex;
@@ -162,47 +160,49 @@ module.exports = class MySortedMap {
       }
 
       let newValues = [];
-      if (beginIdx !== 0 || endIdx !== values.length - 1)
+      if (beginIdx !== 0 || endIdx !== values.length - 1) {
         newValues = values.splice(beginIdx, endIdx - beginIdx + 1);
+      }
 
-      if(newValues.length>0) this.set(key, newValues);
+      if (newValues.length > 0) this.set(key, newValues);
       else this.removeKey(key);
     }
   }
 
-  removeValueAndAddAtEnd(key, value, beginIndex=0, length=1){
-    if(beginIndex<0 || length ===0) return;
+  removeValueAndAddAtEnd(key, value, beginIndex = 0, length = 1) {
+    if (beginIndex < 0 || length === 0) return;
 
-    let values = this.getValue(key);
+    const values = this.getValue(key);
 
-    if(values && values.length>0 && beginIndex<values.length){
+    if (values && values.length > 0 && beginIndex < values.length){
 
-      let beginIdx, endIdx;
+      let beginIdx;
+      let endIdx;
 
-      if(length > 0){
+      if (length > 0) {
         beginIdx = beginIndex;
-        endIdx = Math.min(values.length - 1, beginIndex + length-1);
+        endIdx = Math.min(values.length - 1, beginIndex + length - 1);
       }
-      else{
+      else {
         beginIdx = Math.max(0, beginIndex + length + 1);
         endIdx = beginIndex;
       }
 
       let newValues = [];
-      if(beginIdx !== 0 || endIdx !== values.length - 1)
+      if (beginIdx !== 0 || endIdx !== values.length - 1){
         newValues = values.splice(beginIdx, endIdx - beginIdx + 1);
+      }
 
       // add new value
-      if(Array.isArray(value)) {
-        if(newValues.length === 0) newValues=value;
+      if (Array.isArray(value)) {
+        if (newValues.length === 0) newValues = value;
         else newValues = newValues.concat(value);
       }
-      else{
-        if(newValues.length === 0) newValues=[value];
-        else newValues.push(value);
-      }
+      else if (newValues.length === 0) newValues = [value];
+      else newValues.push(value);
 
       this.set(key, newValues);
     }
   }
 };
+
