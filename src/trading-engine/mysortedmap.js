@@ -135,12 +135,11 @@ module.exports = class MySortedMap {
     }
     else{
       if(value) this.map.set(key, [value]);
-      else this.removeKey(key);
+      else this.map.set(key, null); // TODO: QUESTION: There is no method to remove key???
     }
   }
 
   removeKey(key){
-    // TODO: QUESTION: There is no method to remove key???
     this.set(key, null);
   }
 
