@@ -39,8 +39,7 @@ module.exports = class OrderBookSide {
   update quantity of existing order on book
   */
   updateQuantity(order) {
-
-    // TODO: QUESTION: need to put item to the end or not ??? (currently YES)
+    // TODO: QUESTION: need to put item to the end or not ??? NO, quantity changes do not change the matching priority
 
     const values = this.book.getValue(order.limitPrice);
     for (let i = 0; i < values.length; i += 1) {
@@ -51,8 +50,10 @@ module.exports = class OrderBookSide {
     }
   }
 
-  /*remove first order in the list and put the list on book at given priceLevel.
-  If the list has only one element, them remove the priceLevel from the book completely.*/
+  /*
+  Remove first order in the list and put the list on book at given priceLevel.
+  If the list has only one element, them remove the priceLevel from the book completely.
+  */
   removeHeadOrder(priceLevel) {
     this.book.removeValue(priceLevel, 0, 1);
   }
@@ -63,11 +64,10 @@ module.exports = class OrderBookSide {
   tryToMatch(order) {
     // NEW: optimize search time: one time for both price and order list of this price
     while (order.remainingQuantity() > ZERO) {
-      const bestObj = this.bestPriceAndOrders();
+      const bestObj = this.bestPriceAndOrders(); // very bad naming, what is bestObj, what does bestObj.key, bestObj.value mean?
       if (bestObj && order.fulfill(bestObj.key)) {
-
-        // TODO: QUESTION: is this call by reference??? (currently think - YES)
-        this.match(order, bestObj.key, bestObj.value);
+        // TODO: QUESTION: is this call by reference??? in JS it is always call by ref, if inputs are not primiteve types
+        this.match(order, bestObj.key, bestObj.value); // very bad naming, what is bestObj, what does bestObj.key, bestObj.value mean?
       }
       else {
         return;
@@ -87,7 +87,8 @@ module.exports = class OrderBookSide {
   }
 
   /*
-  return best available price level of counter orders - from point of the view of the order to be processed.
+  Returns best available price level of counter orders - from point of the view
+  of the order being processed.
   For BUY order: minimum asked price
   For SELL order: maximum bid price
   */
@@ -101,7 +102,8 @@ module.exports = class OrderBookSide {
   }
 
   /*
-  return the list of counter orders at the best price level - from point of the view of the order to be processed.
+  return the list of counter orders at the best price level - from point of the view
+  of the order to be processed.
   For BUY order: minimum asked price
   For SELL order: maximum bid price
   */
@@ -119,7 +121,7 @@ module.exports = class OrderBookSide {
    @param order - to be processed order
    @param priceLevel - matched price
    @param counterOrderList - list of orders of same price level waiting on book for matching. Orders
-   in in this fulfill the limtit price of the order to be processed.
+            in this list fulfill the limit price of the order being processed.
    */
   match(order, priceLevel, counterOrderList) {
     // NEW
