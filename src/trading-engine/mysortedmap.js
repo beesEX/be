@@ -19,15 +19,13 @@
 *
 * - getFirstKeyValue()  : return a object {'key': first key, 'value': array value of first key}
 * - getLastKeyValue()   : return a object {'key': last key, 'value': array value of last key}
-* - getKeyValue(key)    : return a object {'key': key, 'value': array value of key}
 *
 * - getKeys()           : return array of keys
 * - getValues()         : return array of values (2D matrix)
 *
-* - getEntries()         : return array of all keys and values: [{'key': <key>, 'value': [<values>]}, ...]
-*
 * - set(key, value)     : set value for a key, if value is not array type -> set [value] instead
 *
+* - removeKey(key)      : remove a key of map
 * - removeValue(key, beginIndex=1, length=1)                   : remove <length>-elements from <beginIndex>-element of array value of this <key>-key, if <length> < 0 -> remove from right to left (check also validation of value array length)
 * - removeValueAndAddAtEnd(key, value, beginIndex=1, length=1) : execute removeValues() then addAtEnd
 */
@@ -117,20 +115,12 @@ module.exports = class MySortedMap {
     return null;
   }
 
-  getKeyValue(key){
-
-  }
-
   getKeys(){
     return this.map.keys();
   }
 
   getValues(){
     return this.map.values();
-  }
-
-  getEntries(){
-
   }
 
   /**
