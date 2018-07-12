@@ -74,7 +74,7 @@ module.exports = class OrderBookSide {
       }
     }
 
-    logger.info(`try to match ${JSON.stringify(order)} has been done`);
+    //logger.info(`try to match ${JSON.stringify(order)} has been done`);
   }
 
   bestPriceAndOrders() {

@@ -2,7 +2,8 @@
 * Created by Viet Anh Ho
 *
 * Define a new sorted map:
-* - All keys are sorted, duplicate values are acceptable
+* - All keys are sorted in sorted array
+* - All key-value pairs is stored in a object
 * - All values in type array
 * - If value array is empty, delete this key automatically
 *
@@ -20,9 +21,6 @@
 * - getFirstKeyValue()  : return a object {'key': first key, 'value': array value of first key}
 * - getLastKeyValue()   : return a object {'key': last key, 'value': array value of last key}
 *
-* - getKeys()           : return array of keys
-* - getValues()         : return array of values (2D matrix)
-*
 * - set(key, value)     : set value for a key, if value is not array type -> set [value] instead
 *
 * - removeKey(key)      : remove a key of map
@@ -30,12 +28,16 @@
 * - removeValueAndAddAtEnd(key, value, beginIndex=1, length=1) : execute removeValues() then addAtEnd
 */
 
-const SortedMap = require('collections/sorted-map');
+//const SortedMap = require('collections/sorted-map');
 // src: http://www.collectionsjs.com/sorted-map
+
+const SortedArray = require('collections/sorted-array');
+// src: http://www.collectionsjs.com/sorted-array
 
 module.exports = class MySortedMap {
   constructor() {
-    this.map = new SortedMap();
+    this.keyArr = new SortedArray();
+    this.valMap = {};
   }
 
   /**
@@ -45,108 +47,92 @@ module.exports = class MySortedMap {
    @return array of values for this key
    */
   addAtEnd(key, value) {
-    if (Array.isArray(value)) {
-      this.set(key, this.getValue(key).concat(value));
+    const values = this.getValue(key);
+    if (values) {
+      if (Array.isArray(value)) {
+        this.set(key, values.concat(value));
+      }
+      else {
+        values.push(value);
+        this.set(key, values);
+      }
     }
     else {
-      this.set(key, this.getValue(key).push(value));
+      this.set(key, value);
     }
   }
 
   getFirstKey() {
-    const keys = this.getKeys();
-    if (keys && keys.length > 0) return keys[0];
-    return null;
+    return this.keyArr.min();
   }
 
   getLastKey() {
-    const keys = this.getKeys();
-    if (keys && keys.length > 0) return keys[keys.length - 1];
-    return null;
+    return this.keyArr.max();
   }
 
   getFirstValue() {
-    const keys = this.getKeys();
-    if (keys && keys.length > 0) return this.getValue(keys[0]);
-    return null;
+    return this.valMap[this.getFirstKey()];
   }
 
   getLastValue() {
-    const keys = this.getKeys();
-    if (keys && keys.length > 0) return this.getValue(keys[keys.length - 1]);
-    return null;
+    return this.valMap[this.getLastKey()];
   }
 
   getValue(key) {
-    return this.map.get(key);
+    return this.valMap[key];
   }
 
   getFirstKeyValue() {
-    const keys = this.getKeys();
-    if (keys && keys.length > 0) {
-      const values = this.getValue(keys[0]);
-      if (values && values.length > 0) {
-        return {
-          key: keys[0],
-          value: values,
-        };
-      }
-    }
-    return null;
+    const key = this.keyArr.min();
+    return {
+      key: key,
+      value: this.valMap[key],
+    };
   }
 
   getLastKeyValue() {
-    const keys = this.getKeys();
-    if (keys && keys.length > 0) {
-      const values = this.getValue(keys[keys.length - 1]);
-      if (values && values.length > 0) {
-        return {
-          key: keys[keys.length - 1],
-          value: values,
-        };
-      }
-    }
-    return null;
-  }
-
-  getKeys() {
-    return this.map.keys();
-  }
-
-  getValues() {
-    return this.map.values();
+    const key = this.keyArr.max();
+    return {
+      key: key,
+      value: this.valMap[key],
+    };
   }
 
   /**
    * Set value for key
    *
    * */
-
   set(key, value) {
     if (Array.isArray(value)) {
+      //console.log('value is array');
       if (value.length === 0) this.removeKey(key);
-      else this.map.set(key, value);
+      else {
+        if (!this.keyArr.has(key)) this.keyArr.push(key);
+        this.valMap[key] = value;
+      }
     }
     else if (value) {
-      this.map.set(key, [value]);
+      //console.log('value is defined');
+      if (!this.keyArr.has(key)) this.keyArr.push(key);
+      this.valMap[key] = [value];
     }
     else {
-      // TODO: QUESTION: There is no method to remove key???
-      this.map.set(key, null);
+      this.removeKey(key);
     }
   }
 
   removeKey(key) {
-    this.set(key, null);
+    this.keyArr.delete(key);
+    delete this.valMap[key];
   }
 
+  // by default: remove the first element
   removeValue(key, beginIndex = 0, length = 1) {
     if (beginIndex < 0 || length === 0) return;
 
     const values = this.getValue(key);
 
-    if (values && values.length > 0 && beginIndex < values.length) {
-
+    if (values && Array.isArray(values) && values.length > 0 && beginIndex < values.length) {
       let beginIdx;
       let endIdx;
 
@@ -174,8 +160,7 @@ module.exports = class MySortedMap {
 
     const values = this.getValue(key);
 
-    if (values && values.length > 0 && beginIndex < values.length){
-
+    if (values && values.length > 0 && beginIndex < values.length) {
       let beginIdx;
       let endIdx;
 
@@ -195,11 +180,11 @@ module.exports = class MySortedMap {
 
       // add new value
       if (Array.isArray(value)) {
-        if (newValues.length === 0) newValues = value;
-        else newValues = newValues.concat(value);
+        newValues = newValues.concat(value);
       }
-      else if (newValues.length === 0) newValues = [value];
-      else newValues.push(value);
+      else if (value) {
+        newValues.push(value);
+      }
 
       this.set(key, newValues);
     }

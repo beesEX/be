@@ -32,7 +32,8 @@
     "koa-router": "7.4.0",
     "koa-validate": "1.0.7",
     "lodash": "4.17.10",
-    "nodemon": "1.17.3"
+    "nodemon": "1.17.3",
+    "collections": "^5.1.4"
   },
   "devDependencies": {
     "@paralect/eslint-config": "0.1.5",

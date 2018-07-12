@@ -51,10 +51,10 @@ class OrderBook {
       logger.info(`${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
 
       if (order.side === 'BUY') {
-        this.asks.putOrderOnBook(order);
+        this.bids.putOrderOnBook(order);
       }
       else { // SELL
-        this.bids.putOrderOnBook(order);
+        this.asks.putOrderOnBook(order);
       }
     }
   }
@@ -87,10 +87,10 @@ class OrderBook {
     logger.info(`processing updated LIMIT order : ${JSON.stringify(order)}`);
 
     if (order.side === 'BUY') {
-      this.asks.updateQuantity(order);
+      this.bids.updateQuantity(order);
     }
     else { // SELL
-      this.bids.updateQuantity(order);
+      this.asks.updateQuantity(order);
     }
   }
 
@@ -103,10 +103,10 @@ class OrderBook {
 
     // remove existing order with old price from book
     if (order.side === 'BUY') {
-      this.asks.removeOrder(order);
+      this.bids.removeOrder(order);
     }
     else { // SELL
-      this.bids.removeOrder(order);
+      this.asks.removeOrder(order);
     }
 
 
@@ -123,10 +123,10 @@ class OrderBook {
       logger.info(`${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
 
       if (order.side === 'BUY') {
-        this.asks.putOrderOnBook(order);
+        this.bids.putOrderOnBook(order);
       }
       else { // SELL
-        this.bids.putOrderOnBook(order);
+        this.asks.putOrderOnBook(order);
       }
     }
   }
@@ -139,10 +139,10 @@ class OrderBook {
     logger.info(`processing LIMIT order canceled: ${JSON.stringify(order)}`);
 
     if (order.side === 'BUY') {
-      this.asks.removeOrder(order);
+      this.bids.removeOrder(order);
     }
     else { // SELL
-      this.bids.removeOrder(order);
+      this.asks.removeOrder(order);
     }
   }
 }
