@@ -25,10 +25,11 @@ class OrderBook {
       logger.warn(`currency pair of order event ${event.order.symbol()} not matches that of order book ${this.symbol}`);
       return;
     }
-    if (event.type === OrderEvent.PLACED_EVENT) this.placeLimit(event);
+    if (event.type === OrderEvent.LIMIT_PLACED_EVENT) this.placeLimit(event);
+    else if (event.type === OrderEvent.MARKET_PLACED_EVENT) this.placeMarket(event);
     else if (event.type === OrderEvent.LIMIT_UPDATED_EVENT) this.updateLimit(event);
     else if (event.type === OrderEvent.QUANTITY_UPDATED_EVENT) this.updateQuantity(event);
-    else if (event.type === OrderEvent.CANCELED_EVENT) this.updateQuantity(event);
+    else if (event.type === OrderEvent.CANCELED_EVENT) this.cancel(event);
     else logger.warn(`unknown event type will be rejected: ${event}`);
   }
 
@@ -64,6 +65,10 @@ class OrderBook {
   */
   placeMarket(orderPlacedEvent) {
     const { order } = orderPlacedEvent;
+    if (order.type !== 'MARKET') {
+      logger.info(`received order ${order} is not a MARKET order and will be rejected`);
+      return;
+    }
     logger.info(`processing new MARKET order placed: ${JSON.stringify(order)}`);
 
     if (order.side === 'BUY') {
@@ -149,7 +154,7 @@ class OrderBook {
 
 // create an order book instance here, hardcode for currency pair BTC_USDT.
 const orderbook = new OrderBook('BTC_USDT', askSide, bidSide);
-logger.info(`${orderbook.symbol} orderbook ready to accept events`);
+logger.info(`${orderbook.symbol} orderbook is ready to accept events`);
 
 // Order Book receives order events from parent process
 process.on('message', (event) => {

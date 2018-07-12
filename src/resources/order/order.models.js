@@ -55,7 +55,8 @@ class OrderEvent {
     this.order = orderFromModel;
     this.type = undefined;
   }
-  static PLACED_EVENT = 'OrderPlacedEvent';
+  static LIMIT_PLACED_EVENT = 'OrderPlacedEvent';
+  static MARKET_PLACED_EVENT = 'MarketOrderPlacedEvent';
   static QUANTITY_UPDATED_EVENT = 'OrderQuantityUpdatedEvent';
   static LIMIT_UPDATED_EVENT = 'OrderLimitUpdatedEvent';
   static CANCELED_EVENT = 'OrderCanceledEvent';
@@ -64,7 +65,14 @@ class OrderEvent {
 class OrderPlacedEvent extends OrderEvent {
   constructor(orderFromModel) {
     super(orderFromModel);
-    super.type = OrderEvent.PLACED_EVENT;
+    super.type = OrderEvent.LIMIT_PLACED_EVENT;
+  }
+}
+
+class MarketOrderPlacedEvent extends OrderEvent {
+  constructor(orderFromModel) {
+    super(orderFromModel);
+    super.type = OrderEvent.MARKET_PLACED_EVENT;
   }
 }
 
@@ -90,5 +98,11 @@ class OrderCanceledEvent extends OrderEvent {
 }
 
 module.exports = {
-  Order, OrderEvent, OrderPlacedEvent, OrderQuantityUpdatedEvent, OrderLimitUpdatedEvent, OrderCanceledEvent,
+  Order,
+  OrderEvent,
+  OrderPlacedEvent,
+  MarketOrderPlacedEvent,
+  OrderQuantityUpdatedEvent,
+  OrderLimitUpdatedEvent,
+  OrderCanceledEvent,
 };
