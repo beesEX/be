@@ -34,7 +34,7 @@
 const SortedArray = require('collections/sorted-array');
 // src: http://www.collectionsjs.com/sorted-array
 
-module.exports = class MySortedMap {
+module.exports = class MySortedMap { // [Tung]: dat ten class nay la OrderTree hay OrderMap thi dung much dich cua no hon
   constructor() {
     this.keyArr = new SortedArray();
     this.valMap = {};
@@ -102,10 +102,10 @@ module.exports = class MySortedMap {
    * Set value for key
    *
    * */
-  set(key, value) {
+  set(key, value) { // thiet ke API cua function nay chi nhan value la array of order thi dung much dich va phu hop voi ten cua no hon
     if (Array.isArray(value)) {
       //console.log('value is array');
-      if (value.length === 0) this.removeKey(key);
+      if (value.length === 0) this.removeKey(key); // value.length = 0 thi anh huong gi lai xoa tat ca values at key hien tai?
       else {
         if (!this.keyArr.has(key)) this.keyArr.push(key);
         this.valMap[key] = value;
@@ -121,13 +121,13 @@ module.exports = class MySortedMap {
     }
   }
 
-  removeKey(key) {
+  removeKey(key) { // bad naming: ten function la removeKey nhung thuc ra remove ca value, doi ten thanh -> remove thi dung hon
     this.keyArr.delete(key);
     delete this.valMap[key];
   }
 
-  // by default: remove the first element
-  removeValue(key, beginIndex = 0, length = 1) {
+  // by default: remove the first element // [Tung]: ten function la 'removeValue', document lai viet la 'remove first element', biet tin cai nao? :-)
+  removeValue(key, beginIndex = 0, length = 1) { // [Tung]: leaky abstraction -> bad API design: co can thiet bat nguoi dung phai biet offset index va length? nguoi su dung class ko can biet la class su dung array de quan ly du lieu, day la chuyen rieng class nay, phai dc encapsulated.
     if (beginIndex < 0 || length === 0) return;
 
     const values = this.getValue(key);

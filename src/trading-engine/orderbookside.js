@@ -12,7 +12,7 @@ const ZERO = 0.0000000000001;
 module.exports = class OrderBookSide {
   constructor(side) {
     this.side = side; // 'ASK' or 'BID'
-    this.book = new SortedMap();
+    this.book = new SortedMap(); // [Tung]: bad naming, dung dat ten la 'book', em co the dat ten la orderMap, orderTree gi do thi dung hon
   }
 
   /*
@@ -25,7 +25,7 @@ module.exports = class OrderBookSide {
   /*
   remove order from book
   */
-  removeOrder(order) {
+  removeOrder(order) { // [Tung]: leaky abstraction -> bad API design of underlying data structure, tat ca logics cua cai function nay dung ra phai thuc hien ben trong mysortedmap, vi day la trach nhiem cua underlying data structure
     const values = this.book.getValue(order.limitPrice);
     for (let i = 0; i < values.length; i += 1) {
       if (values[i]._id === order._id) {
@@ -38,13 +38,13 @@ module.exports = class OrderBookSide {
   /*
   update quantity of existing order on book
   */
-  updateQuantity(order) {
+  updateQuantity(order) { // [Tung]: leaky abstraction -> bad API design of underlying data structure, tat ca logics cua cai function nay dung ra phai thuc hien ben trong mysortedmap, vi day la trach nhiem cua underlying data structure
     // TODO: QUESTION: need to put item to the end or not ??? NO, quantity changes do not change the matching priority
 
     const values = this.book.getValue(order.limitPrice);
     for (let i = 0; i < values.length; i += 1) {
       if (values[i]._id === order._id) {
-        this.book.removeValueAndAddAtEnd(order.limitPrice, order, i, 1);
+        this.book.removeValueAndAddAtEnd(order.limitPrice, order, i, 1); // [Tung]: update quantity cua mot order dang nam tren so ko thay doi vi tri cua no o trong list!
         return;
       }
     }
@@ -55,7 +55,7 @@ module.exports = class OrderBookSide {
   If the list has only one element, them remove the priceLevel from the book completely.
   */
   removeHeadOrder(priceLevel) {
-    this.book.removeValue(priceLevel, 0, 1);
+    this.book.removeValue(priceLevel, 0, 1); // [Tung]: leaky abstraction -> bad API design of underlying data structure, why the hell do i need to know what 0 and 1 are needed for?
   }
 
   /*
@@ -64,10 +64,10 @@ module.exports = class OrderBookSide {
   tryToMatch(order) {
     // NEW: optimize search time: one time for both price and order list of this price
     while (order.remainingQuantity() > ZERO) {
-      const bestObj = this.bestPriceAndOrders(); // very bad naming, what is bestObj, what does bestObj.key, bestObj.value mean?
+      const bestObj = this.bestPriceAndOrders(); // [Tung]: very bad naming, what is bestObj, what does bestObj.key, bestObj.value mean in this context?
       if (bestObj && order.fulfill(bestObj.key)) {
         // TODO: QUESTION: is this call by reference??? in JS it is always call by ref, if inputs are not primiteve types
-        this.match(order, bestObj.key, bestObj.value); // very bad naming, what is bestObj, what does bestObj.key, bestObj.value mean?
+        this.match(order, bestObj.key, bestObj.value); // [Tung]: very bad naming, what is bestObj?, what does bestObj.key, bestObj.value mean in this context?
       }
       else {
         return;
@@ -131,7 +131,7 @@ module.exports = class OrderBookSide {
     let tradedQuantity = 0.0;
 
     // find the last order in list which is matched only a part of remaining quantity
-    for (; i < counterOrderList.length; i += 1) {
+    for (; i < counterOrderList.length; i += 1) { // [Tung]: khong cong don tradedQuantity nhu the nay! Boi vi sau nay cho moi mot cai match giua 2 orders orderbook se phai sinh ra mot trade event ghi lai traded quantity da matched giua 2 orders do, de settlement module biet duong ma quyet toan
       if (tradedQuantity + counterOrderList[i].remainingQuantity() >= order.remainingQuantity()) break;
       tradedQuantity += counterOrderList[i].remainingQuantity();
     }
@@ -140,7 +140,7 @@ module.exports = class OrderBookSide {
       // remove this price level in book
       this.book.removeKey(priceLevel);
       // update remaining quantity of order
-      order.setRemainingQuantity(order.remainingQuantity() - tradedQuantity);
+      order.setRemainingQuantity(order.remainingQuantity() - tradedQuantity); // [Tung]: remainingQuantity() la util function de access transient status cua order (quantity - filledQuantity), khong set value cho transient status bang mot setter truc tiep ma hay set value cua nhung original status (filledQuantity)
     }
     else {
       // update remaining quantity of this last order in list
@@ -149,8 +149,10 @@ module.exports = class OrderBookSide {
       // - remove i first elements
       const newCounterOrderList = counterOrderList.splice(0, i);
       this.book.set(priceLevel, newCounterOrderList);
-      order.setRemainingQuantity(0.0); // update remaining quantity of order
+      order.setRemainingQuantity(0.0); // update remaining quantity of order [Tung]: remainingQuantity() la util function de access transient status cua order (quantity - filledQuantity), khong set value cho transient status bang mot setter truc tiep ma hay set value cua nhung original status (filledQuantity)
     }
+
+    // [Tung]: dung doan code ma em commented out di, vi no moi la giai thuat dung. Nhin dong logger.info() ay, dong day sau nay se dc thay bang 1 dong sinh ra trade event de settlement module xu ly va thuc hien quyet toan
 
     /*
     while(counterOrderList.length>0 && order.remainingQuantity()>ZERO) {
