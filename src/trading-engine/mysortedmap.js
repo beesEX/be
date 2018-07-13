@@ -36,7 +36,7 @@ const SortedArray = require('collections/sorted-array');
 
 module.exports = class MySortedMap { // [Tung]: dat ten class nay la OrderTree hay OrderMap thi dung much dich cua no hon
   constructor() {
-    this.keyArr = new SortedArray();
+    this.keyArr = new SortedArray(); // [Tung]: phai dung SortedSet, vi sortedarray cho phep duplicate! price levels ma duplicate thi ko on roi
     this.valMap = {};
   }
 
