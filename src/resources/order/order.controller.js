@@ -5,7 +5,7 @@ const orderSchema = require('./order.schema');
 const orderService = require('./order.service');
 
 /* POST /order/place */
-exports.orderPlaceHandler = async (ctx, next) => {
+exports.orderPlaceHandler = async (ctx) => {
   logger.info('order.controller.js: orderPlaceHandler(): received request.body', JSON.stringify(ctx.request.body, null, 2));
 
   const newOrderObj = {
@@ -26,13 +26,13 @@ exports.orderPlaceHandler = async (ctx, next) => {
 };
 
 /* POST /order/update */
-exports.orderUpdateHandler = async (ctx, next) => {
+exports.orderUpdateHandler = async (ctx) => {
   logger.info('order.controller.js: orderUpdateHandler(): received request.body', JSON.stringify(ctx.request.body, null, 2));
   ctx.body = await orderService.updateOrderByUser(ctx.request.body, ctx.state.user._id.toString());
 };
 
 /* POST /order/cancel */
-exports.orderCancelHandler = async (ctx, next) => {
+exports.orderCancelHandler = async (ctx) => {
   logger.info('order.controller.js: orderCancelHandler(): received request.body', JSON.stringify(ctx.request.body, null, 2));
   await orderService.cancelOrder(ctx.request.body.orderId, ctx.state.user._id.toString());
 
@@ -40,7 +40,7 @@ exports.orderCancelHandler = async (ctx, next) => {
 };
 
 /* GET /order/active */
-exports.orderActiveHandler = async (ctx, next) => {
+exports.orderActiveHandler = async (ctx) => {
   logger.info('order.controller.js: orderActiveHandler(): received userId', ctx.state.user._id.toString());
-  ctx.body = await orderService.getActiveOrder(ctx.state.user._id.toString());
+  ctx.body = await orderService.getActiveOrder(ctx.state.user._id.toString(), ctx.request.query);
 };
