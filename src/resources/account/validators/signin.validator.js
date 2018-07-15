@@ -52,22 +52,7 @@ exports.validate = ctx =>
       return false;
     }
 
-    logger.info(isPasswordMatch);
+    logger.info(`email password matched: ${isPasswordMatch}`);
     logger.info(`signing-in user with email=${signinData.email} found: ${JSON.stringify(user)}`);
     return user;
-    // const isPasswordMatch = await securityUtil.compareTextWithHash(
-    //   signinData.password,
-    //   user.passwordHash,
-    //   user.passwordSalt,
-    // );
-    //
-    // if (!isPasswordMatch) {
-    //   ctx.errors.push({ credentials: incorrectCredentials });
-    //   return false;
-    // }
-    //
-    // if (!user.isEmailVerified) {
-    //   ctx.errors.push({ email: 'Please verify your email to sign in' });
-    //   return false;
-    // }
   });
