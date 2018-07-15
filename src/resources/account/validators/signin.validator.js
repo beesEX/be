@@ -45,17 +45,16 @@ exports.validate = ctx =>
       return false;
     }
 
-    bcrypt.compare(signinData.password, user.password, (err, isMatch) => {
-      if (err) return err;
-      if (!isMatch) {
-        ctx.errors.push({ credentials: incorrectCredentials });
-        return false;
-      }
-      logger.info(isMatch);
-      logger.info(`signing-in user with email=${signinData.email} found: ${JSON.stringify(user)}`);
-      return user;
-    });
+    const isPasswordMatch = await bcrypt.compare(signinData.password, user.password);
 
+    if (!isPasswordMatch) {
+      ctx.errors.push({ credentials: incorrectCredentials });
+      return false;
+    }
+
+    logger.info(isPasswordMatch);
+    logger.info(`signing-in user with email=${signinData.email} found: ${JSON.stringify(user)}`);
+    return user;
     // const isPasswordMatch = await securityUtil.compareTextWithHash(
     //   signinData.password,
     //   user.passwordHash,
