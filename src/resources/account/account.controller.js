@@ -10,10 +10,10 @@ exports.signin = async (ctx, next) => {
   const result = await validators.signin.validate(ctx);
   ctx.assert(!result.errors, 400);
 
-  const token = authService.createAuthToken({ userId: result._id });
+  const token = authService.createAuthToken({ userId: result.value._id.toString() });
 
   ctx.body = {
-    user: result,
+    user: result.value,
     token,
   };
 };
