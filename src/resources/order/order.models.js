@@ -42,12 +42,6 @@ class Order {
    * @returns {number}
    */
   remainingQuantity() { return this.quantity - this.filledQuantity; }
-
-  /**
-   * set filled quantity via setting remain quantity
-   * @remainValue: remaining quantity need to be filled
-   */
-  setRemainingQuantity(remainValue) { this.filledQuantity = this.quantity - remainValue; } // [Tung]: remainingQuantity() la util function de access transient status cua order (quantity - filledQuantity), khong set value cho transient status bang mot setter truc tiep ma hay set value cua nhung original status (filledQuantity) -> xoa function nay di
 }
 
 class OrderEvent {
