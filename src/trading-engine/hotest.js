@@ -6,41 +6,121 @@ let asks = new OrderBookSide('ASK');
 let bids = new OrderBookSide('BID');
 
 function seeDetails(orderbookside){
-  const book = orderbookside.book;
-  const keyArr = book.keyArr;
-  const valMap = book.valMap;
+  const book = orderbookside.orderMap;
+  const keyArr = book.priceLevelSet.toArray();
+
   keyArr.map((val) => {
     console.log('At price '+val);
-    const values = valMap[val];
-    for(let i=0; i<values.length; i+=1){
-      console.log('id:',values[i]._id,'   quan:',values[i].quantity, '   filled:',values[i].filledQuantity);
+
+    let LLOE = book.getFirstElementOfPriceLevel(val);
+    while (LLOE){
+      console.log('id:',LLOE.order._id,'   quan:',LLOE.order.quantity, '   filled:',LLOE.order.filledQuantity);
+      LLOE = LLOE.next;
     }
+
     return val;
   });
 }
 
 function placeLimit(order) { // simulate from order book
   if (order.side === 'BUY') {
+    //console.log('tryToMatch in ASK_Book');
     asks.tryToMatch(order);
-    console.log('tryToMatch in ASK_Book');
-    //seeDetails(asks);
   }
   else { // SELL
+    //console.log('tryToMatch in BID_Book');
     bids.tryToMatch(order);
-    console.log('tryToMatch in BID_Book');
-    //seeDetails(bids);
   }
 
   // Neu van chua match het hoac ko match duoc teo nao thi cho order len so
   if (order.remainingQuantity() > 0) {
     if (order.side === 'BUY') {
+      //console.log('putOrderOnBook in BID_Book');
       bids.putOrderOnBook(order);
-      console.log('putOrderOnBook in BID_Book');
+    }
+    else { // SELL
+      //console.log('putOrderOnBook in ASK_Book');
+      asks.putOrderOnBook(order);
+    }
+  }
+
+  console.log(' ==== BID_Book ==== ');
+  seeDetails(bids);
+  console.log(' ==== ASK_Book ==== ');
+  seeDetails(asks);
+}
+
+
+function placeMarket(order){
+  if (order.side === 'BUY') {
+    asks.tryToMatch(order);
+  }
+  else { // SELL
+    bids.tryToMatch(order);
+  }
+
+  console.log(' ==== BID_Book ==== ');
+  seeDetails(bids);
+  console.log(' ==== ASK_Book ==== ');
+  seeDetails(asks);
+}
+
+
+function updateLimit(order){
+  // remove existing order with old price from book
+  if (order.side === 'BUY') {
+    bids.removeOrder(order);
+  }
+  else { // SELL
+    asks.removeOrder(order);
+  }
+
+
+  // process updated order like new placed order
+  if (order.side === 'BUY') {
+    asks.tryToMatch(order);
+  }
+  else { // SELL
+    bids.tryToMatch(order);
+  }
+
+  // Neu van chua match het hoac ko match duoc teo nao thi cho order len so
+  if (order.remainingQuantity() > 0) {
+
+    if (order.side === 'BUY') {
+      bids.putOrderOnBook(order);
     }
     else { // SELL
       asks.putOrderOnBook(order);
-      console.log('putOrderOnBook in ASK_Book');
     }
+  }
+
+  console.log(' ==== BID_Book ==== ');
+  seeDetails(bids);
+  console.log(' ==== ASK_Book ==== ');
+  seeDetails(asks);
+}
+
+function updateQuantity(order){
+  if (order.side === 'BUY') {
+    bids.updateQuantity(order);
+  }
+  else { // SELL
+    asks.updateQuantity(order);
+  }
+
+  console.log(' ==== BID_Book ==== ');
+  seeDetails(bids);
+  console.log(' ==== ASK_Book ==== ');
+  seeDetails(asks);
+}
+
+function cancel(order){
+  if (order.side === 'BUY') {
+    bids.removeOrder(order);
+  }
+  else { // SELL
+    asks.removeOrder(order);
   }
 
   console.log(' ==== BID_Book ==== ');
@@ -88,55 +168,114 @@ class Order {
    * @returns {number}
    */
   remainingQuantity() { return this.quantity - this.filledQuantity; }
-
-  /**
-   * set filled quantity via setting remain quantity
-   * @remainValue: remaining quantity need to be filled
-   */
-  setRemainingQuantity(remainValue) { this.filledQuantity = this.quantity - remainValue; }
 }
 
 // TODO: make randomly
-// all type is place limit
 orderList = [
   {
+    event: 'placeLimit',
+    id:0,
     side: 'BUY',
     limitPrice: 99.0,
     quantity: 20.0,
   },
   {
+    event: 'placeLimit',
+    id:1,
     side: 'BUY',
     limitPrice: 99.0,
     quantity: 30.0,
   },
   {
+    event: 'placeLimit',
+    id:2,
     side: 'SELL',
     limitPrice: 101.0,
     quantity: 10.0,
   },
   {
+    event: 'placeLimit',
+    id:3,
     side: 'SELL',
     limitPrice: 100.0,
     quantity: 5.0,
   },
   {
+    event: 'placeLimit',
+    id:4,
     side: 'BUY',
     limitPrice: 100.0,
     quantity: 10.0,
+  },
+  {
+    event: 'cancel',
+    id: 0,
+    side: 'BUY',
+    limitPrice: 99.0,
+    quantity: 20.0,
+  },
+  {
+    event: 'cancel',
+    id:1,
+    side: 'BUY',
+    limitPrice: 99.0,
+    quantity: 30.0,
+  },
+  {
+    event: 'placeLimit',
+    id:5,
+    side: 'BUY',
+    limitPrice: 101.0,
+    quantity: 11.0,
+  },
+  {
+    event: 'updateQuantity',
+    id:4,
+    side: 'BUY',
+    limitPrice: 100.0,
+    quantity: 20.0,
+  },
+  {
+    event: 'updateLimit',
+    id:4,
+    side: 'BUY',
+    limitPrice: 101.0,
+    quantity: 20.0,
+  },
+  {
+    event: 'updateLimit',
+    id:4,
+    side: 'BUY',
+    limitPrice: 102.0,
+    quantity: 20.0,
+  },
+  {
+    event: 'placeMarket',
+    id:10,
+    side: 'SELL',
+    limitPrice: 100.0,
+    quantity: 200.0,
   },
 ];
 
 // deploy and see
 for(let i=0; i<orderList.length; i += 1){
   // make a order obj
-  const newOrder = new Order({
-    _id : i,
+  console.log('Event', orderList[i].event, orderList[i].side, 'order id',  orderList[i].id, 'quantity', orderList[i].quantity, 'at price',orderList[i].limitPrice);
+  let newOrder = new Order({
+    _id : orderList[i].id,
     type: 'LIMIT',
     side: orderList[i].side,
     limitPrice: orderList[i].limitPrice,
     quantity: orderList[i].quantity,
     filledQuantity: 0.0,
   });
-  placeLimit(newOrder);
+  if(orderList[i].event === 'placeLimit'){
+    placeLimit(newOrder);
+  }
+  else if(orderList[i].event === 'cancel') cancel(newOrder);
+  else if(orderList[i].event === 'updateLimit') updateLimit(newOrder);
+  else if(orderList[i].event === 'updateQuantity') updateQuantity(newOrder);
+  else if(orderList[i].event === 'placeMarket') placeMarket(newOrder);
   console.log('----------------------------------------------');
 }
