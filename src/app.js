@@ -3,7 +3,7 @@
 // all options can be found here: https://gist.github.com/branneman/8048520
 require('app-module-path').addPath(__dirname);
 global.logger = require('logger');
-const beesV8 = require('src/trading-engine/beesV8');
+const beesV8 = require('trading-engine/beesV8');
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 

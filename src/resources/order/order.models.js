@@ -49,11 +49,11 @@ class OrderEvent {
     this.order = orderFromModel;
     this.type = undefined;
   }
-  static LIMIT_PLACED_EVENT = 'OrderPlacedEvent';
-  static MARKET_PLACED_EVENT = 'MarketOrderPlacedEvent';
-  static QUANTITY_UPDATED_EVENT = 'OrderQuantityUpdatedEvent';
-  static LIMIT_UPDATED_EVENT = 'OrderLimitUpdatedEvent';
-  static CANCELED_EVENT = 'OrderCanceledEvent';
+  static get LIMIT_PLACED_EVENT() { return 'OrderPlacedEvent'; }
+  static get MARKET_PLACED_EVENT() { return 'MarketOrderPlacedEvent'; }
+  static get QUANTITY_UPDATED_EVENT() { return 'OrderQuantityUpdatedEvent'; }
+  static get LIMIT_UPDATED_EVENT() { return 'OrderLimitUpdatedEvent'; }
+  static get CANCELED_EVENT() { return 'OrderCanceledEvent'; }
 }
 
 class OrderPlacedEvent extends OrderEvent {

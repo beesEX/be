@@ -1,6 +1,9 @@
 const OrderBookSide = require('./orderbookside');
 const { OrderEvent } = require('../resources/order/order.models');
+const config = require('../config');
+const { createConsoleLogger } = require('@paralect/common-logger');
 
+global.logger = createConsoleLogger({ isDev: config.isDev });
 const { logger } = global;
 
 
@@ -153,6 +156,8 @@ class OrderBook {
 }
 
 // create an order book instance here, hardcode for currency pair BTC_USDT.
+const askSide = new OrderBookSide('ASK');
+const bidSide = new OrderBookSide('BID');
 const orderbook = new OrderBook('BTC_USDT', askSide, bidSide);
 logger.info(`${orderbook.symbol} orderbook is ready to accept events`);
 

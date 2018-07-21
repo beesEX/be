@@ -15,7 +15,10 @@ class BeesV8 {
    * start the engine
    */
   start() {
-    this.orderbookChildProcess = fork('orderbook.js');
+    const options = {
+      stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+    };
+    this.orderbookChildProcess = fork('src/trading-engine/orderbook.js', [], options);
   }
 
   /**
