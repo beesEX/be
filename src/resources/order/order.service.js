@@ -7,6 +7,9 @@ const db = require('db');
 const service = db.createService(constants.DATABASE_DOCUMENTS.ORDERS, orderSchema.schema);
 // usage: https://github.com/paralect/node-mongo/blob/master/API.md#mongo-service
 
+const beesV8 = require('trading-engine/beesV8');
+const { Order, OrderPlacedEvent } = require('./order.models');
+
 const ON_BOOK_STATUS = [orderSchema.ORDER_STATUS.PLACED, orderSchema.ORDER_STATUS.PARTIALLY_FILLED];
 
 module.exports = {
@@ -19,6 +22,9 @@ module.exports = {
   placeOrder: async (newOrderObject) => {
     const createdOrder = await service.create(newOrderObject);
     logger.info('order.service.js: placedOrder(): createdOrder =', JSON.stringify(createdOrder, null, 2));
+
+    const orderPlacedEvent = new OrderPlacedEvent(new Order(createdOrder));
+    beesV8.processOrderEvent(orderPlacedEvent);
     return createdOrder;
   },
 
