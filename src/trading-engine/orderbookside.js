@@ -93,6 +93,8 @@ module.exports = class OrderBookSide {
       if (tmpLLOE.order.remainingQuantity() <= ZERO) {
         this.orderMap.removeOrder(tmpLLOE.order);
       }
+
+      if (order.remainingQuantity() <= ZERO) break;
     }
   }
 };
