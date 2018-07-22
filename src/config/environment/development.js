@@ -6,4 +6,5 @@ module.exports = {
     secret: 'the_secret',
   },
   authCookieName: 'auth',
+  zeroMQHost: 'tcp://127.0.0.1:42000'
 };

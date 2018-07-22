@@ -7,7 +7,7 @@ const beesV8 = require('trading-engine/beesV8');
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
-const { logger } = global;
+const {logger} = global;
 const config = require('config');
 const Koa = require('koa');
 
@@ -23,5 +23,42 @@ app.listen(config.port, () => {
   beesV8.start();
   logger.warn(`Api server listening on ${config.port}, in ${process.env.NODE_ENV} mode`);
 });
+
+//test zeroMQ publisher
+
+const {publish, close} = require('./util/zeroMQpublisher');
+
+async function sendMessage(index) {
+
+  return new Promise((resolve) => {
+
+    setTimeout(() => {
+
+      publish(`Hello World ${index}`, 'world');
+
+      resolve();
+
+    }, 1000);
+
+  })
+
+}
+
+async function sendMessages() {
+
+  for (let i = 0; i < 10; i++) {
+
+    await sendMessage(i);
+
+  }
+
+}
+
+sendMessages().then(() => {
+
+  close();
+
+});
+
 
 module.exports = app;

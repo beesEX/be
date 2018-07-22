@@ -34,6 +34,7 @@
     "lodash": "4.17.10",
     "nodemon": "1.17.3",
     "collections": "^5.1.4"
+    "zeromq": "^4.6.0"
   },
   "devDependencies": {
     "@paralect/eslint-config": "0.1.5",

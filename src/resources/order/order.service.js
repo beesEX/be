@@ -1,4 +1,4 @@
-const { logger } = global;
+const {logger} = global;
 
 const orderSchema = require('./order.schema');
 const constants = require('app.constants');
@@ -36,7 +36,11 @@ module.exports = {
    * @returns {Promise<void>}
    */
   updateOrderByUser: async (orderObject, userId) => {
-    const updatedOrder = await service.update({ _id: orderObject._id, userId: userId, status: { $in: ON_BOOK_STATUS } }, (doc) => {
+    const updatedOrder = await service.update({
+      _id: orderObject._id,
+      userId: userId,
+      status: {$in: ON_BOOK_STATUS}
+    }, (doc) => {
       if (orderObject.quantity > doc.filledQuantity) {
         doc.limitPrice = orderObject.limitPrice;
         doc.quantity = orderObject.quantity;
@@ -55,7 +59,7 @@ module.exports = {
    * @returns {Promise<void>}
    */
   cancelOrder: async (orderId, userId) => {
-    await service.update({ _id: orderId, userId: userId, status: { $in: ON_BOOK_STATUS } }, (doc) => {
+    await service.update({_id: orderId, userId: userId, status: {$in: ON_BOOK_STATUS}}, (doc) => {
       doc.status = orderSchema.ORDER_STATUS.CANCELED;
       doc.lastUpdatedAt = new Date();
       logger.info('order.service.js: cancelOrder(): canceledOrder with id =', orderId);
@@ -64,13 +68,59 @@ module.exports = {
 
   /**
    * Retrieves orders on book of the given user
-   * @param userId: userId of user for whose order should be retrieved
-   * @returns {Promise<Array>}
+   *
+   * @param userId
+   * @param extraOptions
+   * @returns {Promise<Array<{name: string, code: (number)}>|*|Function>}
    */
-  getActiveOrder: async (userId) => {
-    const result = await service.find({ userId: userId, status: { $in: ON_BOOK_STATUS } });
+  getActiveOrder: async (userId, extraOptions) => {
+
+    let offset;
+    let limit;
+    let currency;
+    let baseCurrency;
+    let sort;
+
+    if (extraOptions) {
+      offset = parseInt(extraOptions.offset) || 0;
+      limit = parseInt(extraOptions.limit) || 100;
+      currency = extraOptions.currency || 'BTC';
+      baseCurrency = extraOptions.baseCurrency || 'USDT';
+      sort = JSON.parse(extraOptions.sort) || {};
+    }
+    else {
+      offset = 0;
+      limit = 100;
+      currency = 'BTC';
+      baseCurrency = 'USDT';
+    }
+
+    let arrayOfCurrencies = [baseCurrency, currency];
+    const perPage = limit;
+    let page = offset / limit + 1;
+
+    if (!Number.isInteger(page)) {
+      logger.warn(`page ${page} is not an integer. It will be rounded down`);
+      page = Math.floor(page);
+    }
+
+    const options = {
+      perPage,
+      page,
+      sort
+    };
+
+    const result = await service.find({
+          userId: userId, status: {$in: ON_BOOK_STATUS},
+          currency: {$in: arrayOfCurrencies}, baseCurrency: {$in: arrayOfCurrencies}
+        }, options
+    );
+
     logger.info('order.service.js: getActiveOrder(): list of active orders =', JSON.stringify(result.results, null, 2));
 
-    return result.results;
+    return {
+      orders: result.results,
+      count: result.count
+    };
   }
 };
