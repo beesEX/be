@@ -1,5 +1,5 @@
 const OrderBookSide = require('./orderbookside');
-const { OrderEvent } = require('../resources/order/order.models');
+const { Order, OrderEvent, OrderPlacedEvent, MarketOrderPlacedEvent, OrderQuantityUpdatedEvent, OrderLimitUpdatedEvent, OrderCanceledEvent } = require('../resources/order/order.models');
 const config = require('../config');
 const { createConsoleLogger } = require('@paralect/common-logger');
 
@@ -23,17 +23,19 @@ class OrderBook {
    * @param event - OrderEvent
    */
   processOrderEvent(event) {
-    logger.info(`receices order event: ${event}`);
-    if (event.order.symbol() !== this.symbol) {
-      logger.warn(`currency pair of order event ${event.order.symbol()} not matches that of order book ${this.symbol}`);
+    logger.info(`orderbook.js processOrderEvent(): receices order event: ${JSON.stringify(event)}`);
+    const order = new Order(event._order);
+    const orderSymbol = `${event._order.currency}_${event._order.baseCurrency}`;
+    if (orderSymbol !== this.symbol) {
+      logger.warn(`orderbook.js processOrderEvent(): currency pair of order event ${orderSymbol} not matches that of order book ${this.symbol}`);
       return;
     }
-    if (event.type === OrderEvent.LIMIT_PLACED_EVENT) this.placeLimit(event);
-    else if (event.type === OrderEvent.MARKET_PLACED_EVENT) this.placeMarket(event);
-    else if (event.type === OrderEvent.LIMIT_UPDATED_EVENT) this.updateLimit(event);
-    else if (event.type === OrderEvent.QUANTITY_UPDATED_EVENT) this.updateQuantity(event);
-    else if (event.type === OrderEvent.CANCELED_EVENT) this.cancel(event);
-    else logger.warn(`unknown event type will be rejected: ${event}`);
+    if (event._type === OrderEvent.LIMIT_PLACED_EVENT) this.placeLimit(new OrderPlacedEvent(order));
+    else if (event._type === OrderEvent.MARKET_PLACED_EVENT) this.placeMarket(new MarketOrderPlacedEvent(order));
+    else if (event._type === OrderEvent.LIMIT_UPDATED_EVENT) this.updateLimit(new OrderLimitUpdatedEvent(order));
+    else if (event._type === OrderEvent.QUANTITY_UPDATED_EVENT) this.updateQuantity(new OrderQuantityUpdatedEvent(order));
+    else if (event._type === OrderEvent.CANCELED_EVENT) this.cancel(new OrderCanceledEvent(order));
+    else logger.warn(`orderbook.js processOrderEvent(): unknown event type ${event._type} will be rejected`);
   }
 
   /*
@@ -41,7 +43,7 @@ class OrderBook {
   */
   placeLimit(orderPlacedEvent) {
     const { order } = orderPlacedEvent;
-    logger.info(`processing new LIMIT order placed: ${JSON.stringify(order)}`);
+    logger.info(`orderbook.js placeLimit(): processing new LIMIT order placed: ${JSON.stringify(order)}`);
 
     if (order.side === 'BUY') {
       this.asks.tryToMatch(order);
@@ -52,7 +54,7 @@ class OrderBook {
 
     // Neu van chua match het hoac ko match duoc teo nao thi cho order len so
     if (order.remainingQuantity() > 0) {
-      logger.info(`${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
+      logger.info(`orderbook.js placeLimit(): ${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
 
       if (order.side === 'BUY') {
         this.bids.putOrderOnBook(order);
@@ -69,10 +71,10 @@ class OrderBook {
   placeMarket(orderPlacedEvent) {
     const { order } = orderPlacedEvent;
     if (order.type !== 'MARKET') {
-      logger.info(`received order ${order} is not a MARKET order and will be rejected`);
+      logger.info(`orderbook.js placeMarket(): received order ${order} is not a MARKET order and will be rejected`);
       return;
     }
-    logger.info(`processing new MARKET order placed: ${JSON.stringify(order)}`);
+    logger.info(`orderbook.js placeMarket(): processing new MARKET order placed: ${JSON.stringify(order)}`);
 
     if (order.side === 'BUY') {
       this.asks.tryToMatch(order);
@@ -83,7 +85,7 @@ class OrderBook {
 
     // remaining units of market order will not be put on book, gets just rejected.
     if (order.remainingQuantity() > 0) {
-      logger.info(`${order.remainingQuantity()} remaining units of MARKET order will be rejected`);
+      logger.info(`orderbook.js placeMarket(): ${order.remainingQuantity()} remaining units of MARKET order will be rejected`);
     }
   }
 
@@ -92,7 +94,7 @@ class OrderBook {
   */
   updateQuantity(orderUpdatedEvent) {
     const { order } = orderUpdatedEvent;
-    logger.info(`processing updated LIMIT order : ${JSON.stringify(order)}`);
+    logger.info(`orderbook.js updateQuantity(): processing updated LIMIT order : ${JSON.stringify(order)}`);
 
     if (order.side === 'BUY') {
       this.bids.updateQuantity(order);
@@ -107,7 +109,7 @@ class OrderBook {
   */
   updateLimit(orderUpdatedEvent) {
     const { order } = orderUpdatedEvent;
-    logger.info(`processing updated LIMIT order with limit price change: ${JSON.stringify(order)}`);
+    logger.info(`orderbook.js updateLimit(): processing updated LIMIT order with limit price change: ${JSON.stringify(order)}`);
 
     // remove existing order with old price from book
     if (order.side === 'BUY') {
@@ -128,7 +130,7 @@ class OrderBook {
 
     // Neu van chua match het hoac ko match duoc teo nao thi cho order len so
     if (order.remainingQuantity() > 0) {
-      logger.info(`${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
+      logger.info(`orderbook.js updateLimit(): ${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
 
       if (order.side === 'BUY') {
         this.bids.putOrderOnBook(order);
@@ -144,7 +146,7 @@ class OrderBook {
   */
   cancel(orderCanceledEvent) {
     const { order } = orderCanceledEvent;
-    logger.info(`processing LIMIT order canceled: ${JSON.stringify(order)}`);
+    logger.info(`orderbook.js cancel(): processing LIMIT order canceled: ${JSON.stringify(order)}`);
 
     if (order.side === 'BUY') {
       this.bids.removeOrder(order);
@@ -159,7 +161,7 @@ class OrderBook {
 const askSide = new OrderBookSide('ASK');
 const bidSide = new OrderBookSide('BID');
 const orderbook = new OrderBook('BTC_USDT', askSide, bidSide);
-logger.info(`${orderbook.symbol} orderbook is ready to accept events`);
+logger.info(`orderbook.js: ${orderbook.symbol} orderbook is ready to accept events`);
 
 // Order Book receives order events from parent process
 process.on('message', (event) => {

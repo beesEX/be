@@ -34,7 +34,7 @@ class Order {
    * returns symbol string of the currency pair. e.g. 'BTC_USDT'
    */
   symbol() {
-    return `${this.currency}/${this.baseCurrency}`;
+    return `${this.currency}_${this.baseCurrency}`;
   }
 
   /**
@@ -46,9 +46,12 @@ class Order {
 
 class OrderEvent {
   constructor(orderFromModel) {
-    this.order = orderFromModel;
-    this.type = undefined;
+    this._order = orderFromModel;
+    this._type = undefined;
   }
+  get order() { return this._order; }
+  get type() { return this._type; }
+
   static get LIMIT_PLACED_EVENT() { return 'OrderPlacedEvent'; }
   static get MARKET_PLACED_EVENT() { return 'MarketOrderPlacedEvent'; }
   static get QUANTITY_UPDATED_EVENT() { return 'OrderQuantityUpdatedEvent'; }
@@ -59,35 +62,35 @@ class OrderEvent {
 class OrderPlacedEvent extends OrderEvent {
   constructor(orderFromModel) {
     super(orderFromModel);
-    super.type = OrderEvent.LIMIT_PLACED_EVENT;
+    super._type = OrderEvent.LIMIT_PLACED_EVENT;
   }
 }
 
 class MarketOrderPlacedEvent extends OrderEvent {
   constructor(orderFromModel) {
     super(orderFromModel);
-    super.type = OrderEvent.MARKET_PLACED_EVENT;
+    super._type = OrderEvent.MARKET_PLACED_EVENT;
   }
 }
 
 class OrderQuantityUpdatedEvent extends OrderEvent {
   constructor(orderFromModel) {
     super(orderFromModel);
-    super.type = OrderEvent.QUANTITY_UPDATED_EVENT;
+    super._type = OrderEvent.QUANTITY_UPDATED_EVENT;
   }
 }
 
 class OrderLimitUpdatedEvent extends OrderEvent {
   constructor(orderFromModel) {
     super(orderFromModel);
-    super.type = OrderEvent.LIMIT_UPDATED_EVENT;
+    super._type = OrderEvent.LIMIT_UPDATED_EVENT;
   }
 }
 
 class OrderCanceledEvent extends OrderEvent {
   constructor(orderFromModel) {
     super(orderFromModel);
-    super.type = OrderEvent.CANCELED_EVENT;
+    super._type = OrderEvent.CANCELED_EVENT;
   }
 }
 

@@ -18,7 +18,7 @@ class BeesV8 {
     const options = {
       stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
     };
-    this.orderbookChildProcess = fork('src/trading-engine/orderbook.js', [], options);
+    this.orderbookChildProcess = fork('src/trading-engine/orderbook.js');
   }
 
   /**
@@ -28,6 +28,7 @@ class BeesV8 {
    * @param event
    */
   processOrderEvent(event) {
+    logger.info('beesV8.js processOrderEvent(): receives order event = ', JSON.stringify(event));
     this.orderbookChildProcess.send(event);
   }
 }
