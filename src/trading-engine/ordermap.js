@@ -96,10 +96,10 @@ module.exports = class OrderMap {
       if (LLOE) {
         return LLOE;
       }
-      console.log('ordermap.js: getFirstElementOfPriceLevel(): WARNING: not found order for this order id', orderId);
+      // console.log('ordermap.js: getFirstElementOfPriceLevel(): WARNING: not found order for this order id', orderId);
       return null;
     }
-    console.log('ordermap.js: getFirstElementOfPriceLevel(): WARNING: not found price level', price);
+    // console.log('ordermap.js: getFirstElementOfPriceLevel(): WARNING: not found price level', price);
     return null;
   }
 
@@ -111,10 +111,10 @@ module.exports = class OrderMap {
       if (LLOE) {
         return LLOE;
       }
-      console.log('ordermap.js: getLastElementOfPriceLevel(): WARNING: not found order for this order id', orderId);
+      // console.log('ordermap.js: getLastElementOfPriceLevel(): WARNING: not found order for this order id', orderId);
       return null;
     }
-    console.log('ordermap.js: getLastElementOfPriceLevel(): WARNING: not found price level');
+    // console.log('ordermap.js: getLastElementOfPriceLevel(): WARNING: not found price level');
     return null;
   }
 
