@@ -33,7 +33,7 @@
     "koa-validate": "1.0.7",
     "lodash": "4.17.10",
     "nodemon": "1.17.3",
-    "collections": "^5.1.4"
+    "collections": "^5.1.4",
     "zeromq": "^4.6.0"
   },
   "devDependencies": {
