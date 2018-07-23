@@ -1,8 +1,8 @@
-const {fork} = require('child_process');
+const { fork } = require('child_process');
 const uuid = require('uuid/v4');
-const {EVENT_GET_AGGREGATED_STATE} = require('./orderbook');
+const { EVENT_GET_AGGREGATED_STATE } = require('./orderbook');
 
-const {logger} = global;
+const { logger } = global;
 
 /**
  * The trading engine of the beesEX platform.
@@ -18,9 +18,6 @@ class BeesV8 {
    * start the engine
    */
   start() {
-    const options = {
-      stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
-    };
     this.orderbookChildProcess = fork('src/trading-engine/orderbook.js');
 
     this.orderbookChildProcess.on('message', (message) => {
@@ -29,8 +26,7 @@ class BeesV8 {
         resolveFunction(message.state);
         delete this.mapOfIdAndResolveFunction[message.id];
       }
-    })
-
+    });
   }
 
   /**
