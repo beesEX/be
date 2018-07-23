@@ -26,39 +26,39 @@ app.listen(config.port, () => {
 
 //test zeroMQ publisher
 
-const {publish, close} = require('./util/zeroMQpublisher');
-
-async function sendMessage(index) {
-
-  return new Promise((resolve) => {
-
-    setTimeout(() => {
-
-      publish(`Hello World ${index}`, 'world');
-
-      resolve();
-
-    }, 1000);
-
-  })
-
-}
-
-async function sendMessages() {
-
-  for (let i = 0; i < 10; i++) {
-
-    await sendMessage(i);
-
-  }
-
-}
-
-sendMessages().then(() => {
-
-  close();
-
-});
+// const {publish, close} = require('./util/zeroMQpublisher');
+//
+// async function sendMessage(index) {
+//
+//   return new Promise((resolve) => {
+//
+//     setTimeout(() => {
+//
+//       publish(`Hello World ${index}`, 'world');
+//
+//       resolve();
+//
+//     }, 1000);
+//
+//   })
+//
+// }
+//
+// async function sendMessages() {
+//
+//   for (let i = 0; i < 10; i++) {
+//
+//     await sendMessage(i);
+//
+//   }
+//
+// }
+//
+// sendMessages().then(() => {
+//
+//   close();
+//
+// });
 
 
 module.exports = app;

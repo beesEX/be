@@ -1,9 +1,8 @@
-
 /**
  * One side of the order book ASK or BID, contains data structure to hold the orders of the side.
  *
  */
-const { logger } = global;
+const {logger} = global;
 
 const OrderMap = require('./ordermap');
 
@@ -97,5 +96,38 @@ module.exports = class OrderBookSide {
       if (order.remainingQuantity() <= ZERO) break;
     }
   }
+
+  getAggregatedState() {
+    const arrayOfAggregatedStateByPrice = [];
+
+    this.orderMap.priceLevelSet.forEach((price) => {
+
+      const stateByPrice = {
+        price
+      };
+
+      const orderLinkedList = this.orderMap.mapOfPriceAndOrderLinkedList[price];
+      stateByPrice.quantity = sumOver('quantity', orderLinkedList);
+      stateByPrice.filledQuantity = sumOver('filledQuantity', orderLinkedList);
+      arrayOfAggregatedStateByPrice.push(stateByPrice);
+
+    });
+
+    return arrayOfAggregatedStateByPrice;
+
+  }
+
 };
 
+function sumOver(propertyName, orderLinkedList) {
+  let currentLinkedListElement = orderLinkedList.head;
+  let sum = 0;
+
+  while (currentLinkedListElement) {
+    sum += currentLinkedListElement.order[propertyName];
+    currentLinkedListElement = currentLinkedListElement.next;
+  }
+
+  return sum;
+
+}
