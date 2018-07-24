@@ -2,6 +2,10 @@
  * One side of the order book ASK or BID, contains data structure to hold the orders of the side.
  *
  */
+const config = require('../config');
+const {createConsoleLogger} = require('@paralect/common-logger');
+
+global.logger = createConsoleLogger({isDev: config.isDev});
 const {logger} = global;
 
 const OrderMap = require('./ordermap');
@@ -79,12 +83,12 @@ module.exports = class OrderBookSide {
 
       if (order.remainingQuantity() < tmpLLOE.order.remainingQuantity()) {
         // order will be fulfilled right now
-        console.log('orderbookside.js: match(): Match id', tmpLLOE.order._id, 'with trade quantity', order.remainingQuantity());
+        logger.info(`orderbookside.js: match(): Match id ${tmpLLOE.order._id} with trade quantity ${order.remainingQuantity()}`);
         tmpLLOE.order.filledQuantity += order.remainingQuantity();
         order.filledQuantity = order.quantity;
       }
       else {
-        console.log('orderbookside.js: match(): Match id', tmpLLOE.order._id, 'with trade quantity', tmpLLOE.order.remainingQuantity());
+        logger.info(`orderbookside.js: match(): Match id ${tmpLLOE.order._id} with trade quantity ${tmpLLOE.order.remainingQuantity()}`);
         order.filledQuantity += tmpLLOE.order.remainingQuantity();
         tmpLLOE.order.filledQuantity = tmpLLOE.order.quantity;
       }
