@@ -52,8 +52,6 @@ module.exports = class OrderBookSide {
         return;
       }
     }
-
-    //logger.info(`try to match ${JSON.stringify(order)} has been done`);
   }
 
   /*

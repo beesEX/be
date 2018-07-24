@@ -23,6 +23,7 @@ class OrderBook {
    */
   processOrderEvent(event) {
     logger.info(`orderbook.js processOrderEvent(): receices order event: ${JSON.stringify(event)}`);
+
     const order = new Order(event._order);
     const orderSymbol = `${event._order.currency}_${event._order.baseCurrency}`;
     if (orderSymbol !== this.symbol) {

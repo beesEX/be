@@ -111,10 +111,10 @@ module.exports = {
     };
 
     const result = await service.find({
-          userId: userId, status: {$in: ON_BOOK_STATUS},
-          currency: {$in: arrayOfCurrencies}, baseCurrency: {$in: arrayOfCurrencies}
-        }, options
-    );
+      userId: userId,
+      status: {$in: ON_BOOK_STATUS},
+      currency: {$in: arrayOfCurrencies},
+      baseCurrency: {$in: arrayOfCurrencies}}, options);
 
     logger.info('order.service.js: getActiveOrder(): list of active orders =', JSON.stringify(result.results, null, 2));
 

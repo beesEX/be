@@ -38,7 +38,6 @@ class OrderLinkedListElement {
 }
 
 class OrderLinkedList {
-
   constructor(element) {
     this.head = element;
     this.tail = this.head;
