@@ -8,6 +8,12 @@
 * - Each LLOE will contain order object and link to the previous and next LLOE
 */
 
+const config = require('../config');
+const {createConsoleLogger} = require('@paralect/common-logger');
+
+global.logger = createConsoleLogger({isDev: config.isDev});
+const {logger} = global;
+
 const SortedSet = require('collections/sorted-set');
 // src: http://www.collectionsjs.com/sorted-set
 
@@ -32,9 +38,8 @@ class OrderLinkedListElement {
 }
 
 class OrderLinkedList {
-
-  constructor(order) {
-    this.head = new OrderLinkedListElement(order);
+  constructor(element) {
+    this.head = element;
     this.tail = this.head;
   }
 
@@ -64,14 +69,14 @@ module.exports = class OrderMap {
     // save linkedListOrderElement via matching id
     this.mapOfOrderIdAndOrderLinkedListElement = {};
 
-    // <price level> : [<first order id>, <last order id>]
+    // <price level> : OrderLinkedList
     this.mapOfPriceAndOrderLinkedList = {};
   }
 
   addOrder(order) {
     // check if this order already exists or not
     if (this.mapOfOrderIdAndOrderLinkedListElement[order._id]) {
-      console.log('ordermap.js: addOrder(): ERROR: this order._id already existed');
+      logger.error(`ordermap.js: addOrder(): ERROR: this order._id ${order._id} already existed`);
       return false;
     }
 
@@ -90,9 +95,8 @@ module.exports = class OrderMap {
 
     }
     else {
-      // new array
-      // add to array of price level
-      this.mapOfPriceAndOrderLinkedList[priceLevel] = new OrderLinkedList(order);
+      // new OrderLinkedList
+      this.mapOfPriceAndOrderLinkedList[priceLevel] = new OrderLinkedList(newLinkedListOrderElement);
 
       // add this price level
       this.priceLevelSet.push(priceLevel);
@@ -119,10 +123,8 @@ module.exports = class OrderMap {
       if (order) {
         return order;
       }
-      // console.log('ordermap.js: getFirstElementOfPriceLevel(): WARNING: not found order for this order id', orderId);
       return null;
     }
-    // console.log('ordermap.js: getFirstElementOfPriceLevel(): WARNING: not found price level', price);
     return null;
   }
 
@@ -133,10 +135,8 @@ module.exports = class OrderMap {
       if (order) {
         return order;
       }
-      // console.log('ordermap.js: getLastElementOfPriceLevel(): WARNING: not found order for this order id', orderId);
       return null;
     }
-    // console.log('ordermap.js: getLastElementOfPriceLevel(): WARNING: not found price level');
     return null;
   }
 
@@ -145,7 +145,7 @@ module.exports = class OrderMap {
     const orderLinkedListElementToRemove = this.mapOfOrderIdAndOrderLinkedListElement[orderToRemove._id];
     if (!orderLinkedListElementToRemove) {
       // this order is not in this orderMap
-      console.log('ordermap.js: removeOrder(): ERROR: not found this order._id', orderToRemove._id);
+      logger.error(`ordermap.js: removeOrder(): ERROR: not found this order._id ${orderToRemove._id}`);
       return false;
     }
 
@@ -154,7 +154,7 @@ module.exports = class OrderMap {
     const orderLinkedList = this.mapOfPriceAndOrderLinkedList[priceLevel];
     if (!orderLinkedList) {
       // this order is not in this orderMap
-      console.log('ordermap.js: removeOrder(): ERROR: not found array for this price level', priceLevel);
+      logger.error(`ordermap.js: removeOrder(): ERROR: not found array for this price level ${priceLevel}`);
       return false;
     }
     else if (orderLinkedList.hasOnlyOneElement()) {
@@ -206,7 +206,7 @@ module.exports = class OrderMap {
       orderLinkedListElement.order.quantity = order.quantity;
       return true;
     }
-    console.log('ordermap.js: updateOrderQuantity(): ERROR: not found old order ID', order._id, 'to update -> add new');
+    logger.error(`ordermap.js: updateOrderQuantity(): ERROR: not found old order ID ${order._id} to update -> add new`);
     return false;
   }
 };
