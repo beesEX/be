@@ -209,6 +209,6 @@ describe('get the aggregated state of the order book', async () => {
 
     beesV8.stop();
 
-  })
+  });
 
 });

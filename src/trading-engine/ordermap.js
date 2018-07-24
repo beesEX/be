@@ -31,26 +31,26 @@ class OrderLinkedListElement {
   }
 }
 
-class OrderLinkedList{
+class OrderLinkedList {
 
-  constructor(order){
+  constructor(order) {
     this.head = new OrderLinkedListElement(order);
     this.tail = this.head;
   }
 
-  hasOnlyOneElement(){
-    if(this.head === this.tail){
+  hasOnlyOneElement() {
+    if (this.head === this.tail) {
       return true;
     }
 
     return false;
   }
 
-  isHead(element){
+  isHead(element) {
     return this.head === element;
   }
 
-  isTail(element){
+  isTail(element) {
     return this.tail === element;
   }
 

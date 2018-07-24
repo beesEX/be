@@ -51,7 +51,7 @@ class BeesV8 {
 
       id: messageId
 
-    }
+    };
 
     this.orderbookChildProcess.send(message);
 
