@@ -1,4 +1,4 @@
-# beesEX-BE (Backend) cloned from Koa.JS REST api starter
+# beesEX cackend api starter
 
 [![Stack](https://raw.githubusercontent.com/paralect/stack/master/stack-component-template/stack.png)](https://github.com/paralect/stack)
 
@@ -53,7 +53,7 @@ The easiest way to get started is to clone the repository:
 
 ```bash
 # Get the latest snapshot
-git clone https://github.com/lht147/beesEX-BE beesEX-BE
+git clone https://github.com/beesEX/be beesEX-BE
 
 # Change directory
 cd beesEX-BE
