@@ -1,4 +1,4 @@
-# beesEX cackend api starter
+# beesEX backend api starter
 
 [![Stack](https://raw.githubusercontent.com/paralect/stack/master/stack-component-template/stack.png)](https://github.com/paralect/stack)
 

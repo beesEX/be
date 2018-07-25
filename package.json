@@ -1,9 +1,9 @@
 {
   "name": "beesEX-BE",
   "version": "0.1.0",
-  "description": "Backend-Server webapp of the beesEX project",
+  "description": "backend server of beesEX platform",
   "main": "src/app.js",
-  "author": "Vu, Duc Tung; Ho, Viet Anh; Phan, Manh Hung; Le, Tung Huy; Ta, Hoang Lam; Tran, Duy; Tran, The Anh; Le, Ngoc Son",
+  "author": "Vu, Duc Tung; Ho, Viet Anh; Ta, Hoang Lam; Le, Ngoc Son",
   "license": "MIT",
   "scripts": {
     "start": "NODE_ENV=development nodemon --watch src src/app.js",
@@ -54,6 +54,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lht147/beesEX-BE.git"
+    "url": "git+https://github.com/beesEX/be.git"
   }
 }
