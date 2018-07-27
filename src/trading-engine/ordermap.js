@@ -7,11 +7,6 @@
 * - Each order ID will match with a LinkedListOrderElement (LLOE)
 * - Each LLOE will contain order object and link to the previous and next LLOE
 */
-
-const config = require('../config');
-const {createConsoleLogger} = require('@paralect/common-logger');
-
-global.logger = createConsoleLogger({isDev: config.isDev});
 const {logger} = global;
 
 const SortedSet = require('collections/sorted-set');
