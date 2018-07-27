@@ -19,6 +19,7 @@ const schema = {
   fromWallet: Joi.string(),
   toWallet: Joi.string(),
   createdAt: Joi.date(),
+  orderId: Joi.string(),
   tradeId: Joi.string(),
   userId: Joi.string().required()
 };
