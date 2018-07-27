@@ -8,7 +8,7 @@ const service = db.createService(constants.DATABASE_DOCUMENTS.ORDERS, orderSchem
 // usage: https://github.com/paralect/node-mongo/blob/master/API.md#mongo-service
 
 const beesV8 = require('trading-engine/beesV8');
-const { Order, OrderPlacedEvent } = require('./order.models');
+const { Order, OrderPlacedEvent, OrderQuantityUpdatedEvent, OrderLimitUpdatedEvent, OrderCanceledEvent, } = require('./order.models');
 
 const ON_BOOK_STATUS = [orderSchema.ORDER_STATUS.PLACED, orderSchema.ORDER_STATUS.PARTIALLY_FILLED];
 
@@ -25,6 +25,7 @@ module.exports = {
 
     const orderPlacedEvent = new OrderPlacedEvent(new Order(createdOrder));
     beesV8.processOrderEvent(orderPlacedEvent);
+
     return createdOrder;
   },
 
@@ -36,18 +37,33 @@ module.exports = {
    * @returns {Promise<void>}
    */
   updateOrderByUser: async (orderObject, userId) => {
+    let qtyDelta = 0;
+    let priceDelta = 0;
+
     const updatedOrder = await service.update({
       _id: orderObject._id,
-      userId: userId,
+      userId,
       status: {$in: ON_BOOK_STATUS}
     }, (doc) => {
       if (orderObject.quantity > doc.filledQuantity) {
+        qtyDelta = orderObject.quantity - doc.quantity;
+        priceDelta = orderObject.limitPrice - doc.limitPrice;
+
         doc.limitPrice = orderObject.limitPrice;
         doc.quantity = orderObject.quantity;
         doc.lastUpdatedAt = new Date();
       }
     });
     logger.info('order.service.js: updateOrderByUser(): updatedOrder =', JSON.stringify(updatedOrder, null, 2));
+
+    if (updatedOrder && priceDelta !== 0) {
+      const orderLimitupdatedEvent = new OrderLimitUpdatedEvent(new Order(updatedOrder), qtyDelta, priceDelta);
+      beesV8.processOrderEvent(orderLimitupdatedEvent);
+    }
+    else if (updatedOrder && priceDelta === 0 && qtyDelta !== 0) {
+      const orderQuantityUpdatedEvent = new OrderQuantityUpdatedEvent(new Order(updatedOrder), qtyDelta, priceDelta);
+      beesV8.processOrderEvent(orderQuantityUpdatedEvent);
+    }
 
     return updatedOrder;
   },
@@ -59,11 +75,16 @@ module.exports = {
    * @returns {Promise<void>}
    */
   cancelOrder: async (orderId, userId) => {
-    await service.update({_id: orderId, userId: userId, status: {$in: ON_BOOK_STATUS}}, (doc) => {
+    const canceledOrder = await service.update({_id: orderId, userId, status: {$in: ON_BOOK_STATUS}}, (doc) => {
       doc.status = orderSchema.ORDER_STATUS.CANCELED;
       doc.lastUpdatedAt = new Date();
-      logger.info('order.service.js: cancelOrder(): canceledOrder with id =', orderId);
     });
+    logger.info('order.service.js: cancelOrder(): canceledOrder =', JSON.stringify(canceledOrder, null, 2));
+
+    if (canceledOrder) {
+      const orderCanceledOrderEvent = new OrderCanceledEvent(new Order(canceledOrder));
+      beesV8.processOrderEvent(orderCanceledOrderEvent);
+    }
   },
 
   /**
@@ -77,27 +98,20 @@ module.exports = {
 
     let offset;
     let limit;
-    let currency;
-    let baseCurrency;
     let sort;
 
     if (extraOptions) {
       offset = parseInt(extraOptions.offset) || 0;
       limit = parseInt(extraOptions.limit) || 100;
-      currency = extraOptions.currency || 'BTC';
-      baseCurrency = extraOptions.baseCurrency || 'USDT';
       sort = JSON.parse(extraOptions.sort) || {};
     }
     else {
       offset = 0;
       limit = 100;
-      currency = 'BTC';
-      baseCurrency = 'USDT';
     }
 
-    let arrayOfCurrencies = [baseCurrency, currency];
     const perPage = limit;
-    let page = offset / limit + 1;
+    let page = (offset / limit) + 1;
 
     if (!Number.isInteger(page)) {
       logger.warn(`page ${page} is not an integer. It will be rounded down`);
@@ -111,12 +125,12 @@ module.exports = {
     };
 
     const result = await service.find({
-      userId: userId,
+      userId,
       status: {$in: ON_BOOK_STATUS},
-      currency: {$in: arrayOfCurrencies},
-      baseCurrency: {$in: arrayOfCurrencies}}, options);
+      currency: extraOptions.currency,
+      baseCurrency: extraOptions.baseCurrency}, options);
 
-    logger.info('order.service.js: getActiveOrder(): list of active orders =', JSON.stringify(result.results, null, 2));
+    logger.info(`order.service.js: getActiveOrder(): active orders = ${offset}-${offset + result.results.length}/${result.count} of userId=${userId} on market=${extraOptions.currency}_${extraOptions.baseCurrency}`);
 
     return {
       orders: result.results,
