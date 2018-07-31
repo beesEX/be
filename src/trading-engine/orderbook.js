@@ -6,6 +6,8 @@ const {createConsoleLogger} = require('@paralect/common-logger');
 global.logger = createConsoleLogger({isDev: config.isDev});
 const {logger} = global;
 
+const ZERO = 0.0000000000001;
+
 /**
  * Limit Order Book performs order matching after principals of price/time priority
  * matching algorithm.
@@ -36,6 +38,8 @@ class OrderBook {
     else if (event._type === OrderEvent.QUANTITY_UPDATED_EVENT) this.updateQuantity(new OrderQuantityUpdatedEvent(order));
     else if (event._type === OrderEvent.CANCELED_EVENT) this.cancel(new OrderCanceledEvent(order));
     else logger.warn(`orderbook.js processOrderEvent(): unknown event type ${event._type} will be rejected`);
+
+    //this.showBook();
   }
 
   /*
@@ -84,7 +88,7 @@ class OrderBook {
     }
 
     // remaining units of market order will not be put on book, gets just rejected.
-    if (order.remainingQuantity() > 0) {
+    if (order.remainingQuantity() > ZERO) {
       logger.info(`orderbook.js placeMarket(): ${order.remainingQuantity()} remaining units of MARKET order will be rejected`);
     }
   }
@@ -164,6 +168,34 @@ class OrderBook {
 
     return state;
 
+  }
+
+  seeDetails(orderbookside){
+    const book = orderbookside.orderMap;
+    const keyArr = book.priceLevelSet.toArray();
+
+    keyArr.map((val) => {
+      //logger.info(`At price ${val}`);
+      console.log('At price '+val);
+
+      let LLOE = book.getFirstElementOfPriceLevel(val);
+      while (LLOE){
+        //logger.info(`id: ${LLOE.order._id}   quan: ${LLOE.order.quantity}   filled: ${LLOE.order.filledQuantity}`);
+        console.log('id:',LLOE.order._id,'   quan:',LLOE.order.quantity, '   filled:',LLOE.order.filledQuantity);
+        LLOE = LLOE.next;
+      }
+
+      return val;
+    });
+  }
+
+  showBook(){
+    //logger.info(' ==== BID_Book ==== ');
+    console.log(' ==== BID_Book ==== ');
+    this.seeDetails(this.bids);
+    //logger.info(' ==== ASK_Book ==== ');
+    console.log(' ==== ASK_Book ==== ');
+    this.seeDetails(this.asks);
   }
 
 }
