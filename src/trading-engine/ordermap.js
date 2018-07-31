@@ -141,7 +141,7 @@ module.exports = class OrderMap {
     if (!orderLinkedListElementToRemove) {
       // this order is not in this orderMap
       logger.error(`ordermap.js: removeOrder(): ERROR: not found this order._id ${orderToRemove._id}`);
-      return false;
+      //return false;
     }
 
     // check if this order is head or tail of array
@@ -149,38 +149,32 @@ module.exports = class OrderMap {
     const orderLinkedList = this.mapOfPriceAndOrderLinkedList[priceLevel];
     if (!orderLinkedList) {
       // this order is not in this orderMap
-      logger.error(`ordermap.js: removeOrder(): ERROR: not found array for this price level ${priceLevel}`);
+      logger.error(`ordermap.js: removeOrder(): ERROR: not found orderLinkedList for this price level ${priceLevel}`);
       return false;
     }
     else if (orderLinkedList.hasOnlyOneElement()) {
-      // only this order at this price level
-      // delete this price level
+      // only this order at this price level -> delete this price level
+      //logger.info(`ordermap.js: removeOrder(): only one element`);
       delete this.mapOfPriceAndOrderLinkedList[priceLevel];
       this.priceLevelSet.delete(priceLevel);
     }
     else if (orderLinkedList.isHead(orderLinkedListElementToRemove)) {
-      // this order is head
-      // let its next be head
+      // this order is head -> let its next be head
+      //logger.info(`ordermap.js: removeOrder(): this is head`);
       const nextLinkedListElement = orderLinkedListElementToRemove.next;
       nextLinkedListElement.setPrevious(null);
-
-      if (orderLinkedList.isTail(nextLinkedListElement)) {
-        orderLinkedList.head = nextLinkedListElement;
-      }
+      orderLinkedList.head = nextLinkedListElement;
     }
     else if (orderLinkedList.isTail(orderLinkedListElementToRemove)) {
-      // this order is tail
-      // let its previous be tail
+      // this order is tai -> let its previous be tail
+      //logger.info(`ordermap.js: removeOrder(): this is tail`);
       const previousOrderLinkedListElement = orderLinkedListElementToRemove.previous;
       previousOrderLinkedListElement.setNext(null);
-
-      if (orderLinkedList.isHead(previousOrderLinkedListElement)) {
-        orderLinkedList.tail = previousOrderLinkedListElement;
-      }
+      orderLinkedList.tail = previousOrderLinkedListElement;
     }
     else {
-      // this order in the middle
-      // connect previous to next
+      // this order in the middle -> connect previous to next
+      //logger.info(`ordermap.js: removeOrder(): this is middle`);
       const previousElement = orderLinkedListElementToRemove.previous;
       const nextElement = orderLinkedListElementToRemove.next;
 
