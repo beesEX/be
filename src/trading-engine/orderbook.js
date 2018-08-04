@@ -170,6 +170,16 @@ class OrderBook {
 
   }
 
+  getOrderBookState() {
+
+    const orderState = {};
+    orderState.symbol = this.symbol;
+    orderState.askSide = this.asks.getState();
+    orderState.bidSide = this.bids.getState();
+
+    return orderState;
+  }
+
   seeDetails(orderbookside){
     const book = orderbookside.orderMap;
     const keyArr = book.priceLevelSet.toArray();
@@ -209,13 +219,25 @@ logger.info(`orderbook.js: ${orderbook.symbol} orderbook is ready to accept even
 // Order Book receives order events from parent process
 process.on('message', (event) => {
   switch (event._type) {
-
     case EVENT_GET_AGGREGATED_STATE:
       logger.debug(`orderbook.js: received a message of type ${EVENT_GET_AGGREGATED_STATE}`);
       const state = orderbook.getAggregatedState();
       process.send({
         id: event.id,
+        type: EVENT_GET_AGGREGATED_STATE,
         state
+      });
+
+      break;
+
+    case EVENT_GET_ORDERBOOK_STATE:
+      logger.debug(`orderbook.js: received a message of type ${EVENT_GET_ORDERBOOK_STATE}`);
+      const orderState = orderbook.getOrderBookState();
+      //logger.info(`orderbook.js: state ${JSON.stringify(orderState)}`);
+      process.send({
+        id: event.id,
+        type: EVENT_GET_ORDERBOOK_STATE,
+        orderState
       });
 
       break;
@@ -227,8 +249,11 @@ process.on('message', (event) => {
 
 const EVENT_GET_AGGREGATED_STATE = 'GET_AGGREGATED_STATE';
 
+const EVENT_GET_ORDERBOOK_STATE = 'GET_ORDERBOOK_STATE';
+
 module.exports = {
 
-  EVENT_GET_AGGREGATED_STATE
+  EVENT_GET_AGGREGATED_STATE,
+  EVENT_GET_ORDERBOOK_STATE,
 
 };
