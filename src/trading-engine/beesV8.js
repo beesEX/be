@@ -1,6 +1,6 @@
 const { fork } = require('child_process');
 const uuid = require('uuid/v4');
-const { EVENT_GET_AGGREGATED_STATE } = require('./orderbook');
+const { EVENT_GET_AGGREGATED_STATE, EVENT_GET_ORDERBOOK_STATE } = require('./orderbook');
 
 const { logger } = global;
 
@@ -22,8 +22,10 @@ class BeesV8 {
 
     this.orderbookChildProcess.on('message', (message) => {
       const resolveFunction = this.mapOfIdAndResolveFunction[message.id];
+      logger.info(`beesV8.js: message ${JSON.stringify(message)}`);
       if (resolveFunction) {
-        resolveFunction(message.state);
+        if (message.type === EVENT_GET_AGGREGATED_STATE) resolveFunction(message.state);
+        else if (message.type === EVENT_GET_ORDERBOOK_STATE) resolveFunction(message.orderState);
         delete this.mapOfIdAndResolveFunction[message.id];
       }
     });
@@ -56,11 +58,27 @@ class BeesV8 {
     this.orderbookChildProcess.send(message);
 
     return new Promise((resolve, reject) => {
-
+      //logger.info(`beesV8.js: resolve ${JSON.stringify(resolve)}`);
       this.mapOfIdAndResolveFunction[messageId] = resolve;
 
     });
 
+  }
+
+  async getOrderBookStateOfOrderBook(currency, baseCurrency) {
+    //TODO use currency, baseCurrency to decide which order book should be used
+    const messageId = uuid();
+    const message = {
+      _type: EVENT_GET_ORDERBOOK_STATE,
+      id: messageId
+    };
+
+    this.orderbookChildProcess.send(message);
+
+    return new Promise((resolve, reject) => {
+      //logger.info(`beesV8.js: resolve ${JSON.stringify(resolve)}`);
+      this.mapOfIdAndResolveFunction[messageId] = resolve;
+    });
   }
 
   /**
