@@ -68,6 +68,27 @@ module.exports = class OrderMap {
     this.mapOfPriceAndOrderLinkedList = {};
   }
 
+  // only for testing
+  getState() {
+    const priceLevel = this.priceLevelSet.toArray();
+    const result = [];
+    for (let i = 0; i < priceLevel.length; i += 1) {
+      const order = [];
+      const tmpList = this.mapOfPriceAndOrderLinkedList[priceLevel[i]];
+      let tmpElement = tmpList.head;
+      while (tmpElement) {
+        order.push(tmpElement.order);
+        tmpElement = tmpElement.next;
+      }
+      const newItem = {
+        price: priceLevel[i],
+        orders: order
+      };
+      result.push(newItem);
+    }
+    return result;
+  }
+
   addOrder(order) {
     // check if this order already exists or not
     if (this.mapOfOrderIdAndOrderLinkedListElement[order._id]) {
