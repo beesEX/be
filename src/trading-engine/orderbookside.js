@@ -18,6 +18,14 @@ module.exports = class OrderBookSide {
     this.orderMap = new OrderMap();
   }
 
+  // only use for testing
+  getState() {
+    return {
+      side: this.side,
+      orderMap: this.orderMap.getState()
+    };
+  }
+
   /*
   put order on book
   */
