@@ -217,7 +217,7 @@ describe('get the aggregated state of the order book', async () => {
 //                        ORDER BOOK TEST
 // =====================================================================
 
-describe('test all functions of trading engine', async () => {
+describe('test event process of trading engine', async () => {
 
   // --------------------------------------------
   // test place limit event
