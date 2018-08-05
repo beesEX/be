@@ -219,7 +219,10 @@ describe('get the aggregated state of the order book', async () => {
 
 describe('test all functions of trading engine', async () => {
 
+  // --------------------------------------------
   // test place limit event
+  // --------------------------------------------
+
   it('test place limit event', async () => {
 
     // description:
@@ -250,7 +253,7 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(0);
 
-    const order0 = {
+    const orderEvent0 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 0,
@@ -263,7 +266,7 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order0);
+    beesV8.processOrderEvent(orderEvent0);
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
@@ -271,10 +274,10 @@ describe('test all functions of trading engine', async () => {
     // check element(s) inside order book side
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(100);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    //expect(orderState.bidSide.orderMap[0].orders[0]).to.be.equal(order0._order);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order0._order)).to.be.equal(true);
+    //expect(orderState.bidSide.orderMap[0].orders[0]).to.be.equal(orderEvent0._order);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent0._order)).to.be.equal(true);
 
-    const order1 = {
+    const orderEvent1 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 1,
@@ -287,7 +290,7 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order1);
+    beesV8.processOrderEvent(orderEvent1);
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
@@ -295,12 +298,12 @@ describe('test all functions of trading engine', async () => {
     // check element(s) inside order book side
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(100);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    //expect(orderState.bidSide.orderMap[0].orders[0]).to.be.equal(order0._order);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order0._order)).to.be.equal(true);
-    //expect(orderState.bidSide.orderMap[0].orders[1]).to.be.equal(order1._order);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order1._order)).to.be.equal(true);
+    //expect(orderState.bidSide.orderMap[0].orders[0]).to.be.equal(orderEvent0._order);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent0._order)).to.be.equal(true);
+    //expect(orderState.bidSide.orderMap[0].orders[1]).to.be.equal(orderEvent1._order);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent1._order)).to.be.equal(true);
 
-    const order2 = {
+    const orderEvent2 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 2,
@@ -313,7 +316,7 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order2);
+    beesV8.processOrderEvent(orderEvent2);
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
@@ -321,13 +324,13 @@ describe('test all functions of trading engine', async () => {
     // check element(s) inside order book side
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent2._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(100);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], order1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent1._order)).to.be.equal(true);
 
-    const order3 = {
+    const orderEvent3 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 3,
@@ -340,7 +343,7 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order3);
+    beesV8.processOrderEvent(orderEvent3);
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
@@ -348,14 +351,14 @@ describe('test all functions of trading engine', async () => {
     // check element(s) inside order book side
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent3._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(100);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], order1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent1._order)).to.be.equal(true);
 
-    const order4 = {
+    const orderEvent4 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 4,
@@ -369,7 +372,7 @@ describe('test all functions of trading engine', async () => {
       }
     };
 
-    beesV8.processOrderEvent(order4);
+    beesV8.processOrderEvent(orderEvent4);
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
@@ -377,15 +380,15 @@ describe('test all functions of trading engine', async () => {
     // check element(s) inside order book side
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent3._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(100);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[2], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[2], orderEvent4._order)).to.be.equal(true);
 
-    const order5 = {
+    const orderEvent5 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 5,
@@ -398,7 +401,7 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order5);
+    beesV8.processOrderEvent(orderEvent5);
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
@@ -406,16 +409,16 @@ describe('test all functions of trading engine', async () => {
     // check element(s) inside order book side
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent3._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(50);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent5._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(100);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent4._order)).to.be.equal(true);
 
 
     /*
@@ -425,7 +428,7 @@ describe('test all functions of trading engine', async () => {
     * 100: [150, 100, 15]
     * */
 
-    const order6 = {
+    const orderEvent6 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 6,
@@ -438,28 +441,28 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order6);
+    beesV8.processOrderEvent(orderEvent6);
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(1);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(101);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent6._order)).to.be.equal(true);
 
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     // check element(s) inside order book side
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent3._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(50);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent5._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(100);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent4._order)).to.be.equal(true);
 
     /*
     * -> bidSide:
@@ -471,7 +474,7 @@ describe('test all functions of trading engine', async () => {
     * 101: [1000]
     * */
 
-    const order7 = {
+    const orderEvent7 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 7,
@@ -484,29 +487,29 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order7);
+    beesV8.processOrderEvent(orderEvent7);
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(1);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(101);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent6._order)).to.be.equal(true);
 
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     // check element(s) inside order book side
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent3._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(50);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent5._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(100);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(3);
-    order0._order.filledQuantity = 65.0;
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order4._order)).to.be.equal(true);
+    orderEvent0._order.filledQuantity = 65.0;
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent4._order)).to.be.equal(true);
 
     /*
     * -> bidSide:
@@ -519,7 +522,7 @@ describe('test all functions of trading engine', async () => {
     * */
 
 
-    const order8 = {
+    const orderEvent8 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 8,
@@ -532,27 +535,27 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order8);
+    beesV8.processOrderEvent(orderEvent8);
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(2);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(100);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    order8._order.filledQuantity = 200;
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order8._order)).to.be.equal(true);
+    orderEvent8._order.filledQuantity = 200;
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent8._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[1].price).to.be.equal(101);
     expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], order6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent6._order)).to.be.equal(true);
 
     expect(orderState.bidSide.orderMap.length).to.be.equal(2);
     // check element(s) inside order book side
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent3._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(50);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent5._order)).to.be.equal(true);
 
     /*
     * -> bidSide:
@@ -565,7 +568,7 @@ describe('test all functions of trading engine', async () => {
     * */
 
 
-    const order9 = {
+    const orderEvent9 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 9,
@@ -578,27 +581,27 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order9);
+    beesV8.processOrderEvent(orderEvent9);
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(2);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(100);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent8._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[1].price).to.be.equal(101);
     expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], order6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent6._order)).to.be.equal(true);
 
     expect(orderState.bidSide.orderMap.length).to.be.equal(2);
     // check element(s) inside order book side
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent3._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(50);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
-    order5._order.filledQuantity = 5.0;
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order5._order)).to.be.equal(true);
+    orderEvent5._order.filledQuantity = 5.0;
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent5._order)).to.be.equal(true);
 
     /*
     * -> bidSide:
@@ -610,7 +613,7 @@ describe('test all functions of trading engine', async () => {
     * 101: [1000]
     * */
 
-    const order10 = {
+    const orderEvent10 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 10,
@@ -623,27 +626,27 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order10);
+    beesV8.processOrderEvent(orderEvent10);
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(2);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(100);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent8._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[1].price).to.be.equal(101);
     expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], order6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent6._order)).to.be.equal(true);
 
     expect(orderState.bidSide.orderMap.length).to.be.equal(2);
     // check element(s) inside order book side
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent3._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(50);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
-    order5._order.filledQuantity = 10.0;
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order5._order)).to.be.equal(true);
+    orderEvent5._order.filledQuantity = 10.0;
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent5._order)).to.be.equal(true);
 
     /*
     * -> bidSide:
@@ -655,7 +658,7 @@ describe('test all functions of trading engine', async () => {
     * 101: [1000]
     * */
 
-    const order11 = {
+    const orderEvent11 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 11,
@@ -668,27 +671,27 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order11);
+    beesV8.processOrderEvent(orderEvent11);
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(2);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(100);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], order11._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], orderEvent11._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[1].price).to.be.equal(101);
     expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], order6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent6._order)).to.be.equal(true);
 
     expect(orderState.bidSide.orderMap.length).to.be.equal(2);
     // check element(s) inside order book side
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent3._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(50);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent5._order)).to.be.equal(true);
 
     /*
     * -> bidSide:
@@ -700,7 +703,7 @@ describe('test all functions of trading engine', async () => {
     * 101: [1000]
     * */
 
-    const order12 = {
+    const orderEvent12 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 12,
@@ -713,17 +716,17 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order12);
+    beesV8.processOrderEvent(orderEvent12);
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(2);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(100);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], order11._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], orderEvent11._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[1].price).to.be.equal(101);
     expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], order6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent6._order)).to.be.equal(true);
 
     expect(orderState.bidSide.orderMap.length).to.be.equal(0);
 
@@ -735,7 +738,7 @@ describe('test all functions of trading engine', async () => {
     * 101: [1000]
     * */
 
-    const order13 = {
+    const orderEvent13 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 13,
@@ -748,14 +751,14 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order13);
+    beesV8.processOrderEvent(orderEvent13);
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(1);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(101);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    order6._order.filledQuantity = 500;
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order6._order)).to.be.equal(true);
+    orderEvent6._order.filledQuantity = 500;
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent6._order)).to.be.equal(true);
 
     expect(orderState.bidSide.orderMap.length).to.be.equal(0);
 
@@ -770,7 +773,10 @@ describe('test all functions of trading engine', async () => {
   });
 
 
+  // --------------------------------------------
   // test cancel order
+  // --------------------------------------------
+
   it('test cancel order event', async () => {
 
     beesV8.start();
@@ -798,7 +804,7 @@ describe('test all functions of trading engine', async () => {
     * Do the same with SELL
     * */
 
-    const order0 = {
+    const orderEvent0 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 0,
@@ -811,9 +817,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order0);
+    beesV8.processOrderEvent(orderEvent0);
 
-    const order1 = {
+    const orderEvent1 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 1,
@@ -826,9 +832,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order1);
+    beesV8.processOrderEvent(orderEvent1);
 
-    const order2 = {
+    const orderEvent2 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 2,
@@ -841,9 +847,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order2);
+    beesV8.processOrderEvent(orderEvent2);
 
-    const order3 = {
+    const orderEvent3 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 3,
@@ -856,9 +862,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order3);
+    beesV8.processOrderEvent(orderEvent3);
 
-    const order4 = {
+    const orderEvent4 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 4,
@@ -871,9 +877,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order4);
+    beesV8.processOrderEvent(orderEvent4);
 
-    const order5 = {
+    const orderEvent5 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 5,
@@ -886,9 +892,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order5);
+    beesV8.processOrderEvent(orderEvent5);
 
-    const order6 = {
+    const orderEvent6 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 6,
@@ -901,9 +907,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order6);
+    beesV8.processOrderEvent(orderEvent6);
 
-    const order7 = {
+    const orderEvent7 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 7,
@@ -916,9 +922,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order7);
+    beesV8.processOrderEvent(orderEvent7);
 
-    const order8 = {
+    const orderEvent8 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 8,
@@ -931,9 +937,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order8);
+    beesV8.processOrderEvent(orderEvent8);
 
-    const order9 = {
+    const orderEvent9 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 9,
@@ -946,7 +952,7 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order9);
+    beesV8.processOrderEvent(orderEvent9);
 
 
     // description:
@@ -977,27 +983,27 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(4);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent3._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent7._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order4._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent5._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[3].price).to.be.equal(40);
     expect(orderState.bidSide.orderMap[3].orders.length).to.be.equal(4);
-    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[1], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[2], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[3], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[1], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[2], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[3], orderEvent9._order)).to.be.equal(true);
 
     // BEGIN CANCELING
     beesV8.processOrderEvent({
       _type: OrderEvent.CANCELED_EVENT,
-      _order: order3._order
+      _order: orderEvent3._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     /*
@@ -1010,23 +1016,23 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent7._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], order4._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[2], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[2], orderEvent5._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(40);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(4);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[3], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[3], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.CANCELED_EVENT,
-      _order: order1._order
+      _order: orderEvent1._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     /*
@@ -1039,22 +1045,22 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent7._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], order4._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[2], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[2], orderEvent5._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(40);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(4);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[3], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[3], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.CANCELED_EVENT,
-      _order: order5._order
+      _order: orderEvent5._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     /*
@@ -1067,21 +1073,21 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent7._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent4._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(40);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(4);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[3], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[3], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.CANCELED_EVENT,
-      _order: order6._order
+      _order: orderEvent6._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     /*
@@ -1094,20 +1100,20 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent7._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent4._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(40);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.CANCELED_EVENT,
-      _order: order8._order
+      _order: orderEvent8._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     /*
@@ -1120,19 +1126,19 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent7._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent4._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(40);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.CANCELED_EVENT,
-      _order: order2._order
+      _order: orderEvent2._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     /*
@@ -1145,18 +1151,18 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent7._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent4._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(40);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.CANCELED_EVENT,
-      _order: order4._order
+      _order: orderEvent4._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     /*
@@ -1168,15 +1174,15 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(2);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent7._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(40);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.CANCELED_EVENT,
-      _order: order9._order
+      _order: orderEvent9._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     /*
@@ -1188,14 +1194,14 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(2);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent7._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(40);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent0._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.CANCELED_EVENT,
-      _order: order0._order
+      _order: orderEvent0._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     /*
@@ -1206,11 +1212,11 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(1);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent7._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.CANCELED_EVENT,
-      _order: order7._order
+      _order: orderEvent7._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     /*
@@ -1220,26 +1226,26 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(0);
 
     // Place same order for ask side
-    order0._order.side = 'SELL';
-    beesV8.processOrderEvent(order0);
-    order1._order.side = 'SELL';
-    beesV8.processOrderEvent(order1);
-    order2._order.side = 'SELL';
-    beesV8.processOrderEvent(order2);
-    order3._order.side = 'SELL';
-    beesV8.processOrderEvent(order3);
-    order4._order.side = 'SELL';
-    beesV8.processOrderEvent(order4);
-    order5._order.side = 'SELL';
-    beesV8.processOrderEvent(order5);
-    order6._order.side = 'SELL';
-    beesV8.processOrderEvent(order6);
-    order7._order.side = 'SELL';
-    beesV8.processOrderEvent(order7);
-    order8._order.side = 'SELL';
-    beesV8.processOrderEvent(order8);
-    order9._order.side = 'SELL';
-    beesV8.processOrderEvent(order9);
+    orderEvent0._order.side = 'SELL';
+    beesV8.processOrderEvent(orderEvent0);
+    orderEvent1._order.side = 'SELL';
+    beesV8.processOrderEvent(orderEvent1);
+    orderEvent2._order.side = 'SELL';
+    beesV8.processOrderEvent(orderEvent2);
+    orderEvent3._order.side = 'SELL';
+    beesV8.processOrderEvent(orderEvent3);
+    orderEvent4._order.side = 'SELL';
+    beesV8.processOrderEvent(orderEvent4);
+    orderEvent5._order.side = 'SELL';
+    beesV8.processOrderEvent(orderEvent5);
+    orderEvent6._order.side = 'SELL';
+    beesV8.processOrderEvent(orderEvent6);
+    orderEvent7._order.side = 'SELL';
+    beesV8.processOrderEvent(orderEvent7);
+    orderEvent8._order.side = 'SELL';
+    beesV8.processOrderEvent(orderEvent8);
+    orderEvent9._order.side = 'SELL';
+    beesV8.processOrderEvent(orderEvent9);
 
 
     // description:
@@ -1270,26 +1276,26 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(4);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent3._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], orderEvent7._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[2].price).to.be.equal(30);
     expect(orderState.askSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], order4._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[2], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], orderEvent4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[2], orderEvent5._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[3].price).to.be.equal(40);
     expect(orderState.askSide.orderMap[3].orders.length).to.be.equal(4);
-    expect(isSameOrder(orderState.askSide.orderMap[3].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[3].orders[1], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[3].orders[2], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[3].orders[3], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[3].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[3].orders[1], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[3].orders[2], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[3].orders[3], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.CANCELED_EVENT,
-      _order: order2._order
+      _order: orderEvent2._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     /*
@@ -1303,25 +1309,25 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(4);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent3._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], orderEvent7._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[2].price).to.be.equal(30);
     expect(orderState.askSide.orderMap[2].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], order4._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], orderEvent4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], orderEvent5._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[3].price).to.be.equal(40);
     expect(orderState.askSide.orderMap[3].orders.length).to.be.equal(4);
-    expect(isSameOrder(orderState.askSide.orderMap[3].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[3].orders[1], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[3].orders[2], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[3].orders[3], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[3].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[3].orders[1], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[3].orders[2], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[3].orders[3], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.CANCELED_EVENT,
-      _order: order4._order
+      _order: orderEvent4._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     /*
@@ -1335,24 +1341,24 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(4);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent3._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], orderEvent7._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[2].price).to.be.equal(30);
     expect(orderState.askSide.orderMap[2].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], orderEvent5._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[3].price).to.be.equal(40);
     expect(orderState.askSide.orderMap[3].orders.length).to.be.equal(4);
-    expect(isSameOrder(orderState.askSide.orderMap[3].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[3].orders[1], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[3].orders[2], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[3].orders[3], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[3].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[3].orders[1], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[3].orders[2], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[3].orders[3], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.CANCELED_EVENT,
-      _order: order5._order
+      _order: orderEvent5._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     /*
@@ -1365,21 +1371,21 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(3);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent3._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], orderEvent7._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[2].price).to.be.equal(40);
     expect(orderState.askSide.orderMap[2].orders.length).to.be.equal(4);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[2], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[3], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[2], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[3], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.CANCELED_EVENT,
-      _order: order7._order
+      _order: orderEvent7._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     /*
@@ -1392,20 +1398,20 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(3);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent3._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], order1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent1._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[2].price).to.be.equal(40);
     expect(orderState.askSide.orderMap[2].orders.length).to.be.equal(4);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[2], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[3], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[2], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[3], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.CANCELED_EVENT,
-      _order: order1._order
+      _order: orderEvent1._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     /*
@@ -1417,17 +1423,17 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(2);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent3._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[1].price).to.be.equal(40);
     expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(4);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[2], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[3], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[2], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[3], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.CANCELED_EVENT,
-      _order: order3._order
+      _order: orderEvent3._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     /*
@@ -1438,14 +1444,14 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(1);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(40);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(4);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[2], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[3], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[2], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[3], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.CANCELED_EVENT,
-      _order: order6._order
+      _order: orderEvent6._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     /*
@@ -1456,13 +1462,13 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(1);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(40);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[2], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[2], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.CANCELED_EVENT,
-      _order: order8._order
+      _order: orderEvent8._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     /*
@@ -1473,12 +1479,12 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(1);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(40);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.CANCELED_EVENT,
-      _order: order9._order
+      _order: orderEvent9._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     /*
@@ -1489,11 +1495,11 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(1);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(40);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent0._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.CANCELED_EVENT,
-      _order: order0._order
+      _order: orderEvent0._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     /*
@@ -1526,7 +1532,7 @@ describe('test all functions of trading engine', async () => {
     * Do the same with SELL
     * */
 
-    const order0 = {
+    const orderEvent0 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 0,
@@ -1539,9 +1545,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order0);
+    beesV8.processOrderEvent(orderEvent0);
 
-    const order1 = {
+    const orderEvent1 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 1,
@@ -1554,9 +1560,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order1);
+    beesV8.processOrderEvent(orderEvent1);
 
-    const order2 = {
+    const orderEvent2 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 2,
@@ -1569,9 +1575,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order2);
+    beesV8.processOrderEvent(orderEvent2);
 
-    const order3 = {
+    const orderEvent3 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 3,
@@ -1584,9 +1590,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order3);
+    beesV8.processOrderEvent(orderEvent3);
 
-    const order4 = {
+    const orderEvent4 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 4,
@@ -1599,9 +1605,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order4);
+    beesV8.processOrderEvent(orderEvent4);
 
-    const order5 = {
+    const orderEvent5 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 5,
@@ -1614,9 +1620,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order5);
+    beesV8.processOrderEvent(orderEvent5);
 
-    const order6 = {
+    const orderEvent6 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 6,
@@ -1629,9 +1635,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order6);
+    beesV8.processOrderEvent(orderEvent6);
 
-    const order7 = {
+    const orderEvent7 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 7,
@@ -1644,9 +1650,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order7);
+    beesV8.processOrderEvent(orderEvent7);
 
-    const order8 = {
+    const orderEvent8 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 8,
@@ -1659,9 +1665,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order8);
+    beesV8.processOrderEvent(orderEvent8);
 
-    const order9 = {
+    const orderEvent9 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 9,
@@ -1674,7 +1680,7 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order9);
+    beesV8.processOrderEvent(orderEvent9);
 
 
     // description:
@@ -1705,22 +1711,22 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(4);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent3._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent7._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order4._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent5._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[3].price).to.be.equal(40);
     expect(orderState.bidSide.orderMap[3].orders.length).to.be.equal(4);
-    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[1], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[2], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[3], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[1], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[2], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[3], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.MARKET_PLACED_EVENT,
@@ -1741,22 +1747,22 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(4);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent3._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent7._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order4._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent5._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[3].price).to.be.equal(40);
     expect(orderState.bidSide.orderMap[3].orders.length).to.be.equal(4);
-    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[1], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[2], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[3], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[1], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[2], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[3], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.MARKET_PLACED_EVENT,
@@ -1782,16 +1788,16 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent3._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent7._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order4._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent5._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.MARKET_PLACED_EVENT,
@@ -1814,26 +1820,26 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(0);
 
     // Place same order for ask side
-    order0._order.side = 'SELL';
-    beesV8.processOrderEvent(order0);
-    order1._order.side = 'SELL';
-    beesV8.processOrderEvent(order1);
-    order2._order.side = 'SELL';
-    beesV8.processOrderEvent(order2);
-    order3._order.side = 'SELL';
-    beesV8.processOrderEvent(order3);
-    order4._order.side = 'SELL';
-    beesV8.processOrderEvent(order4);
-    order5._order.side = 'SELL';
-    beesV8.processOrderEvent(order5);
-    order6._order.side = 'SELL';
-    beesV8.processOrderEvent(order6);
-    order7._order.side = 'SELL';
-    beesV8.processOrderEvent(order7);
-    order8._order.side = 'SELL';
-    beesV8.processOrderEvent(order8);
-    order9._order.side = 'SELL';
-    beesV8.processOrderEvent(order9);
+    orderEvent0._order.side = 'SELL';
+    beesV8.processOrderEvent(orderEvent0);
+    orderEvent1._order.side = 'SELL';
+    beesV8.processOrderEvent(orderEvent1);
+    orderEvent2._order.side = 'SELL';
+    beesV8.processOrderEvent(orderEvent2);
+    orderEvent3._order.side = 'SELL';
+    beesV8.processOrderEvent(orderEvent3);
+    orderEvent4._order.side = 'SELL';
+    beesV8.processOrderEvent(orderEvent4);
+    orderEvent5._order.side = 'SELL';
+    beesV8.processOrderEvent(orderEvent5);
+    orderEvent6._order.side = 'SELL';
+    beesV8.processOrderEvent(orderEvent6);
+    orderEvent7._order.side = 'SELL';
+    beesV8.processOrderEvent(orderEvent7);
+    orderEvent8._order.side = 'SELL';
+    beesV8.processOrderEvent(orderEvent8);
+    orderEvent9._order.side = 'SELL';
+    beesV8.processOrderEvent(orderEvent9);
 
 
     // description:
@@ -1878,22 +1884,22 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(4);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent3._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], orderEvent7._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[2].price).to.be.equal(30);
     expect(orderState.askSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], order4._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[2], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], orderEvent4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[2], orderEvent5._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[3].price).to.be.equal(40);
     expect(orderState.askSide.orderMap[3].orders.length).to.be.equal(4);
-    expect(isSameOrder(orderState.askSide.orderMap[3].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[3].orders[1], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[3].orders[2], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[3].orders[3], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[3].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[3].orders[1], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[3].orders[2], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[3].orders[3], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.MARKET_PLACED_EVENT,
@@ -1916,27 +1922,27 @@ describe('test all functions of trading engine', async () => {
     * 40: [0: 10, 6: 20, 8: 30, 9: 40]
     * -> bidSide: empty
     * */
-    order3._order.filledQuantity = 5;
+    orderEvent3._order.filledQuantity = 5;
     expect(orderState.bidSide.orderMap.length).to.be.equal(0);
     expect(orderState.askSide.orderMap.length).to.be.equal(4);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent3._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], orderEvent7._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[2].price).to.be.equal(30);
     expect(orderState.askSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], order4._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[2], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], orderEvent4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[2], orderEvent5._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[3].price).to.be.equal(40);
     expect(orderState.askSide.orderMap[3].orders.length).to.be.equal(4);
-    expect(isSameOrder(orderState.askSide.orderMap[3].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[3].orders[1], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[3].orders[2], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[3].orders[3], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[3].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[3].orders[1], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[3].orders[2], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[3].orders[3], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.MARKET_PLACED_EVENT,
@@ -1961,15 +1967,15 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(2);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(30);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], order4._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[2], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], orderEvent4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[2], orderEvent5._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[1].price).to.be.equal(40);
     expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(4);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[2], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[3], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[2], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[3], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.MARKET_PLACED_EVENT,
@@ -1989,14 +1995,14 @@ describe('test all functions of trading engine', async () => {
     * 40: [6: 10, 8: 30, 9: 40]
     * -> bidSide: empty
     * */
-    order6._order.filledQuantity = 10;
+    orderEvent6._order.filledQuantity = 10;
     expect(orderState.bidSide.orderMap.length).to.be.equal(0);
     expect(orderState.askSide.orderMap.length).to.be.equal(1);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(40);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], order8._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[2], order9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], orderEvent8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[2], orderEvent9._order)).to.be.equal(true);
 
     beesV8.processOrderEvent({
       _type: OrderEvent.MARKET_PLACED_EVENT,
@@ -2021,7 +2027,10 @@ describe('test all functions of trading engine', async () => {
     beesV8.stop();
   });
 
+  // --------------------------------------------
   // test update quantity
+  // --------------------------------------------
+
   it('test update quantity event', async () => {
     beesV8.start();
     // description:
@@ -2042,7 +2051,7 @@ describe('test all functions of trading engine', async () => {
     * Do the same with SELL
     * */
 
-    const order0 = {
+    const orderEvent0 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 0,
@@ -2055,9 +2064,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order0);
+    beesV8.processOrderEvent(orderEvent0);
 
-    const order1 = {
+    const orderEvent1 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 1,
@@ -2070,9 +2079,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order1);
+    beesV8.processOrderEvent(orderEvent1);
 
-    const order2 = {
+    const orderEvent2 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 2,
@@ -2085,9 +2094,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order2);
+    beesV8.processOrderEvent(orderEvent2);
 
-    const order3 = {
+    const orderEvent3 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 3,
@@ -2100,9 +2109,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order3);
+    beesV8.processOrderEvent(orderEvent3);
 
-    const order4 = {
+    const orderEvent4 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 4,
@@ -2115,9 +2124,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order4);
+    beesV8.processOrderEvent(orderEvent4);
 
-    const order5 = {
+    const orderEvent5 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 5,
@@ -2130,7 +2139,7 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order5);
+    beesV8.processOrderEvent(orderEvent5);
 
     /*-> bidSide:
     * 10: [2: 10]
@@ -2144,46 +2153,46 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent2._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent5._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order3._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent4._order)).to.be.equal(true);
 
-    order0._order.quantity = order0._order.quantity * 2;
+    orderEvent0._order.quantity = orderEvent0._order.quantity * 2;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
-      _order: order0._order
+      _order: orderEvent0._order
     });
-    order1._order.quantity = order1._order.quantity * 2;
+    orderEvent1._order.quantity = orderEvent1._order.quantity * 2;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
-      _order: order1._order
+      _order: orderEvent1._order
     });
-    order2._order.quantity = order2._order.quantity * 2;
+    orderEvent2._order.quantity = orderEvent2._order.quantity * 2;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
-      _order: order2._order
+      _order: orderEvent2._order
     });
-    order3._order.quantity = order3._order.quantity * 2;
+    orderEvent3._order.quantity = orderEvent3._order.quantity * 2;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
-      _order: order3._order
+      _order: orderEvent3._order
     });
-    order4._order.quantity = order4._order.quantity * 2;
+    orderEvent4._order.quantity = orderEvent4._order.quantity * 2;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
-      _order: order4._order
+      _order: orderEvent4._order
     });
-    order5._order.quantity = order5._order.quantity * 2;
+    orderEvent5._order.quantity = orderEvent5._order.quantity * 2;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
-      _order: order5._order
+      _order: orderEvent5._order
     });
 
     orderState = await beesV8.getOrderBookStateOfOrderBook();
@@ -2191,18 +2200,18 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent2._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent5._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order3._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent4._order)).to.be.equal(true);
 
-    const order6 = {
+    const orderEvent6 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 6,
@@ -2215,9 +2224,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order6);
+    beesV8.processOrderEvent(orderEvent6);
 
-    const order7 = {
+    const orderEvent7 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 7,
@@ -2230,9 +2239,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order7);
+    beesV8.processOrderEvent(orderEvent7);
 
-    const order8 = {
+    const orderEvent8 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 8,
@@ -2245,9 +2254,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order8);
+    beesV8.processOrderEvent(orderEvent8);
 
-    const order9 = {
+    const orderEvent9 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 9,
@@ -2260,9 +2269,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order9);
+    beesV8.processOrderEvent(orderEvent9);
 
-    const order10 = {
+    const orderEvent10 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 10,
@@ -2275,9 +2284,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order10);
+    beesV8.processOrderEvent(orderEvent10);
 
-    const order11 = {
+    const orderEvent11 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 11,
@@ -2290,7 +2299,7 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order11);
+    beesV8.processOrderEvent(orderEvent11);
 
     /*-> bidSide:
     * 10: [2: 10]
@@ -2306,71 +2315,74 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(3);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(100);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent8._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[1].price).to.be.equal(200);
     expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], order11._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], orderEvent11._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[2].price).to.be.equal(300);
     expect(orderState.askSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], order7._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], order9._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[2], order10._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], orderEvent7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], orderEvent9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[2], orderEvent10._order)).to.be.equal(true);
 
-    order6._order.quantity = order6._order.quantity * 2;
+    orderEvent6._order.quantity = orderEvent6._order.quantity * 2;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
-      _order: order6._order
+      _order: orderEvent6._order
     });
-    order7._order.quantity = order7._order.quantity * 2;
+    orderEvent7._order.quantity = orderEvent7._order.quantity * 2;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
-      _order: order7._order
+      _order: orderEvent7._order
     });
-    order8._order.quantity = order8._order.quantity * 2;
+    orderEvent8._order.quantity = orderEvent8._order.quantity * 2;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
-      _order: order8._order
+      _order: orderEvent8._order
     });
-    order9._order.quantity = order9._order.quantity * 2;
+    orderEvent9._order.quantity = orderEvent9._order.quantity * 2;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
-      _order: order9._order
+      _order: orderEvent9._order
     });
-    order10._order.quantity = order10._order.quantity * 2;
+    orderEvent10._order.quantity = orderEvent10._order.quantity * 2;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
-      _order: order10._order
+      _order: orderEvent10._order
     });
-    order11._order.quantity = order11._order.quantity * 2;
+    orderEvent11._order.quantity = orderEvent11._order.quantity * 2;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
-      _order: order11._order
+      _order: orderEvent11._order
     });
     orderState = await beesV8.getOrderBookStateOfOrderBook();
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.askSide.orderMap.length).to.be.equal(3);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(100);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent8._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[1].price).to.be.equal(200);
     expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], order11._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], orderEvent11._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[2].price).to.be.equal(300);
     expect(orderState.askSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], order7._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], order9._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[2].orders[2], order10._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], orderEvent7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], orderEvent9._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[2], orderEvent10._order)).to.be.equal(true);
 
     beesV8.stop();
   });
 
+  // --------------------------------------------
   // test update limit price
+  // --------------------------------------------
+  
   it('test update limit event', async () => {
     beesV8.start();
 
-    const order0 = {
+    const orderEvent0 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 0,
@@ -2383,9 +2395,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order0);
+    beesV8.processOrderEvent(orderEvent0);
 
-    const order1 = {
+    const orderEvent1 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 1,
@@ -2398,9 +2410,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order1);
+    beesV8.processOrderEvent(orderEvent1);
 
-    const order2 = {
+    const orderEvent2 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 2,
@@ -2413,9 +2425,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order2);
+    beesV8.processOrderEvent(orderEvent2);
 
-    const order3 = {
+    const orderEvent3 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 3,
@@ -2428,9 +2440,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order3);
+    beesV8.processOrderEvent(orderEvent3);
 
-    const order4 = {
+    const orderEvent4 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 4,
@@ -2443,9 +2455,9 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order4);
+    beesV8.processOrderEvent(orderEvent4);
 
-    const order5 = {
+    const orderEvent5 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 5,
@@ -2458,7 +2470,7 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order5);
+    beesV8.processOrderEvent(orderEvent5);
 
     /*-> bidSide:
     * 10: [2: 10]
@@ -2472,21 +2484,21 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent2._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent5._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order3._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent4._order)).to.be.equal(true);
 
-    order2._order.limitPrice = 5.0;
+    orderEvent2._order.limitPrice = 5.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
-      _order: order2._order
+      _order: orderEvent2._order
     });
     /*-> bidSide:
     * 5: [2: 10]
@@ -2498,21 +2510,21 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(5);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent2._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent5._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order3._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent4._order)).to.be.equal(true);
 
-    order2._order.limitPrice = 25.0;
+    orderEvent2._order.limitPrice = 25.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
-      _order: order2._order
+      _order: orderEvent2._order
     });
     /*-> bidSide:
     * 20: [0: 10, 5: 20]
@@ -2524,21 +2536,21 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent5._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(25);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent2._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order3._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent4._order)).to.be.equal(true);
 
-    order2._order.limitPrice = 20.0;
+    orderEvent2._order.limitPrice = 20.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
-      _order: order2._order
+      _order: orderEvent2._order
     });
     /*-> bidSide:
     * 20: [0: 10, 5: 20, 2: 10]
@@ -2549,19 +2561,19 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(2);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order5._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[2], order2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[2], orderEvent2._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], order3._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[2], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[2], orderEvent4._order)).to.be.equal(true);
 
-    order3._order.limitPrice = 31.0;
+    orderEvent3._order.limitPrice = 31.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
-      _order: order3._order
+      _order: orderEvent3._order
     });
     /*-> bidSide:
     * 20: [0: 10, 5: 20, 2: 10]
@@ -2573,21 +2585,21 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order5._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[2], order2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[2], orderEvent2._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent4._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(31);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent3._order)).to.be.equal(true);
 
-    order2._order.limitPrice = 31.0;
+    orderEvent2._order.limitPrice = 31.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
-      _order: order2._order
+      _order: orderEvent2._order
     });
     /*-> bidSide:
     * 20: [0: 10, 5: 20]
@@ -2599,21 +2611,21 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent5._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent4._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(31);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order3._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent2._order)).to.be.equal(true);
 
-    order1._order.limitPrice = 31.0;
+    orderEvent1._order.limitPrice = 31.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
-      _order: order1._order
+      _order: orderEvent1._order
     });
     /*-> bidSide:
     * 20: [0: 10, 5: 20]
@@ -2625,21 +2637,21 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order0._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent5._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent4._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(31);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order3._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent1._order)).to.be.equal(true);
 
-    order5._order.limitPrice = 31.0;
+    orderEvent5._order.limitPrice = 31.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
-      _order: order5._order
+      _order: orderEvent5._order
     });
     /*-> bidSide:
     * 20: [0: 10]
@@ -2651,21 +2663,21 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent0._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent4._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(31);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(4);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order3._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[3], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[3], orderEvent5._order)).to.be.equal(true);
 
-    order1._order.limitPrice = 10.0;
+    orderEvent1._order.limitPrice = 10.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
-      _order: order1._order
+      _order: orderEvent1._order
     });
     /*-> bidSide:
     * 10: [1: 10]
@@ -2678,23 +2690,23 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(4);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent1._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent0._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(30);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent4._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[3].price).to.be.equal(31);
     expect(orderState.bidSide.orderMap[3].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[0], order3._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[1], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[2], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[0], orderEvent3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[1], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[3].orders[2], orderEvent5._order)).to.be.equal(true);
 
-    order4._order.limitPrice = 10.0;
+    orderEvent4._order.limitPrice = 10.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
-      _order: order4._order
+      _order: orderEvent4._order
     });
     /*-> bidSide:
     * 10: [1: 10, 4: 30]
@@ -2706,18 +2718,18 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent4._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent0._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(31);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order3._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent5._order)).to.be.equal(true);
 
-    const order6 = {
+    const orderEvent6 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 6,
@@ -2730,7 +2742,7 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order6);
+    beesV8.processOrderEvent(orderEvent6);
     /*-> bidSide:
     * 10: [1: 10, 4: 30]
     * 20: [0: 10]
@@ -2742,23 +2754,23 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(1);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(200);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent6._order)).to.be.equal(true);
 
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent4._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent0._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(31);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order3._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent5._order)).to.be.equal(true);
 
-    const order7 = {
+    const orderEvent7 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 7,
@@ -2771,7 +2783,7 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order7);
+    beesV8.processOrderEvent(orderEvent7);
     /*-> bidSide:
     * 10: [1: 10, 4: 30]
     * 20: [0: 10]
@@ -2783,24 +2795,24 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(1);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(200);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], orderEvent7._order)).to.be.equal(true);
 
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent4._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent0._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(31);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order3._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent5._order)).to.be.equal(true);
 
-    const order8 = {
+    const orderEvent8 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
         _id: 8,
@@ -2813,7 +2825,7 @@ describe('test all functions of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     };
-    beesV8.processOrderEvent(order8);
+    beesV8.processOrderEvent(orderEvent8);
     /*-> bidSide:
     * 10: [1: 10, 4: 30]
     * 20: [0: 10]
@@ -2825,30 +2837,30 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(1);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(200);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], order7._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[2], order8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], orderEvent7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[2], orderEvent8._order)).to.be.equal(true);
 
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent4._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent0._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(31);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order3._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent5._order)).to.be.equal(true);
 
-    order6._order.limitPrice = 32.0;
+    orderEvent6._order.limitPrice = 32.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
-      _order: order6._order
+      _order: orderEvent6._order
     });
-    beesV8.processOrderEvent(order6);
+    beesV8.processOrderEvent(orderEvent6);
     /*-> bidSide:
     * 10: [1: 10, 4: 30]
     * 20: [0: 10]
@@ -2861,33 +2873,33 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(2);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(32);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent6._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[1].price).to.be.equal(200);
     expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], order7._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], order8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], orderEvent8._order)).to.be.equal(true);
 
 
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent4._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent0._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(31);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order3._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent5._order)).to.be.equal(true);
 
-    order8._order.limitPrice = 32.0;
+    orderEvent8._order.limitPrice = 32.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
-      _order: order8._order
+      _order: orderEvent8._order
     });
-    beesV8.processOrderEvent(order8);
+    beesV8.processOrderEvent(orderEvent8);
     /*-> bidSide:
     * 10: [1: 10, 4: 30]
     * 20: [0: 10]
@@ -2900,30 +2912,30 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(2);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(32);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order6._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], order8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], orderEvent8._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[1].price).to.be.equal(200);
     expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent7._order)).to.be.equal(true);
 
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent4._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent0._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(31);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(3);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order3._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent3._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent5._order)).to.be.equal(true);
 
-    order6._order.limitPrice = 2.0;
+    orderEvent6._order.limitPrice = 2.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
-      _order: order6._order
+      _order: orderEvent6._order
     });
     /*-> bidSide:
     * 10: [1: 10, 4: 30]
@@ -2937,28 +2949,28 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(2);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(32);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent8._order)).to.be.equal(true);
     expect(orderState.askSide.orderMap[1].price).to.be.equal(200);
     expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], order7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent7._order)).to.be.equal(true);
 
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order1._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent1._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[1], orderEvent4._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[1].price).to.be.equal(20);
     expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], order0._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent0._order)).to.be.equal(true);
     expect(orderState.bidSide.orderMap[2].price).to.be.equal(31);
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(2);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], order2._order)).to.be.equal(true);
-    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], order5._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent5._order)).to.be.equal(true);
 
-    order7._order.limitPrice = 1.0;
+    orderEvent7._order.limitPrice = 1.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
-      _order: order7._order
+      _order: orderEvent7._order
     });
     /*-> bidSide:
     * 10: [4: 30]
@@ -2969,17 +2981,17 @@ describe('test all functions of trading engine', async () => {
     expect(orderState.askSide.orderMap.length).to.be.equal(1);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(32);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], order8._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent8._order)).to.be.equal(true);
 
     expect(orderState.bidSide.orderMap.length).to.be.equal(1);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
-    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], order4._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent4._order)).to.be.equal(true);
 
-    order4._order.limitPrice = 100.0;
+    orderEvent4._order.limitPrice = 100.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
-      _order: order4._order
+      _order: orderEvent4._order
     });
     /*-> bidSide: empty
     * -> askSide: empty
@@ -2990,7 +3002,9 @@ describe('test all functions of trading engine', async () => {
     beesV8.stop();
   });
 
-  // test combination of all event types
+  // --------------------------------------------
+  // TODO: test combination of all event types
+  // --------------------------------------------
   it('test combination of all event types', async () => {
     beesV8.start();
 
@@ -3008,7 +3022,7 @@ describe('test all functions of trading engine', async () => {
 
 function isSameOrder(order1, order2) {
   const zero = 0.000000000000000000001;
-  //console.log(`compare ${order1._id} and ${order2._id}`);
+  //console.log(`compare ${orderEvent1._id} and ${orderEvent2._id}`);
   if (order1._id !== order2._id) return false;
   if (order1.type !== order2.type) return false;
   if (order1.side !== order2.side) return false;
