@@ -19,7 +19,7 @@ module.exports = {
     "no-param-reassign": 0,
     "spaced-comment": 0,
     "eol-last": 0,
-
+    "no-unused-expression": 0,
     "max-len": 0
   },
   "settings": {

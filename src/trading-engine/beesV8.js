@@ -48,35 +48,29 @@ class BeesV8 {
     const messageId = uuid();
 
     const message = {
-
-      _type: EVENT_GET_AGGREGATED_STATE,
-
+      type: EVENT_GET_AGGREGATED_STATE,
       id: messageId
-
     };
 
     this.orderbookChildProcess.send(message);
 
     return new Promise((resolve, reject) => {
-      //logger.info(`beesV8.js: resolve ${JSON.stringify(resolve)}`);
       this.mapOfIdAndResolveFunction[messageId] = resolve;
-
     });
 
   }
 
-  async getOrderBookStateOfOrderBook(currency, baseCurrency) {
+  async getCurrentStateOfOrderBook(currency, baseCurrency) {
     //TODO use currency, baseCurrency to decide which order book should be used
     const messageId = uuid();
     const message = {
-      _type: EVENT_GET_ORDERBOOK_STATE,
+      type: EVENT_GET_ORDERBOOK_STATE,
       id: messageId
     };
 
     this.orderbookChildProcess.send(message);
 
     return new Promise((resolve, reject) => {
-      //logger.info(`beesV8.js: resolve ${JSON.stringify(resolve)}`);
       this.mapOfIdAndResolveFunction[messageId] = resolve;
     });
   }

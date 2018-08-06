@@ -8,6 +8,9 @@ const {logger} = global;
 
 const ZERO = 0.0000000000001;
 
+const EVENT_GET_AGGREGATED_STATE = 'GET_AGGREGATED_STATE';
+const EVENT_GET_ORDERBOOK_STATE = 'GET_ORDERBOOK_STATE';
+
 /**
  * Limit Order Book performs order matching after principals of price/time priority
  * matching algorithm.
@@ -38,8 +41,6 @@ class OrderBook {
     else if (event._type === OrderEvent.QUANTITY_UPDATED_EVENT) this.updateQuantity(new OrderQuantityUpdatedEvent(order));
     else if (event._type === OrderEvent.CANCELED_EVENT) this.cancel(new OrderCanceledEvent(order));
     else logger.warn(`orderbook.js processOrderEvent(): unknown event type ${event._type} will be rejected`);
-
-    //this.showBook();
   }
 
   /*
@@ -56,7 +57,7 @@ class OrderBook {
       this.bids.tryToMatch(order);
     }
 
-    // Neu van chua match het hoac ko match duoc teo nao thi cho order len so
+    // if the order could not be filled completely, put the remaining qty on book
     if (order.remainingQuantity() > 0) {
       logger.info(`orderbook.js placeLimit(): ${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
 
@@ -132,7 +133,7 @@ class OrderBook {
       this.bids.tryToMatch(order);
     }
 
-    // Neu van chua match het hoac ko match duoc teo nao thi cho order len so
+    // if the order could not be filled completely, put the remaining qty on book
     if (order.remainingQuantity() > 0) {
       logger.info(`orderbook.js updateLimit(): ${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
 
@@ -179,35 +180,6 @@ class OrderBook {
 
     return orderState;
   }
-
-  seeDetails(orderbookside){
-    const book = orderbookside.orderMap;
-    const keyArr = book.priceLevelSet.toArray();
-
-    keyArr.map((val) => {
-      //logger.info(`At price ${val}`);
-      console.log('At price '+val);
-
-      let LLOE = book.getFirstElementOfPriceLevel(val);
-      while (LLOE){
-        //logger.info(`id: ${LLOE.order._id}   quan: ${LLOE.order.quantity}   filled: ${LLOE.order.filledQuantity}`);
-        console.log('id:',LLOE.order._id,'   quan:',LLOE.order.quantity, '   filled:',LLOE.order.filledQuantity);
-        LLOE = LLOE.next;
-      }
-
-      return val;
-    });
-  }
-
-  showBook(){
-    //logger.info(' ==== BID_Book ==== ');
-    console.log(' ==== BID_Book ==== ');
-    this.seeDetails(this.bids);
-    //logger.info(' ==== ASK_Book ==== ');
-    console.log(' ==== ASK_Book ==== ');
-    this.seeDetails(this.asks);
-  }
-
 }
 
 // create an order book instance here, hardcode for currency pair BTC_USDT.
@@ -218,9 +190,10 @@ logger.info(`orderbook.js: ${orderbook.symbol} orderbook is ready to accept even
 
 // Order Book receives order events from parent process
 process.on('message', (event) => {
-  switch (event._type) {
-    case EVENT_GET_AGGREGATED_STATE:
+  switch (event.type) {
+    case EVENT_GET_AGGREGATED_STATE: {
       logger.debug(`orderbook.js: received a message of type ${EVENT_GET_AGGREGATED_STATE}`);
+
       const state = orderbook.getAggregatedState();
       process.send({
         id: event.id,
@@ -229,11 +202,11 @@ process.on('message', (event) => {
       });
 
       break;
-
-    case EVENT_GET_ORDERBOOK_STATE:
+    }
+    case EVENT_GET_ORDERBOOK_STATE: {
       logger.debug(`orderbook.js: received a message of type ${EVENT_GET_ORDERBOOK_STATE}`);
+
       const orderState = orderbook.getOrderBookState();
-      //logger.info(`orderbook.js: state ${JSON.stringify(orderState)}`);
       process.send({
         id: event.id,
         type: EVENT_GET_ORDERBOOK_STATE,
@@ -241,15 +214,13 @@ process.on('message', (event) => {
       });
 
       break;
-
-    default:
+    }
+    default: {
       orderbook.processOrderEvent(event);
+    }
   }
 });
 
-const EVENT_GET_AGGREGATED_STATE = 'GET_AGGREGATED_STATE';
-
-const EVENT_GET_ORDERBOOK_STATE = 'GET_ORDERBOOK_STATE';
 
 module.exports = {
 
