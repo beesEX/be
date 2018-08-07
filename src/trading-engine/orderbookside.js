@@ -18,6 +18,14 @@ module.exports = class OrderBookSide {
     this.orderMap = new OrderMap();
   }
 
+  // only use for testing
+  getState() {
+    return {
+      side: this.side,
+      orderMap: this.orderMap.getState()
+    };
+  }
+
   /*
   put order on book
   */
@@ -40,7 +48,7 @@ module.exports = class OrderBookSide {
   }
 
   /*
-  order matching core logics. Try to match the given order against counter orders of the book side.
+  order matching core logic. Try to match the given order against counter orders of the book side.
   */
   tryToMatch(order) {
     while (order.remainingQuantity() > ZERO) {
@@ -48,9 +56,8 @@ module.exports = class OrderBookSide {
       if (bestPriceLevel && order.fulfill(bestPriceLevel)) {
         this.match(order, bestPriceLevel);
       }
-      else {
-        return;
-      }
+
+      return;
     }
   }
 
@@ -64,13 +71,12 @@ module.exports = class OrderBookSide {
     if (this.side === 'ASK') {
       return this.orderMap.getMinPriceLevel();
     }
-    else { // this.side ==='BID'
-      return this.orderMap.getMaxPriceLevel();
-    }
+    // this.side === 'BID'
+    return this.orderMap.getMaxPriceLevel();
   }
 
   /**
-   order matching core logics
+   order matching core logic
    @param order - to be processed order
    @param priceLevel - matched price
    */

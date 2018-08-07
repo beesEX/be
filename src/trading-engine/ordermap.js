@@ -53,7 +53,6 @@ class OrderLinkedList {
   isTail(element) {
     return this.tail === element;
   }
-
 }
 
 module.exports = class OrderMap {
@@ -68,6 +67,27 @@ module.exports = class OrderMap {
     this.mapOfPriceAndOrderLinkedList = {};
   }
 
+  // only for testing
+  getState() {
+    const priceLevel = this.priceLevelSet.toArray();
+    const result = [];
+    for (let i = 0; i < priceLevel.length; i += 1) {
+      const order = [];
+      const tmpList = this.mapOfPriceAndOrderLinkedList[priceLevel[i]];
+      let tmpElement = tmpList.head;
+      while (tmpElement) {
+        order.push(tmpElement.order);
+        tmpElement = tmpElement.next;
+      }
+      const newItem = {
+        price: priceLevel[i],
+        orders: order
+      };
+      result.push(newItem);
+    }
+    return result;
+  }
+
   addOrder(order) {
     // check if this order already exists or not
     if (this.mapOfOrderIdAndOrderLinkedListElement[order._id]) {
@@ -79,7 +99,7 @@ module.exports = class OrderMap {
     const newLinkedListOrderElement = new OrderLinkedListElement(order);
 
     const orderLinkedList = this.mapOfPriceAndOrderLinkedList[priceLevel];
-    if (orderLinkedList) {
+    if (orderLinkedList) { // [Tung]: leaky abstraction - all logic within this if-block should better be encapsulated by a function called append(orderElement) of OrderLinkedList data structure
       // link this new element to the end of linked list
       // set next order to the current last element in list
       const lastOrderElement = orderLinkedList.tail;
@@ -87,7 +107,6 @@ module.exports = class OrderMap {
       lastOrderElement.setNext(newLinkedListOrderElement);
 
       orderLinkedList.tail = newLinkedListOrderElement;
-
     }
     else {
       // new OrderLinkedList
@@ -149,38 +168,32 @@ module.exports = class OrderMap {
     const orderLinkedList = this.mapOfPriceAndOrderLinkedList[priceLevel];
     if (!orderLinkedList) {
       // this order is not in this orderMap
-      logger.error(`ordermap.js: removeOrder(): ERROR: not found array for this price level ${priceLevel}`);
+      logger.error(`ordermap.js: removeOrder(): ERROR: not found orderLinkedList for this price level ${priceLevel}`);
       return false;
     }
     else if (orderLinkedList.hasOnlyOneElement()) {
-      // only this order at this price level
-      // delete this price level
+      // only this order at this price level -> delete this price level
+      //logger.info(`ordermap.js: removeOrder(): only one element`);
       delete this.mapOfPriceAndOrderLinkedList[priceLevel];
       this.priceLevelSet.delete(priceLevel);
-    }
+    } // [Tung]: leaky abstraction - all logic of next 3 else-if-blocks should better be encapsulated by a single function called remove(orderElement) of OrderLinkedList data structure
     else if (orderLinkedList.isHead(orderLinkedListElementToRemove)) {
-      // this order is head
-      // let its next be head
+      // this order is head -> let its next be head
+      //logger.info(`ordermap.js: removeOrder(): this is head`);
       const nextLinkedListElement = orderLinkedListElementToRemove.next;
       nextLinkedListElement.setPrevious(null);
-
-      if (orderLinkedList.isTail(nextLinkedListElement)) {
-        orderLinkedList.head = nextLinkedListElement;
-      }
+      orderLinkedList.head = nextLinkedListElement;
     }
     else if (orderLinkedList.isTail(orderLinkedListElementToRemove)) {
-      // this order is tail
-      // let its previous be tail
+      // this order is tail -> let its previous be tail
+      //logger.info(`ordermap.js: removeOrder(): this is tail`);
       const previousOrderLinkedListElement = orderLinkedListElementToRemove.previous;
       previousOrderLinkedListElement.setNext(null);
-
-      if (orderLinkedList.isHead(previousOrderLinkedListElement)) {
-        orderLinkedList.tail = previousOrderLinkedListElement;
-      }
+      orderLinkedList.tail = previousOrderLinkedListElement;
     }
     else {
-      // this order in the middle
-      // connect previous to next
+      // this order in the middle -> connect previous to next
+      //logger.info(`ordermap.js: removeOrder(): this is middle`);
       const previousElement = orderLinkedListElementToRemove.previous;
       const nextElement = orderLinkedListElementToRemove.next;
 
