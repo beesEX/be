@@ -6,6 +6,11 @@ const {createConsoleLogger} = require('@paralect/common-logger');
 global.logger = createConsoleLogger({isDev: config.isDev});
 const {logger} = global;
 
+const ZERO = 0.0000000000001;
+
+const EVENT_GET_AGGREGATED_STATE = 'GET_AGGREGATED_STATE';
+const EVENT_GET_ORDERBOOK_STATE = 'GET_ORDERBOOK_STATE';
+
 /**
  * Limit Order Book performs order matching after principals of price/time priority
  * matching algorithm.
@@ -52,7 +57,7 @@ class OrderBook {
       this.bids.tryToMatch(order);
     }
 
-    // Neu van chua match het hoac ko match duoc teo nao thi cho order len so
+    // if the order could not be filled completely, put the remaining qty on book
     if (order.remainingQuantity() > 0) {
       logger.info(`orderbook.js placeLimit(): ${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
 
@@ -84,7 +89,7 @@ class OrderBook {
     }
 
     // remaining units of market order will not be put on book, gets just rejected.
-    if (order.remainingQuantity() > 0) {
+    if (order.remainingQuantity() > ZERO) {
       logger.info(`orderbook.js placeMarket(): ${order.remainingQuantity()} remaining units of MARKET order will be rejected`);
     }
   }
@@ -128,7 +133,7 @@ class OrderBook {
       this.bids.tryToMatch(order);
     }
 
-    // Neu van chua match het hoac ko match duoc teo nao thi cho order len so
+    // if the order could not be filled completely, put the remaining qty on book
     if (order.remainingQuantity() > 0) {
       logger.info(`orderbook.js updateLimit(): ${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
 
@@ -166,6 +171,15 @@ class OrderBook {
 
   }
 
+  getOrderBookState() {
+
+    const orderState = {};
+    orderState.symbol = this.symbol;
+    orderState.askSide = this.asks.getState();
+    orderState.bidSide = this.bids.getState();
+
+    return orderState;
+  }
 }
 
 // create an order book instance here, hardcode for currency pair BTC_USDT.
@@ -176,27 +190,41 @@ logger.info(`orderbook.js: ${orderbook.symbol} orderbook is ready to accept even
 
 // Order Book receives order events from parent process
 process.on('message', (event) => {
-  switch (event._type) {
-
-    case EVENT_GET_AGGREGATED_STATE:
+  switch (event.type) {
+    case EVENT_GET_AGGREGATED_STATE: {
       logger.debug(`orderbook.js: received a message of type ${EVENT_GET_AGGREGATED_STATE}`);
+
       const state = orderbook.getAggregatedState();
       process.send({
         id: event.id,
+        type: EVENT_GET_AGGREGATED_STATE,
         state
       });
 
       break;
+    }
+    case EVENT_GET_ORDERBOOK_STATE: {
+      logger.debug(`orderbook.js: received a message of type ${EVENT_GET_ORDERBOOK_STATE}`);
 
-    default:
+      const orderState = orderbook.getOrderBookState();
+      process.send({
+        id: event.id,
+        type: EVENT_GET_ORDERBOOK_STATE,
+        orderState
+      });
+
+      break;
+    }
+    default: {
       orderbook.processOrderEvent(event);
+    }
   }
 });
 
-const EVENT_GET_AGGREGATED_STATE = 'GET_AGGREGATED_STATE';
 
 module.exports = {
 
-  EVENT_GET_AGGREGATED_STATE
+  EVENT_GET_AGGREGATED_STATE,
+  EVENT_GET_ORDERBOOK_STATE,
 
 };
