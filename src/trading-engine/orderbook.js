@@ -164,6 +164,7 @@ class OrderBook {
   getAggregatedState() {
 
     const state = {};
+    state.symbol = this.symbol;
     state.asks = this.asks.getAggregatedState();
     state.bids = this.bids.getAggregatedState();
 

@@ -106,6 +106,18 @@ module.exports = class OrderBookSide {
   }
 
   getAggregatedState() {
+    function sumOver(propertyName, orderLinkedList) {
+      let currentLinkedListElement = orderLinkedList.head;
+      let sum = 0;
+
+      while (currentLinkedListElement) {
+        sum += currentLinkedListElement.order[propertyName];
+        currentLinkedListElement = currentLinkedListElement.next;
+      }
+
+      return sum;
+    }
+
     const arrayOfAggregatedStateByPrice = [];
 
     this.orderMap.priceLevelSet.forEach((price) => {
@@ -126,16 +138,3 @@ module.exports = class OrderBookSide {
   }
 
 };
-
-function sumOver(propertyName, orderLinkedList) {
-  let currentLinkedListElement = orderLinkedList.head;
-  let sum = 0;
-
-  while (currentLinkedListElement) {
-    sum += currentLinkedListElement.order[propertyName];
-    currentLinkedListElement = currentLinkedListElement.next;
-  }
-
-  return sum;
-
-}
