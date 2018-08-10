@@ -1,6 +1,4 @@
-# beesEX backend api starter
-
-[![Stack](https://raw.githubusercontent.com/paralect/stack/master/stack-component-template/stack.png)](https://github.com/paralect/stack)
+# beesEX backend server
 
 [![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors)
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat-square)](LICENSE)
@@ -13,10 +11,18 @@
 [![Follow](https://img.shields.io/twitter/follow/paralect.svg?style=social&label=Follow)](https://twitter.com/paralect)
 [![Tweet](https://img.shields.io/twitter/url/https/github.com/paralect/koa-api-starter.svg?style=social)](https://twitter.com/intent/tweet?text=I%27m%20using%20Stack%20components%20to%20build%20my%20next%20product%20🚀.%20Check%20it%20out:%20https://github.com/paralect/stack)
 
-Fully featured [Koa.JS](http://koajs.com/) restful api starter application.
-The goal of this project is to solve all routine tasks and keep your focus on the product and business logic of the application, not on the common things, such logging, configuration, dev/production environments
+Backend server of beesEX platform. It provides backend API and functionality for following feature groups:
 
-Out of the box support following features:
+1. account and user management
+2. market page with live market data/indicators and trading capabilities
+3. order management
+4. trading engine
+5. trade execution and settlement
+6. user's wealth management
+7. wallets management with blockchain network integration (in future)
+8. platform admin dashboard and back office functionality (in future)
+
+Libs and technologies used:
 
 1. Config management.
 2. Configured console logger based on  [common-logger](https://www.npmjs.com/package/@paralect/common-logger)
@@ -28,6 +34,8 @@ Out of the box support following features:
 8. Production ready account API resource (singup, signin, forgot password, reset password functionality)
 9. JWT based authentication.
 10. Tests for endpoints.
+11. zeroMQ
+12. KoaJS
 
 Prerequisites
 -------------
@@ -41,12 +49,7 @@ Prerequisites
  - <img src="http://i1-news.softpedia-static.com/images/extra/LINUX/small/slw218news1.png" height="17">&nbsp;**Fedora**: `sudo dnf groupinstall "Development Tools"`
  - <img src="https://en.opensuse.org/images/b/be/Logo-geeko_head.png" height="17">&nbsp;**OpenSUSE:** `sudo zypper install --type pattern devel_basis`
 
-**Note:** If you are new to Node or Express, I recommend to watch
-[Node.js and Express 101](https://www.youtube.com/watch?v=BN0JlMZCtNU)
-screencast by Alex Ford that teaches Node and Express from scratch. Alternatively,
-here is another great tutorial for complete beginners - [Getting Started With Node.js, Express, MongoDB](http://cwbuecheler.com/web/tutorials/2013/node-express-mongo/).
-
-Getting Started - how to start beesEX Backend-Server
+Getting Started - how to start beesEX backend server
 ---------------
 
 The easiest way to get started is to clone the repository:
@@ -65,7 +68,7 @@ npm install
 npm start
 ```
 
-To start the project just run: `npm run development`. This command will start application on port `3001` and will automatically restart whenever you change any file in `./src` directory.
+You also can start the server in development mode: `npm run development`. This command will start application on port `3001` and will automatically restart whenever you change any file in `./src` directory.
 
 ### Explanations of the files structure
 
