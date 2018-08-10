@@ -174,4 +174,17 @@ module.exports = {
 
     return tradedTX;
   },
+
+  /**
+   * Retrieves all transactions of the given currency account of the user
+   *
+   * @param userId
+   * @param currency
+   * @returns {Array<{transaction-obj}>}
+   */
+  getTransactions: async (userId, currency) => {
+    const findQuery = await service.find({ userId, currency }, { sort: { createdAt: -1 } });
+    logger.info(`transaction.service.js getTransactions(): retrieves transaction for ${currency} account of userId=${userId} found ${findQuery.results.length} transactions`);
+    return findQuery.results;
+  }
 };
