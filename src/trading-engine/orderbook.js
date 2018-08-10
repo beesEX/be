@@ -193,7 +193,7 @@ logger.info(`orderbook.js: ${orderbook.symbol} orderbook is ready to accept even
 process.on('message', (event) => {
   switch (event.type) {
     case EVENT_GET_AGGREGATED_STATE: {
-      logger.debug(`orderbook.js: received a message of type ${EVENT_GET_AGGREGATED_STATE}`);
+      logger.debug(`orderbook.js: received a message from parent process of type ${EVENT_GET_AGGREGATED_STATE}`);
 
       const state = orderbook.getAggregatedState();
       process.send({
@@ -205,13 +205,13 @@ process.on('message', (event) => {
       break;
     }
     case EVENT_GET_ORDERBOOK_STATE: {
-      logger.debug(`orderbook.js: received a message of type ${EVENT_GET_ORDERBOOK_STATE}`);
+      logger.debug(`orderbook.js: received a message from parent process of type ${EVENT_GET_ORDERBOOK_STATE}`);
 
-      const orderState = orderbook.getOrderBookState();
+      const state = orderbook.getOrderBookState();
       process.send({
         id: event.id,
         type: EVENT_GET_ORDERBOOK_STATE,
-        orderState
+        state
       });
 
       break;
