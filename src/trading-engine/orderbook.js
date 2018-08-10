@@ -37,8 +37,8 @@ class OrderBook {
     }
     if (event._type === OrderEvent.LIMIT_PLACED_EVENT) this.placeLimit(new OrderPlacedEvent(order));
     else if (event._type === OrderEvent.MARKET_PLACED_EVENT) this.placeMarket(new MarketOrderPlacedEvent(order));
-    else if (event._type === OrderEvent.LIMIT_UPDATED_EVENT) this.updateLimit(new OrderLimitUpdatedEvent(order));
-    else if (event._type === OrderEvent.QUANTITY_UPDATED_EVENT) this.updateQuantity(new OrderQuantityUpdatedEvent(order));
+    else if (event._type === OrderEvent.LIMIT_UPDATED_EVENT) this.updateLimit(new OrderLimitUpdatedEvent(order, event.qtyDelta, event.priceDelta));
+    else if (event._type === OrderEvent.QUANTITY_UPDATED_EVENT) this.updateQuantity(new OrderQuantityUpdatedEvent(order, event.qtyDelta, event.priceDelta));
     else if (event._type === OrderEvent.CANCELED_EVENT) this.cancel(new OrderCanceledEvent(order));
     else logger.warn(`orderbook.js processOrderEvent(): unknown event type ${event._type} will be rejected`);
   }
@@ -113,17 +113,18 @@ class OrderBook {
   processes LIMIT order updated event, with limit price change
   */
   updateLimit(orderUpdatedEvent) {
-    const {order} = orderUpdatedEvent;
+    const {order, priceDelta} = orderUpdatedEvent;
     logger.info(`orderbook.js updateLimit(): processing updated LIMIT order with limit price change: ${JSON.stringify(order)}`);
 
+    const oldOrder = new Order(JSON.parse(JSON.stringify(order)));
+    oldOrder.limitPrice -= priceDelta;
     // remove existing order with old price from book
     if (order.side === 'BUY') {
-      this.bids.removeOrder(order);
+      this.bids.removeOrder(oldOrder);
     }
     else { // SELL
-      this.asks.removeOrder(order);
+      this.asks.removeOrder(oldOrder);
     }
-
 
     // process updated order like new placed order
     if (order.side === 'BUY') {

@@ -1524,7 +1524,9 @@ describe('test event process of trading engine', async () => {
     beesV8.stop();
   });
 
+  // --------------------------------------------------
   // test place market
+  // --------------------------------------------------
   it('test place market event', async () => {
     beesV8.start();
     // description:
@@ -2180,31 +2182,43 @@ describe('test event process of trading engine', async () => {
     orderEvent0._order.quantity *= 2;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
+      priceDelta: 0,
+      qtyDelta: orderEvent0._order.quantity / 2,
       _order: orderEvent0._order
     });
-    orderEvent1._order.quantity *= 2;
+    orderEvent1._order.quantity /= 2;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
+      priceDelta: 0,
+      qtyDelta: -orderEvent1._order.quantity,
       _order: orderEvent1._order
     });
-    orderEvent2._order.quantity *= 2;
+    orderEvent2._order.quantity += 2;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
+      priceDelta: 0,
+      qtyDelta: 2,
       _order: orderEvent2._order
     });
-    orderEvent3._order.quantity *= 2;
+    orderEvent3._order.quantity -= 2;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
+      priceDelta: 0,
+      qtyDelta: -2,
       _order: orderEvent3._order
     });
-    orderEvent4._order.quantity *= 2;
+    orderEvent4._order.quantity *= 4;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
+      priceDelta: 0,
+      qtyDelta: (orderEvent4._order.quantity * 3) / 4,
       _order: orderEvent4._order
     });
-    orderEvent5._order.quantity *= 2;
+    orderEvent5._order.quantity /= 4;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
+      priceDelta: 0,
+      qtyDelta: -orderEvent5._order.quantity * 3,
       _order: orderEvent5._order
     });
 
@@ -2315,9 +2329,9 @@ describe('test event process of trading engine', async () => {
     beesV8.processOrderEvent(orderEvent11);
 
     /*-> bidSide:
-    * 10: [2: 10]
-    * 20: [0: 10, 5: 20]
-    * 30: [1: 10, 3: 20, 4: 30]
+    * 10: [2: ?]
+    * 20: [0: ?, 5: ?]
+    * 30: [1: ?, 3: ?, 4: ?]
     *-> askSide:
     * 100: [8: 10]
     * 200: [6: 10, 11: 20]
@@ -2339,34 +2353,46 @@ describe('test event process of trading engine', async () => {
     expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], orderEvent9._order)).to.be.equal(true);
     expect(isSameOrder(orderState.askSide.orderMap[2].orders[2], orderEvent10._order)).to.be.equal(true);
 
-    orderEvent6._order.quantity *= 2;
+    orderEvent6._order.quantity += 2;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
+      priceDelta: 0,
+      qtyDelta: 2,
       _order: orderEvent6._order
     });
-    orderEvent7._order.quantity *= 2;
+    orderEvent7._order.quantity -= 2;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
+      priceDelta: 0,
+      qtyDelta: -2,
       _order: orderEvent7._order
     });
     orderEvent8._order.quantity *= 2;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
+      priceDelta: 0,
+      qtyDelta: orderEvent8._order.quantity / 2,
       _order: orderEvent8._order
     });
-    orderEvent9._order.quantity *= 2;
+    orderEvent9._order.quantity /= 2;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
+      priceDelta: 0,
+      qtyDelta: -orderEvent9._order.quantity,
       _order: orderEvent9._order
     });
-    orderEvent10._order.quantity *= 2;
+    orderEvent10._order.quantity *= 3;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
+      priceDelta: 0,
+      qtyDelta: (orderEvent10._order.quantity * 2) / 3,
       _order: orderEvent10._order
     });
-    orderEvent11._order.quantity *= 2;
+    orderEvent11._order.quantity /= 3;
     beesV8.processOrderEvent({
       _type: OrderEvent.QUANTITY_UPDATED_EVENT,
+      priceDelta: 0,
+      qtyDelta: -orderEvent11._order.quantity * 2,
       _order: orderEvent11._order
     });
     orderState = await beesV8.getCurrentStateOfOrderBook();
@@ -2384,6 +2410,11 @@ describe('test event process of trading engine', async () => {
     expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], orderEvent7._order)).to.be.equal(true);
     expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], orderEvent9._order)).to.be.equal(true);
     expect(isSameOrder(orderState.askSide.orderMap[2].orders[2], orderEvent10._order)).to.be.equal(true);
+
+    // current state
+    // ...
+
+    // TODO: test cancel order by updating quantity : filledQuantity = 0 and filledQuantity != 0
 
     beesV8.stop();
   });
@@ -2508,11 +2539,16 @@ describe('test event process of trading engine', async () => {
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent3._order)).to.be.equal(true);
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent4._order)).to.be.equal(true);
 
+    let priceDelta = 5.0 - orderEvent2._order.limitPrice;
     orderEvent2._order.limitPrice = 5.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
+      priceDelta: priceDelta,
+      qtyDelta: 0,
       _order: orderEvent2._order
     });
+
+
     /*-> bidSide:
     * 5: [2: 10]
     * 20: [0: 10, 5: 20]
@@ -2534,11 +2570,15 @@ describe('test event process of trading engine', async () => {
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent3._order)).to.be.equal(true);
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent4._order)).to.be.equal(true);
 
+    priceDelta = 25.0 - orderEvent2._order.limitPrice;
     orderEvent2._order.limitPrice = 25.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
+      priceDelta: priceDelta,
+      qtyDelta: 0,
       _order: orderEvent2._order
     });
+
     /*-> bidSide:
     * 20: [0: 10, 5: 20]
     * 25: [2: 10]
@@ -2560,9 +2600,12 @@ describe('test event process of trading engine', async () => {
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent3._order)).to.be.equal(true);
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent4._order)).to.be.equal(true);
 
+    priceDelta = 20.0 - orderEvent2._order.limitPrice;
     orderEvent2._order.limitPrice = 20.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
+      priceDelta: priceDelta,
+      qtyDelta: 0,
       _order: orderEvent2._order
     });
     /*-> bidSide:
@@ -2583,9 +2626,12 @@ describe('test event process of trading engine', async () => {
     expect(isSameOrder(orderState.bidSide.orderMap[1].orders[1], orderEvent3._order)).to.be.equal(true);
     expect(isSameOrder(orderState.bidSide.orderMap[1].orders[2], orderEvent4._order)).to.be.equal(true);
 
+    priceDelta = 31.0 - orderEvent3._order.limitPrice;
     orderEvent3._order.limitPrice = 31.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
+      priceDelta: priceDelta,
+      qtyDelta: 0,
       _order: orderEvent3._order
     });
     /*-> bidSide:
@@ -2609,9 +2655,12 @@ describe('test event process of trading engine', async () => {
     expect(orderState.bidSide.orderMap[2].orders.length).to.be.equal(1);
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent3._order)).to.be.equal(true);
 
+    priceDelta = 31.0 - orderEvent2._order.limitPrice;
     orderEvent2._order.limitPrice = 31.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
+      priceDelta: priceDelta,
+      qtyDelta: 0,
       _order: orderEvent2._order
     });
     /*-> bidSide:
@@ -2635,9 +2684,12 @@ describe('test event process of trading engine', async () => {
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent3._order)).to.be.equal(true);
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent2._order)).to.be.equal(true);
 
+    priceDelta = 31.0 - orderEvent1._order.limitPrice;
     orderEvent1._order.limitPrice = 31.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
+      priceDelta: priceDelta,
+      qtyDelta: 0,
       _order: orderEvent1._order
     });
     /*-> bidSide:
@@ -2661,9 +2713,12 @@ describe('test event process of trading engine', async () => {
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent2._order)).to.be.equal(true);
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent1._order)).to.be.equal(true);
 
+    priceDelta = 31.0 - orderEvent5._order.limitPrice;
     orderEvent5._order.limitPrice = 31.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
+      priceDelta: priceDelta,
+      qtyDelta: 0,
       _order: orderEvent5._order
     });
     /*-> bidSide:
@@ -2687,9 +2742,12 @@ describe('test event process of trading engine', async () => {
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent1._order)).to.be.equal(true);
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[3], orderEvent5._order)).to.be.equal(true);
 
+    priceDelta = 10.0 - orderEvent1._order.limitPrice;
     orderEvent1._order.limitPrice = 10.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
+      priceDelta: priceDelta,
+      qtyDelta: 0,
       _order: orderEvent1._order
     });
     /*-> bidSide:
@@ -2716,9 +2774,12 @@ describe('test event process of trading engine', async () => {
     expect(isSameOrder(orderState.bidSide.orderMap[3].orders[1], orderEvent2._order)).to.be.equal(true);
     expect(isSameOrder(orderState.bidSide.orderMap[3].orders[2], orderEvent5._order)).to.be.equal(true);
 
+    priceDelta = 10.0 - orderEvent4._order.limitPrice;
     orderEvent4._order.limitPrice = 10.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
+      priceDelta: priceDelta,
+      qtyDelta: 0,
       _order: orderEvent4._order
     });
     /*-> bidSide:
@@ -2868,12 +2929,14 @@ describe('test event process of trading engine', async () => {
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent2._order)).to.be.equal(true);
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent5._order)).to.be.equal(true);
 
+    priceDelta = 32.0 - orderEvent6._order.limitPrice;
     orderEvent6._order.limitPrice = 32.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
+      priceDelta: priceDelta,
+      qtyDelta: 0,
       _order: orderEvent6._order
     });
-    beesV8.processOrderEvent(orderEvent6);
     /*-> bidSide:
     * 10: [1: 10, 4: 30]
     * 20: [0: 10]
@@ -2892,7 +2955,6 @@ describe('test event process of trading engine', async () => {
     expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent7._order)).to.be.equal(true);
     expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], orderEvent8._order)).to.be.equal(true);
 
-
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(2);
@@ -2907,12 +2969,14 @@ describe('test event process of trading engine', async () => {
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent2._order)).to.be.equal(true);
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent5._order)).to.be.equal(true);
 
+    priceDelta = 32.0 - orderEvent8._order.limitPrice;
     orderEvent8._order.limitPrice = 32.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
+      priceDelta: priceDelta,
+      qtyDelta: 0,
       _order: orderEvent8._order
     });
-    beesV8.processOrderEvent(orderEvent8);
     /*-> bidSide:
     * 10: [1: 10, 4: 30]
     * 20: [0: 10]
@@ -2945,9 +3009,12 @@ describe('test event process of trading engine', async () => {
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent2._order)).to.be.equal(true);
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[2], orderEvent5._order)).to.be.equal(true);
 
+    priceDelta = 2.0 - orderEvent6._order.limitPrice;
     orderEvent6._order.limitPrice = 2.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
+      priceDelta: priceDelta,
+      qtyDelta: 0,
       _order: orderEvent6._order
     });
     /*-> bidSide:
@@ -2980,9 +3047,12 @@ describe('test event process of trading engine', async () => {
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[0], orderEvent2._order)).to.be.equal(true);
     expect(isSameOrder(orderState.bidSide.orderMap[2].orders[1], orderEvent5._order)).to.be.equal(true);
 
+    priceDelta = 1.0 - orderEvent7._order.limitPrice;
     orderEvent7._order.limitPrice = 1.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
+      priceDelta: priceDelta,
+      qtyDelta: 0,
       _order: orderEvent7._order
     });
     /*-> bidSide:
@@ -3001,9 +3071,12 @@ describe('test event process of trading engine', async () => {
     expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
     expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent4._order)).to.be.equal(true);
 
+    priceDelta = 100.0 - orderEvent4._order.limitPrice;
     orderEvent4._order.limitPrice = 100.0;
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_UPDATED_EVENT,
+      priceDelta: priceDelta,
+      qtyDelta: 0,
       _order: orderEvent4._order
     });
     /*-> bidSide: empty
