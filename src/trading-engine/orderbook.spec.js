@@ -26,7 +26,7 @@ describe('get the aggregated state of the order book', async () => {
 
     beesV8.start();
 
-    const state = await beesV8.getAggregatedStateOfOrderBook();
+    const state = await beesV8.getAggregatedStateOfOrderBook('BTC_USDT');
     expect(state).not.to.be.undefined;
 
     expect(state.asks.length).to.be.equal(0);
@@ -72,7 +72,7 @@ describe('get the aggregated state of the order book', async () => {
       }
     });
 
-    const state = await beesV8.getAggregatedStateOfOrderBook();
+    const state = await beesV8.getAggregatedStateOfOrderBook('BTC_USDT');
 
     expect(state).not.to.be.undefined;
 
@@ -124,7 +124,7 @@ describe('get the aggregated state of the order book', async () => {
       }
     });
 
-    const state = await beesV8.getAggregatedStateOfOrderBook();
+    const state = await beesV8.getAggregatedStateOfOrderBook('BTC_USDT');
 
     expect(state).not.to.be.undefined;
 
@@ -202,7 +202,7 @@ describe('get the aggregated state of the order book', async () => {
       }
     });
 
-    const state = await beesV8.getAggregatedStateOfOrderBook();
+    const state = await beesV8.getAggregatedStateOfOrderBook('BTC_USDT');
 
     expect(state).not.to.be.undefined;
 
@@ -257,7 +257,7 @@ describe('test event process of trading engine', async () => {
 
     beesV8.start();
 
-    let orderState = await beesV8.getCurrentStateOfOrderBook();
+    let orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState).not.to.be.undefined;
     // check name of book side
     expect(orderState.askSide.side).to.be.equal('ASK');
@@ -280,7 +280,7 @@ describe('test event process of trading engine', async () => {
       }
     };
     beesV8.processOrderEvent(orderEvent0);
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(1);
@@ -304,7 +304,7 @@ describe('test event process of trading engine', async () => {
       }
     };
     beesV8.processOrderEvent(orderEvent1);
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(1);
@@ -330,7 +330,7 @@ describe('test event process of trading engine', async () => {
       }
     };
     beesV8.processOrderEvent(orderEvent2);
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(2);
@@ -357,7 +357,7 @@ describe('test event process of trading engine', async () => {
       }
     };
     beesV8.processOrderEvent(orderEvent3);
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(2);
@@ -386,7 +386,7 @@ describe('test event process of trading engine', async () => {
     };
 
     beesV8.processOrderEvent(orderEvent4);
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(2);
@@ -415,7 +415,7 @@ describe('test event process of trading engine', async () => {
       }
     };
     beesV8.processOrderEvent(orderEvent5);
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
@@ -455,7 +455,7 @@ describe('test event process of trading engine', async () => {
       }
     };
     beesV8.processOrderEvent(orderEvent6);
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(1);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(101);
@@ -501,7 +501,7 @@ describe('test event process of trading engine', async () => {
       }
     };
     beesV8.processOrderEvent(orderEvent7);
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(1);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(101);
@@ -549,7 +549,7 @@ describe('test event process of trading engine', async () => {
       }
     };
     beesV8.processOrderEvent(orderEvent8);
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(2);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(100);
@@ -595,7 +595,7 @@ describe('test event process of trading engine', async () => {
       }
     };
     beesV8.processOrderEvent(orderEvent9);
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(2);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(100);
@@ -640,7 +640,7 @@ describe('test event process of trading engine', async () => {
       }
     };
     beesV8.processOrderEvent(orderEvent10);
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(2);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(100);
@@ -685,7 +685,7 @@ describe('test event process of trading engine', async () => {
       }
     };
     beesV8.processOrderEvent(orderEvent11);
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(2);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(100);
@@ -730,7 +730,7 @@ describe('test event process of trading engine', async () => {
       }
     };
     beesV8.processOrderEvent(orderEvent12);
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(2);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(100);
@@ -765,7 +765,7 @@ describe('test event process of trading engine', async () => {
       }
     };
     beesV8.processOrderEvent(orderEvent13);
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // check length of book side
     expect(orderState.askSide.orderMap.length).to.be.equal(1);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(101);
@@ -990,7 +990,7 @@ describe('test event process of trading engine', async () => {
     *
     * */
 
-    let orderState = await beesV8.getCurrentStateOfOrderBook();
+    let orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // check all order in book again for sure
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(4);
@@ -1018,7 +1018,7 @@ describe('test event process of trading engine', async () => {
       _type: OrderEvent.CANCELED_EVENT,
       _order: orderEvent3._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*
     * -> bidSide:
     * 20: [1: 10, 7: 20]
@@ -1047,7 +1047,7 @@ describe('test event process of trading engine', async () => {
       _type: OrderEvent.CANCELED_EVENT,
       _order: orderEvent1._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*
     * -> bidSide:
     * 20: [7: 20]
@@ -1075,7 +1075,7 @@ describe('test event process of trading engine', async () => {
       _type: OrderEvent.CANCELED_EVENT,
       _order: orderEvent5._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*
     * -> bidSide:
     * 20: [7: 20]
@@ -1102,7 +1102,7 @@ describe('test event process of trading engine', async () => {
       _type: OrderEvent.CANCELED_EVENT,
       _order: orderEvent6._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*
     * -> bidSide:
     * 20: [7: 20]
@@ -1128,7 +1128,7 @@ describe('test event process of trading engine', async () => {
       _type: OrderEvent.CANCELED_EVENT,
       _order: orderEvent8._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*
     * -> bidSide:
     * 20: [7: 20]
@@ -1153,7 +1153,7 @@ describe('test event process of trading engine', async () => {
       _type: OrderEvent.CANCELED_EVENT,
       _order: orderEvent2._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*
     * -> bidSide:
     * 20: [7: 20]
@@ -1177,7 +1177,7 @@ describe('test event process of trading engine', async () => {
       _type: OrderEvent.CANCELED_EVENT,
       _order: orderEvent4._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*
     * -> bidSide:
     * 20: [7: 20]
@@ -1197,7 +1197,7 @@ describe('test event process of trading engine', async () => {
       _type: OrderEvent.CANCELED_EVENT,
       _order: orderEvent9._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*
     * -> bidSide:
     * 20: [7: 20]
@@ -1216,7 +1216,7 @@ describe('test event process of trading engine', async () => {
       _type: OrderEvent.CANCELED_EVENT,
       _order: orderEvent0._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*
     * -> bidSide:
     * 20: [7: 20]
@@ -1231,7 +1231,7 @@ describe('test event process of trading engine', async () => {
       _type: OrderEvent.CANCELED_EVENT,
       _order: orderEvent7._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*
     * -> bidSide:
     * */
@@ -1283,7 +1283,7 @@ describe('test event process of trading engine', async () => {
     *
     * */
 
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // check all order in book again for sure
     expect(orderState.bidSide.orderMap.length).to.be.equal(0);
     expect(orderState.askSide.orderMap.length).to.be.equal(4);
@@ -1310,7 +1310,7 @@ describe('test event process of trading engine', async () => {
       _type: OrderEvent.CANCELED_EVENT,
       _order: orderEvent2._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*
     * -> askSide:
     * 10: [3: 10]
@@ -1342,7 +1342,7 @@ describe('test event process of trading engine', async () => {
       _type: OrderEvent.CANCELED_EVENT,
       _order: orderEvent4._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*
     * -> askSide:
     * 10: [3: 10]
@@ -1373,7 +1373,7 @@ describe('test event process of trading engine', async () => {
       _type: OrderEvent.CANCELED_EVENT,
       _order: orderEvent5._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*
     * -> askSide:
     * 10: [3: 10]
@@ -1400,7 +1400,7 @@ describe('test event process of trading engine', async () => {
       _type: OrderEvent.CANCELED_EVENT,
       _order: orderEvent7._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*
     * -> askSide:
     * 10: [3: 10]
@@ -1426,7 +1426,7 @@ describe('test event process of trading engine', async () => {
       _type: OrderEvent.CANCELED_EVENT,
       _order: orderEvent1._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*
     * -> askSide:
     * 10: [3: 10]
@@ -1448,7 +1448,7 @@ describe('test event process of trading engine', async () => {
       _type: OrderEvent.CANCELED_EVENT,
       _order: orderEvent3._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*
     * -> askSide:
     * 40: [0: 10, 6: 20, 8: 30, 9: 40]
@@ -1466,7 +1466,7 @@ describe('test event process of trading engine', async () => {
       _type: OrderEvent.CANCELED_EVENT,
       _order: orderEvent6._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*
     * -> askSide:
     * 40: [0: 10, 8: 30, 9: 40]
@@ -1483,7 +1483,7 @@ describe('test event process of trading engine', async () => {
       _type: OrderEvent.CANCELED_EVENT,
       _order: orderEvent8._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*
     * -> askSide:
     * 40: [0: 10, 9: 40]
@@ -1499,7 +1499,7 @@ describe('test event process of trading engine', async () => {
       _type: OrderEvent.CANCELED_EVENT,
       _order: orderEvent9._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*
     * -> askSide:
     * 40: [0: 10]
@@ -1514,7 +1514,7 @@ describe('test event process of trading engine', async () => {
       _type: OrderEvent.CANCELED_EVENT,
       _order: orderEvent0._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*
     * -> askSide:
     * */
@@ -1720,7 +1720,7 @@ describe('test event process of trading engine', async () => {
     *
     * */
 
-    let orderState = await beesV8.getCurrentStateOfOrderBook();
+    let orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // check all order in book again for sure
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(4);
@@ -1756,7 +1756,7 @@ describe('test event process of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // nothing change
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(4);
@@ -1792,7 +1792,7 @@ describe('test event process of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*-> bidSide:
     * 10: [3: 10]
     * 20: [1: 10, 7: 20]
@@ -1827,7 +1827,7 @@ describe('test event process of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*-> bidSide: empty
     * -> askSide: empty
     * */
@@ -1893,7 +1893,7 @@ describe('test event process of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // check all order in book again for sure
     expect(orderState.bidSide.orderMap.length).to.be.equal(0);
     expect(orderState.askSide.orderMap.length).to.be.equal(4);
@@ -1929,7 +1929,7 @@ describe('test event process of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*-> askSide:
     * 10: [3: 5]
     * 20: [1: 10, 7: 20]
@@ -1972,7 +1972,7 @@ describe('test event process of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*-> askSide:
     * 30: [2: 10, 4: 20, 5: 30]
     * 40: [0: 10, 6: 20, 8: 30, 9: 40]
@@ -2005,7 +2005,7 @@ describe('test event process of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*-> askSide:
     * 40: [6: 10, 8: 30, 9: 40]
     * -> bidSide: empty
@@ -2032,7 +2032,7 @@ describe('test event process of trading engine', async () => {
         baseCurrency: 'USDT'
       }
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     /*-> askSide: empty
     * -> bidSide: empty
     * */
@@ -2162,7 +2162,7 @@ describe('test event process of trading engine', async () => {
     * 30: [1: 10, 3: 20, 4: 30]
     * */
 
-    let orderState = await beesV8.getCurrentStateOfOrderBook();
+    let orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // check all order in book again for sure
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
@@ -2222,7 +2222,7 @@ describe('test event process of trading engine', async () => {
       _order: orderEvent5._order
     });
 
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
@@ -2337,7 +2337,7 @@ describe('test event process of trading engine', async () => {
     * 200: [6: 10, 11: 20]
     * 300: [7: 10, 9: 20, 10: 30]
     * */
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.askSide.orderMap.length).to.be.equal(3);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(100);
@@ -2395,7 +2395,7 @@ describe('test event process of trading engine', async () => {
       qtyDelta: -orderEvent11._order.quantity * 2,
       _order: orderEvent11._order
     });
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.askSide.orderMap.length).to.be.equal(3);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(100);
@@ -2422,7 +2422,7 @@ describe('test event process of trading engine', async () => {
   // --------------------------------------------
   // test update limit price
   // --------------------------------------------
-  
+
   it('test update limit event', async () => {
     beesV8.start();
 
@@ -2522,7 +2522,7 @@ describe('test event process of trading engine', async () => {
     * 30: [1: 10, 3: 20, 4: 30]
     * */
 
-    let orderState = await beesV8.getCurrentStateOfOrderBook();
+    let orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     // check all order in book again for sure
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
@@ -2554,7 +2554,7 @@ describe('test event process of trading engine', async () => {
     * 20: [0: 10, 5: 20]
     * 30: [1: 10, 3: 20, 4: 30]
     * */
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(5);
@@ -2584,7 +2584,7 @@ describe('test event process of trading engine', async () => {
     * 25: [2: 10]
     * 30: [1: 10, 3: 20, 4: 30]
     * */
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
@@ -2612,7 +2612,7 @@ describe('test event process of trading engine', async () => {
     * 20: [0: 10, 5: 20, 2: 10]
     * 30: [1: 10, 3: 20, 4: 30]
     * */
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(2);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
@@ -2639,7 +2639,7 @@ describe('test event process of trading engine', async () => {
     * 30: [1: 10, 4: 30]
     * 31: [3: 20]
     * */
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
@@ -2668,7 +2668,7 @@ describe('test event process of trading engine', async () => {
     * 30: [1: 10, 4: 30]
     * 31: [3: 20, 2: 10]
     * */
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
@@ -2697,7 +2697,7 @@ describe('test event process of trading engine', async () => {
     * 30: [4: 30]
     * 31: [3: 20, 2: 10, 1: 10]
     * */
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
@@ -2726,7 +2726,7 @@ describe('test event process of trading engine', async () => {
     * 30: [4: 30]
     * 31: [3: 20, 2: 10, 1: 10, 5: 20]
     * */
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(20);
@@ -2756,7 +2756,7 @@ describe('test event process of trading engine', async () => {
     * 30: [4: 30]
     * 31: [3: 20, 2: 10, 5: 20]
     * */
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(4);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
@@ -2787,7 +2787,7 @@ describe('test event process of trading engine', async () => {
     * 20: [0: 10]
     * 31: [3: 20, 2: 10, 5: 20]
     * */
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(3);
     expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
@@ -2824,7 +2824,7 @@ describe('test event process of trading engine', async () => {
     * ->askSide
     * 200: [6: 20]
     * */
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.askSide.orderMap.length).to.be.equal(1);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(200);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
@@ -2865,7 +2865,7 @@ describe('test event process of trading engine', async () => {
     * ->askSide
     * 200: [6: 20, 7: 50]
     * */
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.askSide.orderMap.length).to.be.equal(1);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(200);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(2);
@@ -2907,7 +2907,7 @@ describe('test event process of trading engine', async () => {
     * ->askSide
     * 200: [6: 20, 7: 50, 8: 30]
     * */
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.askSide.orderMap.length).to.be.equal(1);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(200);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(3);
@@ -2945,7 +2945,7 @@ describe('test event process of trading engine', async () => {
     * 32: [6: 20]
     * 200: [7: 50, 8: 30]
     * */
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.askSide.orderMap.length).to.be.equal(2);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(32);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
@@ -2985,7 +2985,7 @@ describe('test event process of trading engine', async () => {
     * 32: [6: 20, 8: 30]
     * 200: [7: 50]
     * */
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.askSide.orderMap.length).to.be.equal(2);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(32);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(2);
@@ -3025,7 +3025,7 @@ describe('test event process of trading engine', async () => {
     * 32: [8: 30]
     * 200: [7: 50]
     * */
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.askSide.orderMap.length).to.be.equal(2);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(32);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
@@ -3060,7 +3060,7 @@ describe('test event process of trading engine', async () => {
     * ->askSide
     * 32: [8: 30]
     * */
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.askSide.orderMap.length).to.be.equal(1);
     expect(orderState.askSide.orderMap[0].price).to.be.equal(32);
     expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
@@ -3082,7 +3082,7 @@ describe('test event process of trading engine', async () => {
     /*-> bidSide: empty
     * -> askSide: empty
     * */
-    orderState = await beesV8.getCurrentStateOfOrderBook();
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(0);
     beesV8.stop();

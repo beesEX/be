@@ -21,11 +21,11 @@ class BeesV8 {
     this.orderbookChildProcess = fork('src/trading-engine/orderbook.js');
 
     this.orderbookChildProcess.on('message', (message) => {
+      logger.info(`beesV8.js: receives message from orderboook-childprocess: ${JSON.stringify(message)}`);
+
       const resolveFunction = this.mapOfIdAndResolveFunction[message.id];
-      logger.info(`beesV8.js: message ${JSON.stringify(message)}`);
       if (resolveFunction) {
-        if (message.type === EVENT_GET_AGGREGATED_STATE) resolveFunction(message.state);
-        else if (message.type === EVENT_GET_ORDERBOOK_STATE) resolveFunction(message.orderState);
+        resolveFunction(message.state);
         delete this.mapOfIdAndResolveFunction[message.id];
       }
     });
@@ -42,11 +42,19 @@ class BeesV8 {
     this.orderbookChildProcess.send(event);
   }
 
-  async getAggregatedStateOfOrderBook(currency, baseCurrency) {
+  /**
+   * Retrieves the current volume-aggregated state of the order book of the given symbol.
+   *
+   * @param symbol currency pair symbol of the order book
+   * @returns {Promise<*>}
+   */
+  async getAggregatedStateOfOrderBook(symbol) {
+    if (symbol !== this.symbol) {
+      logger.warn('beesV8.js getAggregatedStateOfOrderBook(): receives unknown currency pair symbol=', symbol);
+      return null;
+    }
 
-    //TODO use currency, baseCurrency to decide which order book should be used
     const messageId = uuid();
-
     const message = {
       type: EVENT_GET_AGGREGATED_STATE,
       id: messageId
@@ -57,11 +65,20 @@ class BeesV8 {
     return new Promise((resolve, reject) => {
       this.mapOfIdAndResolveFunction[messageId] = resolve;
     });
-
   }
 
-  async getCurrentStateOfOrderBook(currency, baseCurrency) {
-    //TODO use currency, baseCurrency to decide which order book should be used
+  /**
+   * Retrieves the current state of the order book of the given symbol.
+   *
+   * @param symbol currency pair symbol of the order book
+   * @returns {Promise<*>}
+   */
+  async getCurrentStateOfOrderBook(symbol) {
+    if (symbol !== this.symbol) {
+      logger.warn('beesV8.js getCurrentStateOfOrderBook(): receives unknown currency pair symbol=', symbol);
+      return null;
+    }
+
     const messageId = uuid();
     const message = {
       type: EVENT_GET_ORDERBOOK_STATE,

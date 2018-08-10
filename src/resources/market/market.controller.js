@@ -13,7 +13,7 @@ exports.getAggregatedStateOfOrderBook = async (ctx) => {
 
     logger.info(`order.controller.js: getAggregatedStateOfOrderBook: currency = ${ctx.params.currency} base currency = ${ctx.params.baseCurrency}`);
 
-    ctx.body = await beesV8.getAggregatedStateOfOrderBook(ctx.params.currency, ctx.params.baseCurrency);
+    ctx.body = await beesV8.getAggregatedStateOfOrderBook(`${ctx.params.currency}_${ctx.params.baseCurrency}`);
   }
   else {
 
