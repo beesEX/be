@@ -1,4 +1,4 @@
-const txService = require('transaction.service');
+const txService = require('./transaction.service');
 
 const { logger } = global;
 
