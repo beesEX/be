@@ -21,6 +21,7 @@ module.exports = {
     return {
       orderId: order._id,
       price: order.limitPrice,
+      quantity: order.quantity,
       tradedQuantity: tradedQuantity,
       filledCompletely: order.remainingQuantity() <= ZERO
     };

@@ -3,18 +3,18 @@ const uuid = require('uuid/v4');
 const { EVENT_GET_AGGREGATED_STATE, EVENT_GET_ORDERBOOK_STATE } = require('./orderbook');
 
 const { logger } = global;
-/*
+
 const {publish, close} = require('../util/zeroMQpublisher');
 
-async function sendMessage(message) {
+async function sendMessage(message, topic) {
   return new Promise((resolve) => {
     setTimeout(() => {
-      publish(`${message}`, 'world');
+      publish(`${message}`, topic);
       resolve();
     }, 1000);
   });
 }
-*/
+
 
 /**
  * The trading engine of the beesEX platform.
@@ -36,6 +36,11 @@ class BeesV8 {
       logger.info(`beesV8.js: receives message from orderboook-childprocess: ${JSON.stringify(message)}`);
 
       //if (message.type === 'ORDER_BOOK_EVENT') sendMessage(message).then(() => {close();});
+      if (message.type === 'ORDER_BOOK_EVENT') {
+        sendMessage(JSON.stringify(message), 'Orderbook-' + this.symbol).then(() => {
+          logger.info(`beesV8.js: sent message to UI server: ${JSON.stringify(message)}`);
+        });
+      }
 
       const resolveFunction = this.mapOfIdAndResolveFunction[message.id];
       if (resolveFunction) {

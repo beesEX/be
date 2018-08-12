@@ -22,6 +22,8 @@ class OrderBook {
     this.symbol = symbol; // e.g 'BTC_USDT'
     this.asks = askSide; // BookSide containing SELL orders
     this.bids = bidSide; // BookSide containing BUY orders
+
+    // TODO: load all orders in DB of this symbol and save in to order book side
   }
 
   /**
