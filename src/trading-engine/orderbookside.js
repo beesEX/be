@@ -9,15 +9,9 @@ global.logger = createConsoleLogger({isDev: config.isDev});
 const {logger} = global;
 
 const OrderMap = require('./ordermap');
+const OrderBookEvent = require('./orderbook.event');
 
 const ZERO = 0.0000000000001;
-let EventId = 0; // TODO: Is it optimal?
-
-const TRADING_EVENT_TYPE = {
-  VOLUME_ADDED_EVENT: 'VOLUME_ADDED_EVENT',
-  VOLUME_REMOVED_EVENT: 'VOLUME_REMOVED_EVENT',
-  ORDER_MATCHED_EVENT: 'ORDER_MATCHED_EVENT'
-};
 
 module.exports = class OrderBookSide {
   constructor(side) {
@@ -37,36 +31,18 @@ module.exports = class OrderBookSide {
   put order on book
   */
   putOrderOnBook(order) {
-    if (this.orderMap.addOrder(order)) {
-      // return VOLUME_ADDED_EVENT
-      return {
-        type: TRADING_EVENT_TYPE.VOLUME_ADDED_EVENT,
-        id: EventId++,
-        symbol: 'BTC_USDT',
-        price: order.limitPrice,
-        quantityAdded: order.remainingQuantity(),
-        timestamp: new Date(),
-      };
+    if (!this.orderMap.addOrder(order)) {
+      logger.error('orderbookside.js putOrderOnBook(): ERROR when put order on book');
     }
-    return null;
   }
 
   /*
   remove order from book
   */
   removeOrder(order) {
-    if (this.orderMap.removeOrder(order)) {
-      // return VOLUME_REMOVED_EVENT
-      return {
-        type: TRADING_EVENT_TYPE.VOLUME_REMOVED_EVENT,
-        id: EventId++,
-        symbol: 'BTC_USDT',
-        price: order.limitPrice,
-        quantityRemoved: order.remainingQuantity(),
-        timestamp: new Date(),
-      };
+    if (!this.orderMap.removeOrder(order)) {
+      logger.error('orderbookside.js removeOrder(): ERROR when remove order from book');
     }
-    return null;
   }
 
   /*
@@ -78,30 +54,7 @@ module.exports = class OrderBookSide {
     if (oldOrderElement) {
       const differenceQuantity = oldOrderElement.order.quantity - order.quantity;
       if (differenceQuantity <= ZERO || oldOrderElement.order.remainingQuantity() >= differenceQuantity){
-        if (this.orderMap.updateOrderQuantity(order)) {
-          if (differenceQuantity <= ZERO) {
-            // return VOLUME_ADDED_EVENT
-            return {
-              type: TRADING_EVENT_TYPE.VOLUME_ADDED_EVENT,
-              id: EventId++,
-              symbol: 'BTC_USDT',
-              price: order.limitPrice,
-              quantityAdded: Math.abs(differenceQuantity),
-              timestamp: new Date(),
-            };
-          }
-          else {
-            // return VOLUME_REMOVED_EVENT
-            return {
-              type: TRADING_EVENT_TYPE.VOLUME_REMOVED_EVENT,
-              id: EventId++,
-              symbol: 'BTC_USDT',
-              price: order.limitPrice,
-              quantityRemoved: Math.abs(differenceQuantity),
-              timestamp: new Date(),
-            };
-          }
-        }
+        return this.orderMap.updateOrderQuantity(order);
       }
     }
     return null;
@@ -111,16 +64,18 @@ module.exports = class OrderBookSide {
   order matching core logic. Try to match the given order against counter orders of the book side.
   */
   tryToMatch(order) {
-    const tradingEventList = [];
+    let matchingEventList = [];
     while (order.remainingQuantity() > ZERO) {
       const bestPriceLevel = this.bestPrice();
       if (bestPriceLevel && order.fulfill(bestPriceLevel)) {
         const tmpTradingEventList = this.match(order, bestPriceLevel);
-        if (tmpTradingEventList.length > 0) tradingEventList.concat(tmpTradingEventList);
+        //logger.info(`orderbookside.js: tryToMatch(): tmpTradingEventList = ${JSON.stringify(tmpTradingEventList)}`);
+        matchingEventList = matchingEventList.concat(tmpTradingEventList);
+        //logger.info(`orderbookside.js: tryToMatch(): matchingEventList = ${JSON.stringify(matchingEventList)}`);
       }
       else break;
     }
-    return tradingEventList;
+    return matchingEventList;
   }
 
   /*
@@ -143,56 +98,31 @@ module.exports = class OrderBookSide {
    @param priceLevel - matched price
    */
   match(order, priceLevel) {
-
-    const tradingEventList = [];
+    const matchingEventList = [];
 
     while (true) {
       const tmpLLOE = this.orderMap.getFirstElementOfPriceLevel(priceLevel);
       if (!tmpLLOE) break; // all orders at this price level are matched
 
-      //logger.info(`orderbookside.js: match(): found ${JSON.stringify(tmpLLOE.order)}`);
 
       if (order.remainingQuantity() < tmpLLOE.order.remainingQuantity()) {
         // order will be fulfilled right now
         logger.info(`orderbookside.js: match(): Match id ${tmpLLOE.order._id} with trade quantity ${order.remainingQuantity()}`);
 
-        // add ORDER_MATCHED_EVENT
-        /*
-        tradingEventList.push({
-          type: TRADING_EVENT_TYPE.ORDER_MATCHED_EVENT,
-          id: EventId++,
-          symbol: 'BTC_USDT',
-          price: priceLevel,
-          buyOrderId: (this.side === 'BID') ? tmpLLOE.order._id : order._id,
-          sellOrderId: (this.side === 'BID') ? order._id : tmpLLOE.order._id,
-          quantity: order.remainingQuantity(),
-          makerSide: (this.side === 'BID') ? 'BUY' : 'SELL',
-          timestamp: new Date(),
-        });
-        */
-        tmpLLOE.order.filledQuantity += order.remainingQuantity();
+        const tradedQuantity = order.remainingQuantity();
+        tmpLLOE.order.filledQuantity += tradedQuantity;
         order.filledQuantity = order.quantity;
+
+        matchingEventList.push(OrderBookEvent.createNewMatchObject(tmpLLOE.order, tradedQuantity));
       }
       else {
         logger.info(`orderbookside.js: match(): Match id ${tmpLLOE.order._id} with trade quantity ${tmpLLOE.order.remainingQuantity()}`);
 
-        // add ORDER_MATCHED_EVENT
-        /*
-        tradingEventList.push({
-          type: TRADING_EVENT_TYPE.ORDER_MATCHED_EVENT,
-          id: EventId++,
-          symbol: 'BTC_USDT',
-          price: priceLevel,
-          buyOrderId: (this.side === 'BID') ? tmpLLOE.order._id : order._id,
-          sellOrderId: (this.side === 'BID') ? order._id : tmpLLOE.order._id,
-          quantity: tmpLLOE.order.remainingQuantity(),
-          makerSide: (this.side === 'BID') ? 'BUY' : 'SELL',
-          timestamp: new Date(),
-        });
-        */
-
-        order.filledQuantity += tmpLLOE.order.remainingQuantity();
+        const tradedQuantity = tmpLLOE.order.remainingQuantity();
+        order.filledQuantity += tradedQuantity;
         tmpLLOE.order.filledQuantity = tmpLLOE.order.quantity;
+
+        matchingEventList.push(OrderBookEvent.createNewMatchObject(tmpLLOE.order, tradedQuantity));
       }
 
       if (tmpLLOE.order.remainingQuantity() <= ZERO) {
@@ -202,7 +132,7 @@ module.exports = class OrderBookSide {
       if (order.remainingQuantity() <= ZERO) break;
     }
 
-    return tradingEventList;
+    return matchingEventList;
   }
 
   getAggregatedState() {

@@ -1,4 +1,6 @@
 const OrderBookSide = require('./orderbookside');
+const OrderBookEvent = require('./orderbook.event');
+
 const {Order, OrderEvent, OrderPlacedEvent, MarketOrderPlacedEvent, OrderQuantityUpdatedEvent, OrderLimitUpdatedEvent, OrderCanceledEvent} = require('../resources/order/order.models');
 const config = require('../config');
 const {createConsoleLogger} = require('@paralect/common-logger');
@@ -48,17 +50,21 @@ class OrderBook {
   */
   placeLimit(orderPlacedEvent) {
     const {order} = orderPlacedEvent;
+    const reasonObject = OrderBookEvent.createNewReasonObject(orderPlacedEvent);
+
     logger.info(`orderbook.js placeLimit(): processing new LIMIT order placed: ${JSON.stringify(order)}`);
 
+    let matchingEventList = [];
+
     if (order.side === 'BUY') {
-      this.asks.tryToMatch(order);
+      matchingEventList = this.asks.tryToMatch(order);
     }
     else { // SELL
-      this.bids.tryToMatch(order);
+      matchingEventList = this.bids.tryToMatch(order);
     }
 
     // if the order could not be filled completely, put the remaining qty on book
-    if (order.remainingQuantity() > 0) {
+    if (order.remainingQuantity() > ZERO) {
       logger.info(`orderbook.js placeLimit(): ${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
 
       if (order.side === 'BUY') {
@@ -68,6 +74,9 @@ class OrderBook {
         this.asks.putOrderOnBook(order);
       }
     }
+
+    // send order book event back to parent process
+    process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO));
   }
 
   /*
@@ -75,23 +84,29 @@ class OrderBook {
   */
   placeMarket(orderPlacedEvent) {
     const {order} = orderPlacedEvent;
+    const reasonObject = OrderBookEvent.createNewReasonObject(orderPlacedEvent);
+
     if (order.type !== 'MARKET') {
       logger.info(`orderbook.js placeMarket(): received order ${order} is not a MARKET order and will be rejected`);
       return;
     }
     logger.info(`orderbook.js placeMarket(): processing new MARKET order placed: ${JSON.stringify(order)}`);
 
+    let matchingEventList = [];
     if (order.side === 'BUY') {
-      this.asks.tryToMatch(order);
+      matchingEventList = this.asks.tryToMatch(order);
     }
     else { // SELL
-      this.bids.tryToMatch(order);
+      matchingEventList = this.bids.tryToMatch(order);
     }
 
     // remaining units of market order will not be put on book, gets just rejected.
     if (order.remainingQuantity() > ZERO) {
       logger.info(`orderbook.js placeMarket(): ${order.remainingQuantity()} remaining units of MARKET order will be rejected`);
     }
+
+    // send order book event back to parent process
+    process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO));
   }
 
   /*
@@ -99,14 +114,21 @@ class OrderBook {
   */
   updateQuantity(orderUpdatedEvent) {
     const {order} = orderUpdatedEvent;
+    const reasonObject = OrderBookEvent.createNewReasonObject(orderUpdatedEvent);
+
     logger.info(`orderbook.js updateQuantity(): processing updated LIMIT order : ${JSON.stringify(order)}`);
 
     if (order.side === 'BUY') {
       this.bids.updateQuantity(order);
+      if (order.remainingQuantity() <= ZERO) this.bids.remove(order);
     }
     else { // SELL
       this.asks.updateQuantity(order);
+      if (order.remainingQuantity() <= ZERO) this.asks.remove(order);
     }
+
+    // send order book event back to parent process
+    process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= 0));
   }
 
   /*
@@ -114,6 +136,8 @@ class OrderBook {
   */
   updateLimit(orderUpdatedEvent) {
     const {order} = orderUpdatedEvent;
+    const reasonObject = OrderBookEvent.createNewReasonObject(orderUpdatedEvent);
+
     logger.info(`orderbook.js updateLimit(): processing updated LIMIT order with limit price change: ${JSON.stringify(order)}`);
 
     const oldOrder = new Order(JSON.parse(JSON.stringify(order)));
@@ -127,16 +151,17 @@ class OrderBook {
       this.asks.removeOrder(oldOrder);
     }
 
+    let matchingEventList = [];
     // process updated order like new placed order
     if (order.side === 'BUY') {
-      this.asks.tryToMatch(order);
+      matchingEventList = this.asks.tryToMatch(order);
     }
     else { // SELL
-      this.bids.tryToMatch(order);
+      matchingEventList = this.bids.tryToMatch(order);
     }
 
     // if the order could not be filled completely, put the remaining qty on book
-    if (order.remainingQuantity() > 0) {
+    if (order.remainingQuantity() > ZERO) {
       logger.info(`orderbook.js updateLimit(): ${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
 
       if (order.side === 'BUY') {
@@ -146,6 +171,9 @@ class OrderBook {
         this.asks.putOrderOnBook(order);
       }
     }
+
+    // send order book event back to parent process
+    process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO));
   }
 
   /*
@@ -153,6 +181,8 @@ class OrderBook {
   */
   cancel(orderCanceledEvent) {
     const {order} = orderCanceledEvent;
+    const reasonObject = OrderBookEvent.createNewReasonObject(orderCanceledEvent);
+
     logger.info(`orderbook.js cancel(): processing LIMIT order canceled: ${JSON.stringify(order)}`);
 
     if (order.side === 'BUY') {
@@ -161,6 +191,9 @@ class OrderBook {
     else { // SELL
       this.asks.removeOrder(order);
     }
+
+    // send order book event back to parent process
+    process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO));
   }
 
   getAggregatedState() {

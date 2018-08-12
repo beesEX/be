@@ -1,3 +1,8 @@
+const {createConsoleLogger} = require('@paralect/common-logger');
+const config = require('../config');
+global.logger = createConsoleLogger({isDev: config.isDev});
+const {logger} = global;
+
 const {OrderEvent} = require('../resources/order/order.models');
 
 const ZERO = 0.0000000000001;
@@ -21,8 +26,10 @@ module.exports = {
     };
   },
   
-  createNewReasonObject : function (orderEvent) {
-    if (orderEvent._type === OrderEvent.LIMIT_UPDATED_EVENT || orderEvent._type === OrderEvent.MARKET_PLACED_EVENT) {
+  createNewReasonObject : function (originalOrderEvent) {
+    const orderEvent = JSON.parse(JSON.stringify(originalOrderEvent));
+
+    if (orderEvent._type === OrderEvent.LIMIT_PLACED_EVENT || orderEvent._type === OrderEvent.MARKET_PLACED_EVENT) {
       return {
         type: 'PLACED',
         orderId: orderEvent._order._id,
@@ -53,15 +60,18 @@ module.exports = {
         filledQuantity: orderEvent._order.filledQuantity
       };
     }
+
+    logger.error('orderbook.event.js createNewReasonObject(): ERROR: unknown event type');
+    return null;
   },
   
-  createNewOrderbookEvent: function (symbol, reason) {
+  createNewOrderbookEvent: function (symbol, reason, matchingEvent, isFilledCompletely) {
     return {
       type: 'ORDER_BOOK_EVENT',
       symbol: symbol,
       reason: reason,
-      matches: [],
-      filledCompletely: false,
+      matches: matchingEvent || [],
+      filledCompletely: isFilledCompletely || false,
       timestamp: new Date()
     };
   },
