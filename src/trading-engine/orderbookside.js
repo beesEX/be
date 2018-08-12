@@ -52,11 +52,13 @@ module.exports = class OrderBookSide {
     // check if new quantity is valid
     const oldOrderElement = this.orderMap.getElementByOrder(order);
     if (oldOrderElement) {
-      const differenceQuantity = oldOrderElement.order.quantity - order.quantity;
-      if (differenceQuantity <= ZERO || oldOrderElement.order.remainingQuantity() >= differenceQuantity){
+      if (oldOrderElement.order.filledQuantity <= order.quantity) {
         return this.orderMap.updateOrderQuantity(order);
       }
+      logger.error(`orderbookside.js updateQuantity(): ERROR: order id ${order._id} has new quantity ${order.quantity} < filled quantity ${oldOrderElement.order.filledQuantity}`);
+      return null;
     }
+    logger.error(`orderbookside.js updateQuantity(): ERROR: not found this order id ${order._id} at price ${order.limitPrice}`);
     return null;
   }
 

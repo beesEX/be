@@ -120,17 +120,20 @@ class OrderBook {
 
     logger.info(`orderbook.js updateQuantity(): processing updated LIMIT order : ${JSON.stringify(order)}`);
 
+    let isSuccessfullyUpdated;
+
     if (order.side === 'BUY') {
-      this.bids.updateQuantity(order);
-      if (order.remainingQuantity() <= ZERO) this.bids.remove(order);
+      isSuccessfullyUpdated = this.bids.updateQuantity(order);
+      if (isSuccessfullyUpdated && order.remainingQuantity() <= ZERO) this.bids.removeOrder(order);
     }
     else { // SELL
-      this.asks.updateQuantity(order);
-      if (order.remainingQuantity() <= ZERO) this.asks.remove(order);
+      isSuccessfullyUpdated = this.asks.updateQuantity(order);
+      if (isSuccessfullyUpdated && order.remainingQuantity() <= ZERO) this.asks.removeOrder(order);
     }
 
     // send order book event back to parent process
-    process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= 0));
+    if (isSuccessfullyUpdated) process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO));
+    else logger.error(`orderbook.js updateQuantity(): failed to update event ${JSON.stringify(orderUpdatedEvent)}`);
   }
 
   /*

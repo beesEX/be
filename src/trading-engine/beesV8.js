@@ -4,7 +4,7 @@ const { EVENT_GET_AGGREGATED_STATE, EVENT_GET_ORDERBOOK_STATE } = require('./ord
 
 const { logger } = global;
 
-const {publish, close} = require('../util/zeroMQpublisher');
+const {open, publish, close} = require('../util/zeroMQpublisher');
 
 async function sendMessage(message, topic) {
   return new Promise((resolve) => {
@@ -14,7 +14,6 @@ async function sendMessage(message, topic) {
     }, 1000);
   });
 }
-
 
 /**
  * The trading engine of the beesEX platform.
@@ -30,6 +29,11 @@ class BeesV8 {
    * start the engine
    */
   start() {
+    logger.info(`BeesV8 for ${this.symbol} starts`);
+
+    // start zero MQ
+    open();
+
     this.orderbookChildProcess = fork('src/trading-engine/orderbook.js');
 
     this.orderbookChildProcess.on('message', (message) => {
@@ -115,9 +119,8 @@ class BeesV8 {
    * stop the engine
    */
   stop() {
-
     this.orderbookChildProcess.kill();
-
+    close();
   }
 
 }
