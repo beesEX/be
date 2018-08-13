@@ -22,9 +22,9 @@ function isSameOrder(order1, order2) {
 
 describe('get the aggregated state of the order book', async () => {
 
-  it('get aggregated state from the empty order book should be successful', async () => {
+  await it('get aggregated state from the empty order book should be successful', async () => {
 
-    beesV8.start();
+    await beesV8.start();
 
     const state = await beesV8.getAggregatedStateOfOrderBook('BTC_USDT');
     expect(state).not.to.be.undefined;
@@ -35,14 +35,14 @@ describe('get the aggregated state of the order book', async () => {
 
     expect(Object.keys(beesV8.mapOfIdAndResolveFunction).length).to.be.equal(0);
 
-    beesV8.stop();
+    await beesV8.stop();
 
 
   });
 
-  it('get aggregated state from the order book with one side being empty should be successful', async () => {
+  await it('get aggregated state from the order book with one side being empty should be successful', async () => {
 
-    beesV8.start();
+    await beesV8.start();
 
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_PLACED_EVENT,
@@ -88,13 +88,13 @@ describe('get the aggregated state of the order book', async () => {
 
     expect(Object.keys(beesV8.mapOfIdAndResolveFunction).length).to.be.equal(0);
 
-    beesV8.stop();
+    await beesV8.stop();
 
   });
 
-  it('get aggregated state from the order book with one side having more than 2 prices should be successful', async () => {
+  await it('get aggregated state from the order book with one side having more than 2 prices should be successful', async () => {
 
-    beesV8.start();
+    await beesV8.start();
 
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_PLACED_EVENT,
@@ -138,13 +138,13 @@ describe('get the aggregated state of the order book', async () => {
 
     expect(Object.keys(beesV8.mapOfIdAndResolveFunction).length).to.be.equal(0);
 
-    beesV8.stop();
+    await beesV8.stop();
 
   });
 
-  it('get aggregated state from the order book with 2 sides having more than 2 prices should be successful', async () => {
+  await it('get aggregated state from the order book with 2 sides having more than 2 prices should be successful', async () => {
 
-    beesV8.start();
+    await beesV8.start();
 
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_PLACED_EVENT,
@@ -220,7 +220,7 @@ describe('get the aggregated state of the order book', async () => {
 
     expect(Object.keys(beesV8.mapOfIdAndResolveFunction).length).to.be.equal(0);
 
-    beesV8.stop();
+    await beesV8.stop();
 
   });
 
@@ -231,12 +231,24 @@ describe('get the aggregated state of the order book', async () => {
 // =====================================================================
 
 describe('test event process of trading engine', async () => {
+  console.log('');
+  console.log('================================================================================');
+  console.log('                 TEST EVENT PROCESS OF TRADING ENGINE');
+  console.log('================================================================================');
+  console.log('');
+
 
   // --------------------------------------------
   // test place limit event
   // --------------------------------------------
 
-  it('test place limit event', async () => {
+  await it('test place limit event', async () => {
+
+    console.log('');
+    console.log('---------------------------------------------------------');
+    console.log('| TRADING ENGINE: test place limit event                |');
+    console.log('---------------------------------------------------------');
+    console.log('');
 
     // description:
     /*
@@ -254,8 +266,7 @@ describe('test event process of trading engine', async () => {
     * 100: [0: 150, 1: 100, 5: 15]
     * */
 
-
-    beesV8.start();
+    await beesV8.start();
 
     let orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState).not.to.be.undefined;
@@ -780,7 +791,7 @@ describe('test event process of trading engine', async () => {
     * 101: [6: 500]
     * */
 
-    beesV8.stop();
+    await beesV8.stop();
   });
 
 
@@ -788,9 +799,15 @@ describe('test event process of trading engine', async () => {
   // test cancel order
   // --------------------------------------------
 
-  it('test cancel order event', async () => {
+  await it('test cancel order event', async () => {
 
-    beesV8.start();
+    console.log('');
+    console.log('---------------------------------------------------------');
+    console.log('| TRADING ENGINE: test cancel order event               |');
+    console.log('---------------------------------------------------------');
+    console.log('');
+
+    await beesV8.start();
 
     // description:
     /* Firstly place some orders then cancel
@@ -1505,14 +1522,21 @@ describe('test event process of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(0);
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
 
-    beesV8.stop();
+    await beesV8.stop();
   });
 
   // --------------------------------------------------
   // test place market
   // --------------------------------------------------
-  it('test place market event', async () => {
-    beesV8.start();
+  await it('test place market event', async () => {
+
+    console.log('');
+    console.log('---------------------------------------------------------');
+    console.log('| TRADING ENGINE: test place market event               |');
+    console.log('---------------------------------------------------------');
+    console.log('');
+
+    await beesV8.start();
 
     const orderEvent0 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
@@ -2006,15 +2030,22 @@ describe('test event process of trading engine', async () => {
     expect(orderState.bidSide.orderMap.length).to.be.equal(0);
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
 
-    beesV8.stop();
+    await beesV8.stop();
   });
 
   // --------------------------------------------
   // test update quantity
   // --------------------------------------------
 
-  it('test update quantity event', async () => {
-    beesV8.start();
+  await it('test update quantity event', async () => {
+
+    console.log('');
+    console.log('---------------------------------------------------------');
+    console.log('| TRADING ENGINE: test update quantity event            |');
+    console.log('---------------------------------------------------------');
+    console.log('');
+
+    await beesV8.start();
 
     // description:
     /* Firstly place some orders then place update quantity
@@ -2675,7 +2706,6 @@ describe('test event process of trading engine', async () => {
     expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], orderEvent7._order)).to.be.equal(true);
     expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], orderEvent9._order)).to.be.equal(true);
 
-    // try to update with new quantity < filled quantity -> expect: nothing changes
     oldQuantity = 0 + orderEvent0._order.quantity;
     orderEvent0._order.quantity = 10;
     beesV8.processOrderEvent({
@@ -2717,15 +2747,252 @@ describe('test event process of trading engine', async () => {
     expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], orderEvent9._order)).to.be.equal(true);
 
 
-    beesV8.stop();
+    const orderEvent13 = {
+      _type: OrderEvent.LIMIT_PLACED_EVENT,
+      _order: {
+        _id: 13,
+        type: 'LIMIT',
+        side: 'BUY',
+        limitPrice: 400,
+        quantity: 5,
+        filledQuantity: 0.0,
+        currency: 'BTC',
+        baseCurrency: 'USDT'
+      }
+    };
+    orderEvent8._order.filledQuantity = 5;
+    beesV8.processOrderEvent(orderEvent13);
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
+
+    /*-> bidSide:
+    * 10: [2: 12]
+    * 20: [5: 5]
+    *-> askSide:
+    * 100: [8: 15]
+    * 200: [6: 12, 11: 8]
+    * 300: [7: 8, 9: 10]
+    * */
+
+    expect(orderState.bidSide.orderMap.length).to.be.equal(2);
+    expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
+    expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(orderState.bidSide.orderMap[1].price).to.be.equal(20);
+    expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent5._order)).to.be.equal(true);
+
+    expect(orderState.askSide.orderMap.length).to.be.equal(3);
+    expect(orderState.askSide.orderMap[0].price).to.be.equal(100);
+    expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent8._order)).to.be.equal(true);
+    expect(orderState.askSide.orderMap[1].price).to.be.equal(200);
+    expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(2);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], orderEvent11._order)).to.be.equal(true);
+    expect(orderState.askSide.orderMap[2].price).to.be.equal(300);
+    expect(orderState.askSide.orderMap[2].orders.length).to.be.equal(2);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], orderEvent7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], orderEvent9._order)).to.be.equal(true);
+
+    oldQuantity = 0 + orderEvent8._order.quantity;
+    orderEvent8._order.quantity = 10;
+    beesV8.processOrderEvent({
+      _type: OrderEvent.QUANTITY_UPDATED_EVENT,
+      oldPrice: orderEvent8._order.limitPrice,
+      oldQuantity: oldQuantity,
+      _order: orderEvent8._order
+    });
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
+
+    /*-> bidSide:
+    * 10: [2: 12]
+    * 20: [5: 5]
+    *-> askSide:
+    * 100: [8: 5]
+    * 200: [6: 12, 11: 8]
+    * 300: [7: 8, 9: 10]
+    * */
+
+    expect(orderState.bidSide.orderMap.length).to.be.equal(2);
+    expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
+    expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(orderState.bidSide.orderMap[1].price).to.be.equal(20);
+    expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent5._order)).to.be.equal(true);
+
+    expect(orderState.askSide.orderMap.length).to.be.equal(3);
+    expect(orderState.askSide.orderMap[0].price).to.be.equal(100);
+    expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent8._order)).to.be.equal(true);
+    expect(orderState.askSide.orderMap[1].price).to.be.equal(200);
+    expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(2);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent6._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[1], orderEvent11._order)).to.be.equal(true);
+    expect(orderState.askSide.orderMap[2].price).to.be.equal(300);
+    expect(orderState.askSide.orderMap[2].orders.length).to.be.equal(2);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[0], orderEvent7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[2].orders[1], orderEvent9._order)).to.be.equal(true);
+
+    const orderEvent14 = {
+      _type: OrderEvent.LIMIT_PLACED_EVENT,
+      _order: {
+        _id: 14,
+        type: 'LIMIT',
+        side: 'BUY',
+        limitPrice: 400,
+        quantity: 28,
+        filledQuantity: 0.0,
+        currency: 'BTC',
+        baseCurrency: 'USDT'
+      }
+    };
+    orderEvent8._order.filledQuantity = 10;
+    orderEvent7._order.filledQuantity = 3;
+    beesV8.processOrderEvent(orderEvent14);
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
+
+    /*-> bidSide:
+    * 10: [2: 12]
+    * 20: [5: 5]
+    *-> askSide:
+    * 300: [7: 5, 9: 10]
+    * */
+
+    expect(orderState.bidSide.orderMap.length).to.be.equal(2);
+    expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
+    expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(orderState.bidSide.orderMap[1].price).to.be.equal(20);
+    expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent5._order)).to.be.equal(true);
+
+    expect(orderState.askSide.orderMap.length).to.be.equal(1);
+    expect(orderState.askSide.orderMap[0].price).to.be.equal(300);
+    expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(2);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent7._order)).to.be.equal(true);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[1], orderEvent9._order)).to.be.equal(true);
+
+    oldQuantity = 0 + orderEvent7._order.quantity;
+    orderEvent7._order.quantity = 3;
+    beesV8.processOrderEvent({
+      _type: OrderEvent.QUANTITY_UPDATED_EVENT,
+      oldPrice: orderEvent7._order.limitPrice,
+      oldQuantity: oldQuantity,
+      _order: orderEvent7._order
+    });
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
+
+    /*-> bidSide:
+    * 10: [2: 12]
+    * 20: [5: 5]
+    *-> askSide:
+    * 300: [9: 10]
+    * */
+
+    expect(orderState.bidSide.orderMap.length).to.be.equal(2);
+    expect(orderState.bidSide.orderMap[0].price).to.be.equal(10);
+    expect(orderState.bidSide.orderMap[0].orders.length).to.be.equal(1);
+    expect(isSameOrder(orderState.bidSide.orderMap[0].orders[0], orderEvent2._order)).to.be.equal(true);
+    expect(orderState.bidSide.orderMap[1].price).to.be.equal(20);
+    expect(orderState.bidSide.orderMap[1].orders.length).to.be.equal(1);
+    expect(isSameOrder(orderState.bidSide.orderMap[1].orders[0], orderEvent5._order)).to.be.equal(true);
+
+    expect(orderState.askSide.orderMap.length).to.be.equal(1);
+    expect(orderState.askSide.orderMap[0].price).to.be.equal(300);
+    expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent9._order)).to.be.equal(true);
+
+    oldQuantity = 0 + orderEvent2._order.quantity;
+    orderEvent2._order.quantity = 10;
+    beesV8.processOrderEvent({
+      _type: OrderEvent.QUANTITY_UPDATED_EVENT,
+      oldPrice: orderEvent2._order.limitPrice,
+      oldQuantity: oldQuantity,
+      _order: orderEvent2._order
+    });
+
+    /*-> bidSide:
+    * 10: [2: 10]
+    * 20: [5: 5]
+    *-> askSide:
+    * 300: [9: 10]
+    * */
+
+    const orderEvent15 = {
+      _type: OrderEvent.LIMIT_PLACED_EVENT,
+      _order: {
+        _id: 15,
+        type: 'LIMIT',
+        side: 'SELL',
+        limitPrice: 10,
+        quantity: 20,
+        filledQuantity: 0.0,
+        currency: 'BTC',
+        baseCurrency: 'USDT'
+      }
+    };
+    orderEvent2._order.filledQuantity = 10;
+    orderEvent5._order.filledQuantity = 5;
+    beesV8.processOrderEvent(orderEvent15);
+    orderEvent15._order.filledQuantity = 15;
+
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
+
+    /*-> bidSide: empty
+    *-> askSide:
+    * 10: [15: 5]
+    * 300: [9: 10]
+    * */
+
+    expect(orderState.bidSide.orderMap.length).to.be.equal(0);
+
+    expect(orderState.askSide.orderMap.length).to.be.equal(2);
+    expect(orderState.askSide.orderMap[0].price).to.be.equal(10);
+    expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent15._order)).to.be.equal(true);
+    expect(orderState.askSide.orderMap[1].price).to.be.equal(300);
+    expect(orderState.askSide.orderMap[1].orders.length).to.be.equal(1);
+    expect(isSameOrder(orderState.askSide.orderMap[1].orders[0], orderEvent9._order)).to.be.equal(true);
+
+    oldQuantity = 0 + orderEvent15._order.quantity;
+    orderEvent15._order.quantity = 15;
+    beesV8.processOrderEvent({
+      _type: OrderEvent.QUANTITY_UPDATED_EVENT,
+      oldPrice: orderEvent15._order.limitPrice,
+      oldQuantity: oldQuantity,
+      _order: orderEvent15._order
+    });
+    orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
+
+    /*-> bidSide: empty
+    *-> askSide:
+    * 300: [9: 10]
+    * */
+
+    expect(orderState.bidSide.orderMap.length).to.be.equal(0);
+
+    expect(orderState.askSide.orderMap.length).to.be.equal(1);
+    expect(orderState.askSide.orderMap[0].price).to.be.equal(300);
+    expect(orderState.askSide.orderMap[0].orders.length).to.be.equal(1);
+    expect(isSameOrder(orderState.askSide.orderMap[0].orders[0], orderEvent9._order)).to.be.equal(true);
+
+    await beesV8.stop();
   });
 
   // --------------------------------------------
   // test update limit price
   // --------------------------------------------
 
-  it('test update limit event', async () => {
-    beesV8.start();
+  await it('test update limit event', async () => {
+
+    console.log('');
+    console.log('---------------------------------------------------------');
+    console.log('| TRADING ENGINE: test update limit event               |');
+    console.log('---------------------------------------------------------');
+    console.log('');
+
+    await beesV8.start();
 
     const orderEvent0 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
@@ -3386,14 +3653,21 @@ describe('test event process of trading engine', async () => {
     orderState = await beesV8.getCurrentStateOfOrderBook('BTC_USDT');
     expect(orderState.askSide.orderMap.length).to.be.equal(0);
     expect(orderState.bidSide.orderMap.length).to.be.equal(0);
-    beesV8.stop();
+    await beesV8.stop();
   });
 
   // --------------------------------------------
   // TODO: test combination of all event types
   // --------------------------------------------
-  it('test combination of all event types', async () => {
-    beesV8.start();
+  await it('test combination of all event types', async () => {
+
+    console.log('');
+    console.log('---------------------------------------------------------');
+    console.log('| TRADING ENGINE: test combination of all event types   |');
+    console.log('---------------------------------------------------------');
+    console.log('');
+
+    await beesV8.start();
 
     // description:
     /*
@@ -3401,7 +3675,7 @@ describe('test event process of trading engine', async () => {
     *
     * */
 
-    beesV8.stop();
+    await beesV8.stop();
   });
 
 });
