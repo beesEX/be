@@ -186,12 +186,12 @@ module.exports = class OrderMap {
     return null;
   }
 
-  getElementByOrder(order){
+  getElementByOrder(order) {
     // get linked list of this price level
     const orderLinkedList = this.mapOfPriceAndOrderLinkedList[order.limitPrice];
     if (!orderLinkedList) {
       // this order is not in this orderMap
-      logger.error(`ordermap.js: getElementByOrder(): ERROR: not found orderLinkedList for this price level ${orderToRemove.limitPrice}`);
+      logger.error(`ordermap.js: getElementByOrder(): ERROR: not found orderLinkedList for this price level ${order.limitPrice}`);
       return null;
     }
     // get orderElement of this order

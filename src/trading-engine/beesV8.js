@@ -10,7 +10,7 @@ const {open, publish, close} = require('../util/zeroMQpublisher');
 
 async function sendMessage(message, topic) {
   return new Promise((resolve) => {
-    setTimeout(() => {
+    setTimeout(() => { // [Tung]: why timeout of 1000 millisecond?
       publish(`${message}`, topic);
       resolve();
     }, 1000);
@@ -34,20 +34,31 @@ class BeesV8 {
     logger.info(`BeesV8 for ${this.symbol} starts`);
 
     // start zero MQ
-    if (config.isDev) open();
+    if (config.isDev) open(); // [Tung]: why not start zeroMQ in app.listen() function in app.js? And conditional starting of zeroMQ only for DEV is wrong too, what is with PROD?
 
     this.orderbookChildProcess = fork('src/trading-engine/orderbook.js');
 
     this.orderbookChildProcess.on('message', (message) => {
       logger.info(`beesV8.js: receives message from orderboook-childprocess: ${JSON.stringify(message)}`);
 
-      //if (message.type === 'ORDER_BOOK_EVENT') sendMessage(message).then(() => {close();});
-      if (message.type === 'ORDER_BOOK_EVENT') {
-        sendMessage(JSON.stringify(message), 'Orderbook-' + this.symbol).then(() => {
-          logger.info(`beesV8.js: sent message to UI server: ${JSON.stringify(message)}`);
+      /**
+       * [Tung]: events sent from orderbook-childprocess need to be handled in consistent way. In following if-block
+       * you just check type of 'ORDER_BOOK_EVENT', so what is with other event types: 'GET_AGGREGATED_STATE', 'GET_ORDERBOOK_STATE'?
+       * I know that the logic in this if-block is specific to 'ORDER_BOOK-EVENT', but at some abstract level the structure of
+       * handling logic must be consistent for all event types -> always checking type of events in if-else-if-blocks.
+       */
+      if (message.type === 'ORDER_BOOK_EVENT') { // [Tung]: define type constant for events where they were emitted in orderbook.js, and use that constant here
+        sendMessage(JSON.stringify(message), `Orderbook-${this.symbol}`).then(() => {
+          logger.info(`beesV8.js: publishes orderbook event per zeroMQ to UI server: ${JSON.stringify(message)}`);
         });
       }
 
+      /**
+       * [Tung]: You don't check event type here, that means, you will do the same logic for all there event types sent from
+       * orderbook childprocess, which can't work for events of type 'ORDER_BOOK_EVENT', which do not have id field. Tt is
+       * accidentally the correct handling of 'ORDER_BOOK_EVENT', but as mentioned above, the structure of event handling logic
+       * for all three event types must be somehow consistent  -> always checking type of events in if-else-if-blocks.
+       */
       const resolveFunction = this.mapOfIdAndResolveFunction[message.id];
       if (resolveFunction) {
         resolveFunction(message.state);

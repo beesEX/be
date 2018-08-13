@@ -71,12 +71,13 @@ module.exports = class OrderBookSide {
       const bestPriceLevel = this.bestPrice();
       if (bestPriceLevel && order.fulfill(bestPriceLevel)) {
         const tmpTradingEventList = this.match(order, bestPriceLevel);
-        //logger.info(`orderbookside.js: tryToMatch(): tmpTradingEventList = ${JSON.stringify(tmpTradingEventList)}`);
+        logger.debug(`orderbookside.js: tryToMatch(): tmpTradingEventList = ${JSON.stringify(tmpTradingEventList)}`);
+
         matchingEventList = matchingEventList.concat(tmpTradingEventList);
-        //logger.info(`orderbookside.js: tryToMatch(): matchingEventList = ${JSON.stringify(matchingEventList)}`);
       }
       else break;
     }
+    logger.debug(`orderbookside.js: tryToMatch(): matchingEventList = ${JSON.stringify(matchingEventList)}`);
     return matchingEventList;
   }
 
