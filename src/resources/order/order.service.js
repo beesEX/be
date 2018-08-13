@@ -37,8 +37,8 @@ module.exports = {
    * @returns {Promise<void>}
    */
   updateOrderByUser: async (orderObject, userId) => {
-    let qtyDelta = 0;
-    let priceDelta = 0;
+    let oldQuantity = 0;
+    let oldPrice = 0;
 
     const updatedOrder = await service.update({
       _id: orderObject._id,
@@ -46,8 +46,8 @@ module.exports = {
       status: {$in: ON_BOOK_STATUS}
     }, (doc) => {
       if (orderObject.quantity > doc.filledQuantity) {
-        qtyDelta = orderObject.quantity - doc.quantity;
-        priceDelta = orderObject.limitPrice - doc.limitPrice;
+        oldQuantity = 0 + doc.quantity;
+        oldPrice = 0 + doc.limitPrice;
 
         doc.limitPrice = orderObject.limitPrice;
         doc.quantity = orderObject.quantity;
@@ -56,12 +56,12 @@ module.exports = {
     });
     logger.info('order.service.js: updateOrderByUser(): updatedOrder =', JSON.stringify(updatedOrder, null, 2));
 
-    if (updatedOrder && priceDelta !== 0) {
-      const orderLimitupdatedEvent = new OrderLimitUpdatedEvent(new Order(updatedOrder), qtyDelta, priceDelta);
+    if (updatedOrder && oldPrice !== orderObject.limitPrice) {
+      const orderLimitupdatedEvent = new OrderLimitUpdatedEvent(new Order(updatedOrder), oldQuantity, oldPrice);
       beesV8.processOrderEvent(orderLimitupdatedEvent);
     }
-    else if (updatedOrder && priceDelta === 0 && qtyDelta !== 0) {
-      const orderQuantityUpdatedEvent = new OrderQuantityUpdatedEvent(new Order(updatedOrder), qtyDelta, priceDelta);
+    else if (updatedOrder && oldPrice === orderObject.limitPrice && oldQuantity !== orderObject.quantity) {
+      const orderQuantityUpdatedEvent = new OrderQuantityUpdatedEvent(new Order(updatedOrder), oldQuantity, oldPrice);
       beesV8.processOrderEvent(orderQuantityUpdatedEvent);
     }
 
