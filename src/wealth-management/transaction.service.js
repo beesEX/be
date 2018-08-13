@@ -37,7 +37,12 @@ module.exports = {
     ]);
 
     const [credit, debit] = await Promise.all([creditPromise, debitPromise]);
-    const totalBalance = credit.sum - debit.sum;
+
+    let creditSum = 0;
+    let debitSum = 0;
+    if (credit.length > 0) creditSum = credit[0].sum;
+    if (debit.length > 0) debitSum = debit[0].sum;
+    const totalBalance = creditSum - debitSum;
     logger.info(`transaction.service.js getBalance(): userId=${userId} has total ${totalBalance} ${currency}`);
 
     return totalBalance;
@@ -68,7 +73,11 @@ module.exports = {
     ]);
 
     const [credit, debit] = await Promise.all([creditPromise, debitPromise]);
-    const availableBalance = credit.sum - debit.sum;
+    let creditSum = 0;
+    let debitSum = 0;
+    if (credit.length > 0) creditSum = credit[0].sum;
+    if (debit.length > 0) debitSum = debit[0].sum;
+    const availableBalance = creditSum - debitSum;
     logger.info(`transaction.service.js getAvailableBalance(): userId=${userId} has ${availableBalance} ${currency} available for trading`);
 
     return availableBalance;
@@ -184,7 +193,7 @@ module.exports = {
    */
   getTransactions: async (userId, currency) => {
     const findQuery = await service.find({ userId, currency }, { sort: { createdAt: -1 } });
-    logger.info(`transaction.service.js getTransactions(): retrieves transaction for ${currency} account of userId=${userId} found ${findQuery.results.length} transactions`);
+    logger.info(`transaction.service.js getTransactions(): retrieves transactions for ${currency} account of userId=${userId} found ${findQuery.results.length} transaction(s)`);
     return findQuery.results;
   }
 };

@@ -42,5 +42,5 @@ exports.deposit = async (ctx) => {
   const { currency, amount } = ctx.request.body;
   const wallet = 'some test wallet address';
 
-  ctx.body = await txService.deposit(userId, currency, amount, wallet);
+  ctx.body = await txService.deposit(userId, currency, parseFloat(amount), wallet);
 };

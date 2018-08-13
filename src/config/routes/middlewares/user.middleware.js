@@ -7,7 +7,7 @@ const userMiddleware = async (ctx, next) => {
     await next();
     return;
   }
-  logger.info(`user decoded from jwt with id=${ctx.state.user._id}`);
+  logger.info(`user.middleware.js: userId decoded from jwt with id=${ctx.state.user._id}`);
   const user = await userService.findById(ctx.state.user._id);
   ctx.assert(user, 'Not authorized: user not found', 401);
 
