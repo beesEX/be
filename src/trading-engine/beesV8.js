@@ -4,6 +4,8 @@ const { EVENT_GET_AGGREGATED_STATE, EVENT_GET_ORDERBOOK_STATE } = require('./ord
 
 const { logger } = global;
 
+const config = require('../config');
+
 const {open, publish, close} = require('../util/zeroMQpublisher');
 
 async function sendMessage(message, topic) {
@@ -32,7 +34,7 @@ class BeesV8 {
     logger.info(`BeesV8 for ${this.symbol} starts`);
 
     // start zero MQ
-    open();
+    if (config.isDev) open();
 
     this.orderbookChildProcess = fork('src/trading-engine/orderbook.js');
 
@@ -120,7 +122,7 @@ class BeesV8 {
    */
   stop() {
     this.orderbookChildProcess.kill();
-    close();
+    if (config.isDev) close();
   }
 
 }

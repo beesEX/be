@@ -5,6 +5,7 @@ const { expect } = require('chai');
 
 const beesV8 = require('./beesV8');
 const {OrderEvent} = require('../resources/order/order.models');
+const {open, publish, close} = require('../util/zeroMQpublisher');
 
 function isSameOrder(order1, order2) {
   const zero = 0.000000000000000000001;
@@ -21,6 +22,16 @@ function isSameOrder(order1, order2) {
 }
 
 describe('get the aggregated state of the order book', async () => {
+
+  before(function () {
+    // open zeroMQ
+    open();
+  });
+
+  after(function () {
+    // close zeroMQ
+    close();
+  });
 
   await it('get aggregated state from the empty order book should be successful', async () => {
 
@@ -231,12 +242,22 @@ describe('get the aggregated state of the order book', async () => {
 // =====================================================================
 
 describe('test event process of trading engine', async () => {
-  console.log('');
-  console.log('================================================================================');
-  console.log('                 TEST EVENT PROCESS OF TRADING ENGINE');
-  console.log('================================================================================');
-  console.log('');
 
+  before(function () {
+    // open zeroMQ
+    open();
+
+    console.log('');
+    console.log('================================================================================');
+    console.log('                 TEST EVENT PROCESS OF TRADING ENGINE');
+    console.log('================================================================================');
+    console.log('');
+  });
+
+  after(function () {
+    // close zeroMQ
+    close();
+  });
 
   // --------------------------------------------
   // test place limit event
