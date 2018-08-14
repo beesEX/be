@@ -4,6 +4,7 @@
 require('app-module-path').addPath(__dirname);
 global.logger = require('logger');
 const beesV8 = require('trading-engine/beesV8');
+const zeroMQ = require('./util/zeroMQpublisher');
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
@@ -21,6 +22,7 @@ require('./config/koa')(app);
 
 app.listen(config.port, () => {
   beesV8.start();
+  if (!config.isTest) zeroMQ.open();
   logger.warn(`Api server listening on ${config.port}, in ${process.env.NODE_ENV} mode`);
 });
 
