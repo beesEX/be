@@ -94,7 +94,7 @@ module.exports = {
    * @param extraOptions
    * @returns {Promise<Array<{name: string, code: (number)}>|*|Function>}
    */
-  getActiveOrder: async (userId, extraOptions) => {
+  getActiveOrders: async (userId, extraOptions) => {
 
     let offset;
     let limit;

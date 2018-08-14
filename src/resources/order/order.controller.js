@@ -42,5 +42,5 @@ exports.orderCancelHandler = async (ctx) => {
 /* GET /order/active */
 exports.orderActiveHandler = async (ctx) => {
   logger.info('order.controller.js: orderActiveHandler(): received userId', ctx.state.user._id.toString());
-  ctx.body = await orderService.getActiveOrder(ctx.state.user._id.toString(), ctx.request.query);
+  ctx.body = await orderService.getActiveOrders(ctx.state.user._id.toString(), ctx.request.query);
 };
