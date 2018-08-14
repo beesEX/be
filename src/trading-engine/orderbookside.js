@@ -116,7 +116,7 @@ module.exports = class OrderBookSide {
         tmpLLOE.order.filledQuantity += tradedQuantity;
         order.filledQuantity = order.quantity;
 
-        matchingEventList.push(OrderBookEvent.createNewMatchObject(tmpLLOE.order, tradedQuantity));
+        matchingEventList.push(OrderBookEvent.createNewMatchObject(tmpLLOE.order, tradedQuantity, tmpLLOE.order.remainingQuantity() <= ZERO));
       }
       else {
         logger.info(`orderbookside.js: match(): Match id ${tmpLLOE.order._id} with trade quantity ${tmpLLOE.order.remainingQuantity()}`);
@@ -125,7 +125,7 @@ module.exports = class OrderBookSide {
         order.filledQuantity += tradedQuantity;
         tmpLLOE.order.filledQuantity = tmpLLOE.order.quantity;
 
-        matchingEventList.push(OrderBookEvent.createNewMatchObject(tmpLLOE.order, tradedQuantity));
+        matchingEventList.push(OrderBookEvent.createNewMatchObject(tmpLLOE.order, tradedQuantity, tmpLLOE.order.remainingQuantity() <= ZERO));
       }
 
       if (tmpLLOE.order.remainingQuantity() <= ZERO) {
