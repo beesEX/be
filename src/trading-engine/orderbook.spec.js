@@ -242,8 +242,9 @@ describe('get the aggregated state of the order book', async () => {
 // =====================================================================
 
 describe('test event process of trading engine', async () => {
+  let itNumber = 0;
 
-  before(function () {
+  before(() => {
     // open zeroMQ
     open();
 
@@ -254,9 +255,28 @@ describe('test event process of trading engine', async () => {
     console.log('');
   });
 
-  after(function () {
+  after(() => {
     // close zeroMQ
     close();
+  });
+
+  beforeEach(() => {
+    const itName = [
+      'test place limit event',
+      'test cancel order event',
+      'test place market event',
+      'test update quantity event',
+      'test update limit event',
+      'test combination of all event types'];
+
+    if (itNumber < itName.length) {
+      console.log('');
+      console.log('---------------------------------------------------------');
+      console.log(` TRADING ENGINE: ${itName[itNumber]}`);
+      console.log('---------------------------------------------------------');
+      console.log('');
+      itNumber += 1;
+    }
   });
 
   // --------------------------------------------
@@ -264,12 +284,6 @@ describe('test event process of trading engine', async () => {
   // --------------------------------------------
 
   await it('test place limit event', async () => {
-
-    console.log('');
-    console.log('---------------------------------------------------------');
-    console.log('| TRADING ENGINE: test place limit event                |');
-    console.log('---------------------------------------------------------');
-    console.log('');
 
     // description:
     /*
@@ -821,13 +835,6 @@ describe('test event process of trading engine', async () => {
   // --------------------------------------------
 
   await it('test cancel order event', async () => {
-
-    console.log('');
-    console.log('---------------------------------------------------------');
-    console.log('| TRADING ENGINE: test cancel order event               |');
-    console.log('---------------------------------------------------------');
-    console.log('');
-
     await beesV8.start();
 
     // description:
@@ -1550,13 +1557,6 @@ describe('test event process of trading engine', async () => {
   // test place market
   // --------------------------------------------------
   await it('test place market event', async () => {
-
-    console.log('');
-    console.log('---------------------------------------------------------');
-    console.log('| TRADING ENGINE: test place market event               |');
-    console.log('---------------------------------------------------------');
-    console.log('');
-
     await beesV8.start();
 
     const orderEvent0 = {
@@ -2059,13 +2059,6 @@ describe('test event process of trading engine', async () => {
   // --------------------------------------------
 
   await it('test update quantity event', async () => {
-
-    console.log('');
-    console.log('---------------------------------------------------------');
-    console.log('| TRADING ENGINE: test update quantity event            |');
-    console.log('---------------------------------------------------------');
-    console.log('');
-
     await beesV8.start();
 
     // description:
@@ -3006,13 +2999,6 @@ describe('test event process of trading engine', async () => {
   // --------------------------------------------
 
   await it('test update limit event', async () => {
-
-    console.log('');
-    console.log('---------------------------------------------------------');
-    console.log('| TRADING ENGINE: test update limit event               |');
-    console.log('---------------------------------------------------------');
-    console.log('');
-
     await beesV8.start();
 
     const orderEvent0 = {
@@ -3681,13 +3667,6 @@ describe('test event process of trading engine', async () => {
   // TODO: test combination of all event types
   // --------------------------------------------
   await it('test combination of all event types', async () => {
-
-    console.log('');
-    console.log('---------------------------------------------------------');
-    console.log('| TRADING ENGINE: test combination of all event types   |');
-    console.log('---------------------------------------------------------');
-    console.log('');
-
     await beesV8.start();
 
     // description:
