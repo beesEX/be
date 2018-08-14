@@ -37,8 +37,8 @@ module.exports = {
    * @returns {Promise<void>}
    */
   updateOrderByUser: async (orderObject, userId) => {
-    let oldQuantity = 0;
-    let oldPrice = 0;
+    let oldQuantity = 0.0;
+    let oldPrice = 0.0;
 
     const updatedOrder = await service.update({
       _id: orderObject._id,
@@ -46,8 +46,8 @@ module.exports = {
       status: {$in: ON_BOOK_STATUS}
     }, (doc) => {
       if (orderObject.quantity > doc.filledQuantity) {
-        oldQuantity = 0 + doc.quantity;
-        oldPrice = 0 + doc.limitPrice;
+        oldQuantity = parseFloat(doc.quantity);
+        oldPrice = parseFloat(doc.limitPrice);
 
         doc.limitPrice = orderObject.limitPrice;
         doc.quantity = orderObject.quantity;
