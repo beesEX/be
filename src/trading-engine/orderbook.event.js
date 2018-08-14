@@ -6,7 +6,9 @@ const {logger} = global;
 
 const {OrderEvent} = require('../resources/order/order.models');
 
-const ZERO = 0.0000000000001;
+const EVENT_GET_AGGREGATED_STATE = 'GET_AGGREGATED_STATE';
+const EVENT_GET_ORDERBOOK_STATE = 'GET_ORDERBOOK_STATE';
+const ORDER_BOOK_EVENT = 'ORDER_BOOK_EVENT';
 
 const REASON_OBJECT_TYPE = {
   PLACED: 'PLACED',
@@ -16,15 +18,19 @@ const REASON_OBJECT_TYPE = {
 
 module.exports = {
 
+  EVENT_GET_AGGREGATED_STATE,
+  EVENT_GET_ORDERBOOK_STATE,
+  ORDER_BOOK_EVENT,
+
   REASON_OBJECT_TYPE,
 
-  createNewMatchObject: (order, tradedQuantity) => {
+  createNewMatchObject: (order, tradedQuantity, isFilledCompletely) => {
     return {
       orderId: order._id,
       price: order.limitPrice,
       quantity: order.quantity,
       tradedQuantity,
-      filledCompletely: order.remainingQuantity() <= ZERO // [Tung]: try to give the boolean as input param into this constructor or retrieve it different somehow, you don't want to manage ZERO of different currencies here later
+      filledCompletely: isFilledCompletely
     };
   },
 
@@ -33,7 +39,7 @@ module.exports = {
 
     if (orderEvent._type === OrderEvent.LIMIT_PLACED_EVENT || orderEvent._type === OrderEvent.MARKET_PLACED_EVENT) {
       return {
-        type: 'PLACED',
+        type: REASON_OBJECT_TYPE.PLACED,
         orderId: orderEvent._order._id,
         side: orderEvent._order.side,
         price: (orderEvent._type === OrderEvent.MARKET_PLACED_EVENT) ? null : orderEvent._order.limitPrice,
@@ -42,7 +48,7 @@ module.exports = {
     }
     else if (orderEvent._type === OrderEvent.CANCELED_EVENT) {
       return {
-        type: 'CANCELED',
+        type: REASON_OBJECT_TYPE.CANCELED,
         orderId: orderEvent._order._id,
         side: orderEvent._order.side,
         price: orderEvent._order.limitPrice,
@@ -52,7 +58,7 @@ module.exports = {
     }
     else if (orderEvent._type === OrderEvent.QUANTITY_UPDATED_EVENT || orderEvent._type === OrderEvent.LIMIT_UPDATED_EVENT) {
       return {
-        type: 'UPDATED',
+        type: REASON_OBJECT_TYPE.UPDATED,
         orderId: orderEvent._order._id,
         side: orderEvent._order.side,
         price: orderEvent._order.limitPrice,
@@ -69,7 +75,7 @@ module.exports = {
 
   createNewOrderbookEvent: (symbol, reason, matchingEvent, isFilledCompletely) => {
     return {
-      type: 'ORDER_BOOK_EVENT', // [Tung]: define type constant for events where they were emitted in orderbook.js, and use that constant here
+      type: ORDER_BOOK_EVENT,
       symbol,
       reason,
       matches: matchingEvent || [],
