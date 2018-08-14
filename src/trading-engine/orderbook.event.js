@@ -35,7 +35,7 @@ module.exports = {
   },
 
   createNewReasonObject: (originalOrderEvent) => {
-    const orderEvent = JSON.parse(JSON.stringify(originalOrderEvent));
+    const orderEvent = JSON.parse(JSON.stringify(originalOrderEvent)); // [Tung]: why unnecessary serializing and de-serializing of objects? All event objects in orderbook.js are already parsed to real OrderEvent-objects
 
     if (orderEvent._type === OrderEvent.LIMIT_PLACED_EVENT || orderEvent._type === OrderEvent.MARKET_PLACED_EVENT) {
       return {

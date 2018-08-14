@@ -46,7 +46,7 @@ module.exports = {
       status: {$in: ON_BOOK_STATUS}
     }, (doc) => {
       if (orderObject.quantity > doc.filledQuantity) {
-        oldQuantity = parseFloat(doc.quantity);
+        oldQuantity = parseFloat(doc.quantity); // [Tung:] service core logic should not be bothered by such input pre-processing logic, this should be done in controller already. If DB accidentally has some records with incorrect format, delete them! quantity and price should never be persisted as string!
         oldPrice = parseFloat(doc.limitPrice);
 
         doc.limitPrice = orderObject.limitPrice;
@@ -56,11 +56,11 @@ module.exports = {
     });
     logger.info('order.service.js: updateOrderByUser(): updatedOrder =', JSON.stringify(updatedOrder, null, 2));
 
-    if (updatedOrder && oldPrice !== parseFloat(orderObject.limitPrice)) {
+    if (updatedOrder && oldPrice !== parseFloat(orderObject.limitPrice)) { // [Tung:] service core logic should not be bothered by such input pre-processing logic, this should be done in controller already.
       const orderLimitupdatedEvent = new OrderLimitUpdatedEvent(new Order(updatedOrder), oldQuantity, oldPrice);
       beesV8.processOrderEvent(orderLimitupdatedEvent);
     }
-    else if (updatedOrder && oldPrice === parseFloat(orderObject.limitPrice) && oldQuantity !== parseFloat(orderObject.quantity)) {
+    else if (updatedOrder && oldPrice === parseFloat(orderObject.limitPrice) && oldQuantity !== parseFloat(orderObject.quantity)) { // [Tung:] service core logic should not be bothered by such input pre-processing logic, this should be done in controller already.
       const orderQuantityUpdatedEvent = new OrderQuantityUpdatedEvent(new Order(updatedOrder), oldQuantity, oldPrice);
       beesV8.processOrderEvent(orderQuantityUpdatedEvent);
     }

@@ -8,7 +8,7 @@ const { logger } = global;
 
 const zeroMQ = require('../util/zeroMQpublisher');
 
-async function sendMessage(message, topic) {
+async function sendMessage(message, topic) { // [Tung]: rename this function to zmqPublish()
   return new Promise((resolve) => {
     zeroMQ.publish(`${message}`, topic);
     resolve();
