@@ -56,11 +56,11 @@ module.exports = {
     });
     logger.info('order.service.js: updateOrderByUser(): updatedOrder =', JSON.stringify(updatedOrder, null, 2));
 
-    if (updatedOrder && oldPrice !== orderObject.limitPrice) {
+    if (updatedOrder && oldPrice !== parseFloat(orderObject.limitPrice)) {
       const orderLimitupdatedEvent = new OrderLimitUpdatedEvent(new Order(updatedOrder), oldQuantity, oldPrice);
       beesV8.processOrderEvent(orderLimitupdatedEvent);
     }
-    else if (updatedOrder && oldPrice === orderObject.limitPrice && oldQuantity !== orderObject.quantity) {
+    else if (updatedOrder && oldPrice === parseFloat(orderObject.limitPrice) && oldQuantity !== parseFloat(orderObject.quantity)) {
       const orderQuantityUpdatedEvent = new OrderQuantityUpdatedEvent(new Order(updatedOrder), oldQuantity, oldPrice);
       beesV8.processOrderEvent(orderQuantityUpdatedEvent);
     }
