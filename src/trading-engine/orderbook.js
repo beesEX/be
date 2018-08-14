@@ -10,9 +10,6 @@ const {logger} = global;
 
 const ZERO = 0.0000000000001;
 
-const EVENT_GET_AGGREGATED_STATE = 'GET_AGGREGATED_STATE';
-const EVENT_GET_ORDERBOOK_STATE = 'GET_ORDERBOOK_STATE';
-
 /**
  * Limit Order Book performs order matching after principals of price/time priority
  * matching algorithm.
@@ -232,25 +229,25 @@ logger.info(`orderbook.js: ${orderbook.symbol} orderbook is ready to accept even
 // Order Book receives order events from parent process
 process.on('message', (event) => {
   switch (event.type) {
-    case EVENT_GET_AGGREGATED_STATE: {
-      logger.debug(`orderbook.js: received a message from parent process of type ${EVENT_GET_AGGREGATED_STATE}`);
+    case OrderBookEvent.EVENT_GET_AGGREGATED_STATE: {
+      logger.debug(`orderbook.js: received a message from parent process of type ${OrderBookEvent.EVENT_GET_AGGREGATED_STATE}`);
 
       const state = orderbook.getAggregatedState();
       process.send({
         id: event.id,
-        type: EVENT_GET_AGGREGATED_STATE,
+        type: OrderBookEvent.EVENT_GET_AGGREGATED_STATE,
         state
       });
 
       break;
     }
-    case EVENT_GET_ORDERBOOK_STATE: {
-      logger.debug(`orderbook.js: received a message from parent process of type ${EVENT_GET_ORDERBOOK_STATE}`);
+    case OrderBookEvent.EVENT_GET_ORDERBOOK_STATE: {
+      logger.debug(`orderbook.js: received a message from parent process of type ${OrderBookEvent.EVENT_GET_ORDERBOOK_STATE}`);
 
       const state = orderbook.getOrderBookState();
       process.send({
         id: event.id,
-        type: EVENT_GET_ORDERBOOK_STATE,
+        type: OrderBookEvent.EVENT_GET_ORDERBOOK_STATE,
         state
       });
 
@@ -261,11 +258,3 @@ process.on('message', (event) => {
     }
   }
 });
-
-
-module.exports = {
-
-  EVENT_GET_AGGREGATED_STATE,
-  EVENT_GET_ORDERBOOK_STATE,
-
-};
