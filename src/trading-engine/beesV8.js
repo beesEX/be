@@ -61,18 +61,18 @@ class BeesV8 {
    * accept order events and send them to appropriate order book child process
    * which then process them. order service calls this function to send order events
    * to trading engine.
-   * @param event
+   * @param {Object} event: OrderEvent object to be sent to order book child process
    */
   processOrderEvent(event) {
-    logger.info('beesV8.js processOrderEvent(): receives order event = ', JSON.stringify(event));
+    logger.info('beesV8.js processOrderEvent(): sends to order book child process order event = ', JSON.stringify(event));
     this.orderbookChildProcess.send(event);
   }
 
   /**
    * Retrieves the current volume-aggregated state of the order book of the given symbol.
    *
-   * @param symbol currency pair symbol of the order book
-   * @returns {Promise<*>}
+   * @param {string} symbol: currency pair symbol of the order book
+   * @returns {Promise<Object>} Promise of object representing the current volume-aggregated state of the order book
    */
   async getAggregatedStateOfOrderBook(symbol) {
     if (symbol !== this.symbol) {
@@ -86,6 +86,7 @@ class BeesV8 {
       id: messageId
     };
 
+    logger.info(`beesV8.js getAggregatedStateOfOrderBook(): sends request to child process of order book ${symbol}`);
     this.orderbookChildProcess.send(message);
 
     return new Promise((resolve, reject) => {
@@ -96,8 +97,8 @@ class BeesV8 {
   /**
    * Retrieves the current state of the order book of the given symbol.
    *
-   * @param symbol currency pair symbol of the order book
-   * @returns {Promise<*>}
+   * @param {string} symbol: currency pair symbol of the order book, e.g 'BTC_USDT'
+   * @returns {Promise<{Object}>} Promise of object representing the current state of the order book
    */
   async getCurrentStateOfOrderBook(symbol) {
     if (symbol !== this.symbol) {
@@ -111,6 +112,7 @@ class BeesV8 {
       id: messageId
     };
 
+    logger.info(`beesV8.js getCurrentStateOfOrderBook(): sends request to child process of order book ${symbol}`);
     this.orderbookChildProcess.send(message);
 
     return new Promise((resolve, reject) => {

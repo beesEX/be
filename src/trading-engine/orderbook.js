@@ -25,7 +25,7 @@ class OrderBook {
 
   /**
    * checks the order event and dispatches it to appropriate function which processes it.
-   * @param event - OrderEvent
+   * @param {Object} event: serialized object with same structure of original OrderEvent-object sent by beesV8 in parent process
    */
   processOrderEvent(event) {
     logger.info(`orderbook.js processOrderEvent(): receices order event: ${JSON.stringify(event)}`);
@@ -44,9 +44,10 @@ class OrderBook {
     else logger.warn(`orderbook.js processOrderEvent(): unknown event type ${event._type} will be rejected`);
   }
 
-  /*
-  processes new LIMIT order placed event
-  */
+  /**
+   * processes new LIMIT order placed event
+   * @param {Object} orderPlacedEvent: OrderPlacedEvent object
+   */
   placeLimit(orderPlacedEvent) {
     const {order} = orderPlacedEvent;
     const reasonObject = OrderBookEvent.createNewReasonObject(orderPlacedEvent);
@@ -78,9 +79,10 @@ class OrderBook {
     process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO));
   }
 
-  /*
-  processes new MARKET order placed event
-  */
+  /**
+   * processes new MARKET order placed event
+   * @param {Object} orderPlacedEvent: MarketOrderPlacedEvent object
+   */
   placeMarket(orderPlacedEvent) {
     const {order} = orderPlacedEvent;
     const reasonObject = OrderBookEvent.createNewReasonObject(orderPlacedEvent);
@@ -108,9 +110,10 @@ class OrderBook {
     process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO));
   }
 
-  /*
-  processes LIMIT order updated event
-  */
+  /**
+   * processes LIMIT order updated event, only quantity has changed
+   * @param {Object} orderUpdatedEvent: OrderQuantityUpdatedEvent object
+   */
   updateQuantity(orderUpdatedEvent) {
     const {order} = orderUpdatedEvent;
     const reasonObject = OrderBookEvent.createNewReasonObject(orderUpdatedEvent);
@@ -133,9 +136,10 @@ class OrderBook {
     else logger.error(`orderbook.js updateQuantity(): failed to update event ${JSON.stringify(orderUpdatedEvent)}`);
   }
 
-  /*
-  processes LIMIT order updated event, with limit price change
-  */
+  /**
+   * processes LIMIT order updated event, with limit price change
+   * @param {Object} orderUpdatedEvent: OrderLimitUpdatedEvent object
+   */
   updateLimit(orderUpdatedEvent) {
     const {order} = orderUpdatedEvent;
     const reasonObject = OrderBookEvent.createNewReasonObject(orderUpdatedEvent);
@@ -178,9 +182,10 @@ class OrderBook {
     process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO));
   }
 
-  /*
-  processes LIMIT order canceled event
-  */
+  /**
+   * processes LIMIT order canceled event
+   * @param {Object} orderCanceledEvent: OrderCanceledEvent object
+   */
   cancel(orderCanceledEvent) {
     const {order} = orderCanceledEvent;
     const reasonObject = OrderBookEvent.createNewReasonObject(orderCanceledEvent);
@@ -198,6 +203,9 @@ class OrderBook {
     process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO));
   }
 
+  /**
+   * @return {Object} current volume-aggregated state of order book
+   */
   getAggregatedState() {
 
     const state = {};
@@ -209,6 +217,9 @@ class OrderBook {
 
   }
 
+  /**
+   * @return {Object} current state of order book
+   */
   getOrderBookState() {
 
     const orderState = {};
@@ -226,7 +237,7 @@ const bidSide = new OrderBookSide('BID');
 const orderbook = new OrderBook('BTC_USDT', askSide, bidSide);
 logger.info(`orderbook.js: ${orderbook.symbol} orderbook is ready to accept events`);
 
-// Order Book receives order events from parent process
+// Order Book event handling logic for events received from parent process, sent by beesV8.js
 process.on('message', (event) => {
   switch (event.type) {
     case OrderBookEvent.EVENT_GET_AGGREGATED_STATE: {

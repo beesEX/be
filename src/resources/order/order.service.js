@@ -16,8 +16,8 @@ module.exports = {
 
   /**
    * Places new order on book
-   * @param newOrderObject: an order object with full properties of an order <- should consider to fill needed features in order.controller or here
-   * @returns {Promise<*>}
+   * @param {Object} newOrderObject: an order object with full properties of an order <- should consider to fill needed features in order.controller or here
+   * @returns {Promise<{Object}>} Promise of the newly placed order record object
    */
   placeOrder: async (newOrderObject) => {
     const createdOrder = await service.create(newOrderObject);
@@ -32,9 +32,9 @@ module.exports = {
   /**
    * Used by user to update a given order. Only limitPrice and quantity of order are able to change.
    * Only on book orders are allowed to be updated.
-   * @param orderObject: an object contains _id, limitPrice and quantity. New quantity must be greater than quantity already filled.
-   * @param userId: userId of the owner of the order to be updated
-   * @returns {Promise<void>}
+   * @param {Object} orderObject: an object contains _id, limitPrice and quantity. New quantity must be greater than quantity already filled.
+   * @param {string} userId: userId of the owner of the order to be updated
+   * @returns {Promise<{Object}>} Promise of the updated order record object
    */
   updateOrderByUser: async (orderObject, userId) => {
     let oldQuantity = 0.0;
@@ -70,9 +70,9 @@ module.exports = {
 
   /**
    * Cancel order of given user. Only on book order are allowed to canceled.
-   * @param orderId: ID of order to be canceled
-   * @param userId: userId of the owner of the order to be canceled
-   * @returns {Promise<void>}
+   * @param {string} orderId: ID of order to be canceled
+   * @param {string} userId: userId of the owner of the order to be canceled
+   * @returns {undefined}
    */
   cancelOrder: async (orderId, userId) => {
     const canceledOrder = await service.update({_id: orderId, userId, status: {$in: ON_BOOK_STATUS}}, (doc) => {
@@ -90,9 +90,9 @@ module.exports = {
   /**
    * Retrieves orders on book of the given user
    *
-   * @param userId
-   * @param extraOptions
-   * @returns {Promise<Array<{name: string, code: (number)}>|*|Function>}
+   * @param {string} userId
+   * @param {Object} extraOptions
+   * @returns {Promise<{orders: Array<{Object}, count: {number}>}>} Promise of object containing array of order records and a count
    */
   getActiveOrder: async (userId, extraOptions) => {
 

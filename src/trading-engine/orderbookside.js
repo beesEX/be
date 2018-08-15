@@ -1,7 +1,3 @@
-/**
- * One side of the order book ASK or BID, contains data structure to hold the orders of the side.
- *
- */
 const config = require('../config');
 const {createConsoleLogger} = require('@paralect/common-logger');
 
@@ -13,6 +9,9 @@ const OrderBookEvent = require('./orderbook.event');
 
 const ZERO = 0.0000000000001;
 
+/**
+ * One side of the order book: ASK or BID, contains data structure to hold the orders of the side.
+ */
 module.exports = class OrderBookSide {
   constructor(side) {
     this.side = side; // 'ASK' or 'BID'
