@@ -51,11 +51,6 @@ module.exports = {
         oldQuantity = doc.quantity;
         oldPrice = doc.limitPrice;
 
-        console.log(`-------order.service.js oldQuantity ${oldQuantity} in type of ${typeof oldQuantity}`);
-        console.log(`-------order.service.js oldPrice ${oldPrice} in type of ${typeof oldPrice}`);
-        console.log(`-------order.service.js orderObject.limitPrice ${orderObject.limitPrice} in type of ${typeof orderObject.limitPrice}`);
-        console.log(`-------order.service.js orderObject.quantity ${orderObject.quantity} in type of ${typeof orderObject.quantity}`);
-
         doc.limitPrice = orderObject.limitPrice;
         doc.quantity = orderObject.quantity;
         doc.lastUpdatedAt = new Date();
