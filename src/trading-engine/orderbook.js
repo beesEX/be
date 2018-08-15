@@ -2,10 +2,10 @@ const OrderBookSide = require('./orderbookside');
 const OrderBookEvent = require('./orderbook.event');
 
 const {Order, OrderEvent, OrderPlacedEvent, MarketOrderPlacedEvent, OrderQuantityUpdatedEvent, OrderLimitUpdatedEvent, OrderCanceledEvent} = require('../resources/order/order.models');
-const config = require('../config');
-const {createConsoleLogger} = require('@paralect/common-logger');
 
-global.logger = createConsoleLogger({isDev: config.isDev});
+// using later
+const config = require('../config');
+
 const {logger} = global;
 
 const ZERO = 0.0000000000001;
@@ -29,7 +29,6 @@ class OrderBook {
    */
   processOrderEvent(event) {
     logger.info(`orderbook.js processOrderEvent(): receices order event: ${JSON.stringify(event)}`);
-
     const order = new Order(event._order);
     const orderSymbol = `${event._order.currency}_${event._order.baseCurrency}`;
     if (orderSymbol !== this.symbol) {

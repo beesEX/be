@@ -37,6 +37,8 @@ module.exports = {
    * @returns {Promise<void>}
    */
   updateOrderByUser: async (orderObject, userId) => {
+    orderObject = new Order(orderObject);
+
     let oldQuantity = 0.0;
     let oldPrice = 0.0;
 
@@ -46,8 +48,13 @@ module.exports = {
       status: {$in: ON_BOOK_STATUS}
     }, (doc) => {
       if (orderObject.quantity > doc.filledQuantity) {
-        oldQuantity = parseFloat(doc.quantity); // [Tung:] service core logic should not be bothered by such input pre-processing logic, this should be done in controller already. If DB accidentally has some records with incorrect format, delete them! quantity and price should never be persisted as string!
-        oldPrice = parseFloat(doc.limitPrice);
+        oldQuantity = doc.quantity;
+        oldPrice = doc.limitPrice;
+
+        console.log(`-------order.service.js oldQuantity ${oldQuantity} in type of ${typeof oldQuantity}`);
+        console.log(`-------order.service.js oldPrice ${oldPrice} in type of ${typeof oldPrice}`);
+        console.log(`-------order.service.js orderObject.limitPrice ${orderObject.limitPrice} in type of ${typeof orderObject.limitPrice}`);
+        console.log(`-------order.service.js orderObject.quantity ${orderObject.quantity} in type of ${typeof orderObject.quantity}`);
 
         doc.limitPrice = orderObject.limitPrice;
         doc.quantity = orderObject.quantity;

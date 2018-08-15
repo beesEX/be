@@ -1,13 +1,14 @@
 class Order {
+  //[Viet Anh] not only order object from DB but also from order event from order.service.js -> limitPrice, quantity and filledQuantity must be parsed in float. Otherwise it will be in type String
   constructor(orderObjFromDB) {
     this._id = orderObjFromDB._id;
     this.type = orderObjFromDB.type;
     this.side = orderObjFromDB.side;
     this.currency = orderObjFromDB.currency;
     this.baseCurrency = orderObjFromDB.baseCurrency;
-    this.limitPrice = orderObjFromDB.limitPrice;
-    this.quantity = orderObjFromDB.quantity;
-    this.filledQuantity = orderObjFromDB.filledQuantity;
+    this.limitPrice = parseFloat(orderObjFromDB.limitPrice);
+    this.quantity = parseFloat(orderObjFromDB.quantity);
+    this.filledQuantity = parseFloat(orderObjFromDB.filledQuantity);
     this.status = orderObjFromDB.status;
     this.createdAt = orderObjFromDB.createdAt;
     this.lastUpdatedAt = orderObjFromDB.lastUpdatedAt;

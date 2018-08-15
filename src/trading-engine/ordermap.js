@@ -147,6 +147,7 @@ module.exports = class OrderMap {
 
   addOrder(order) {
     const priceLevel = order.limitPrice;
+    console.log(`-------ordermap.js addOrder(): priceLevel ${priceLevel} in type of ${typeof priceLevel}`);
     const newLinkedListOrderElement = new OrderLinkedListElement(order);
 
     const orderLinkedList = this.mapOfPriceAndOrderLinkedList[priceLevel];

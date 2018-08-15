@@ -8,7 +8,7 @@ const { logger } = global;
 
 const zeroMQ = require('../util/zeroMQpublisher');
 
-async function sendMessage(message, topic) { // [Tung]: rename this function to zmqPublish()
+async function zmqPublish(message, topic) {
   return new Promise((resolve) => {
     zeroMQ.publish(`${message}`, topic);
     resolve();
@@ -40,7 +40,7 @@ class BeesV8 {
       logger.info(`beesV8.js: receives message from orderboook-childprocess: ${JSON.stringify(message)}`);
 
       if (message.type === ORDER_BOOK_EVENT) {
-        sendMessage(JSON.stringify(message), `Orderbook-${this.symbol}`).then(() => {
+        zmqPublish(JSON.stringify(message), `Orderbook-${this.symbol}`).then(() => {
           logger.info(`beesV8.js: publishes orderbook event per zeroMQ to UI server: ${JSON.stringify(message)}`);
         });
       }
