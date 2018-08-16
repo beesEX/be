@@ -141,7 +141,7 @@ module.exports = {
   },
 
   /**
-   * Retrieves orders on book of the given user
+   * Update pair of matched orders
    *
    * @param {Object} reasonObj
    * @param {Object} matchObj
