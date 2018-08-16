@@ -138,5 +138,46 @@ module.exports = {
       orders: result.results,
       count: result.count
     };
-  }
+  },
+
+  /**
+   * Retrieves orders on book of the given user
+   *
+   * @param {Object} reasonObj
+   * @param {Object} matchObj
+   * @returns true if success, false if failed
+   */
+  updateOrdersbyMatch: async (reasonObj, matchObj) => {
+    logger.info(`order.service.js: updatedMatchOrder(): received reason object = ${JSON.stringify(reasonObj)} and match object = ${JSON.stringify(matchObj)}`);
+
+    // update reason order
+    const updatedReasonOrder = await service.update({
+      _id: reasonObj.orderId,
+      status: {$in: ON_BOOK_STATUS}
+    }, (doc) => {
+      doc.filledQuantity += matchObj.tradedQuantity;
+      //[Viet Anh] I need filledCompletely of order book event for sure
+      doc.status = (doc.filledQuantity === doc.quantity) ? orderSchema.ORDER_STATUS.FILLED : orderSchema.ORDER_STATUS.PARTIALLY_FILLED;
+      doc.lastUpdatedAt = new Date();
+    });
+
+    // update match order
+    const updatedMatchOrder = await service.update({
+      _id: matchObj.orderId,
+      status: {$in: ON_BOOK_STATUS}
+    }, (doc) => {
+      doc.filledQuantity += matchObj.tradedQuantity;
+      doc.status = (matchObj.filledCompletely) ? orderSchema.ORDER_STATUS.FILLED : orderSchema.ORDER_STATUS.PARTIALLY_FILLED;
+      doc.lastUpdatedAt = new Date();
+    });
+
+    if (updatedMatchOrder && updatedReasonOrder) {
+      logger.info(`order.service.js: updatedMatchOrder(): updated reason order = ${JSON.stringify(updatedReasonOrder)} and match order = ${JSON.stringify(updatedMatchOrder)}`);
+      return true;
+    }
+
+    // [Viet Anh] should I redo work to let both orders not be updated?
+    logger.error('order.service.js: updatedMatchOrder(): ERROR: failed to update');
+    return false;
+  },
 };
