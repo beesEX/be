@@ -41,7 +41,7 @@ class BeesV8 {
 
       if (message.type === ORDER_BOOK_EVENT) {
         zmqPublish(JSON.stringify(message), `Orderbook-${this.symbol}`).then(() => {
-          logger.info(`beesV8.js: publishes orderbook event per zeroMQ to UI server: ${JSON.stringify(message)}`);
+          logger.info(`beesV8.js: publishes orderbook event per zeroMQ to UI server: \n ${JSON.stringify(message, null, 2)}`);
         });
       }
       else if (message.type === EVENT_GET_ORDERBOOK_STATE || message.type === EVENT_GET_AGGREGATED_STATE) {
