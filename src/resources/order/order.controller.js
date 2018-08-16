@@ -13,8 +13,8 @@ exports.orderPlaceHandler = async (ctx) => {
     side: ctx.request.body.side,
     currency: ctx.request.body.currency,
     baseCurrency: ctx.request.body.baseCurrency,
-    limitPrice: parseFloat(ctx.request.body.limitPrice),
-    quantity: parseFloat(ctx.request.body.quantity),
+    limitPrice: typeof ctx.request.body.limitPrice === 'number' ? ctx.request.body.limitPrice : parseFloat(ctx.request.body.limitPrice),
+    quantity: typeof ctx.request.body.quantity === 'number' ? ctx.request.body.quantity : parseFloat(ctx.request.body.quantity),
     filledQuantity: 0.0,
     status: orderSchema.ORDER_STATUS.PLACED,
     createdAt: new Date(),
@@ -31,8 +31,8 @@ exports.orderUpdateHandler = async (ctx) => {
 
   const newOrderObj = {
     _id: ctx.request.body._id,
-    limitPrice: parseFloat(ctx.request.body.limitPrice),
-    quantity: parseFloat(ctx.request.body.quantity),
+    limitPrice: typeof ctx.request.body.limitPrice === 'number' ? ctx.request.body.limitPrice : parseFloat(ctx.request.body.limitPrice),
+    quantity: typeof ctx.request.body.quantity === 'number' ? ctx.request.body.quantity : parseFloat(ctx.request.body.quantity),
   };
 
   ctx.body = await orderService.updateOrderByUser(newOrderObj, ctx.state.user._id.toString());
