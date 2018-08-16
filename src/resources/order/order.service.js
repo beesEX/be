@@ -58,11 +58,11 @@ module.exports = {
     });
     logger.info('order.service.js: updateOrderByUser(): updatedOrder =', JSON.stringify(updatedOrder, null, 2));
 
-    if (updatedOrder && oldPrice !== parseFloat(orderObject.limitPrice)) { // [Tung:] service core logic should not be bothered by such input pre-processing logic, this should be done in controller already.
-      const orderLimitupdatedEvent = new OrderLimitUpdatedEvent(new Order(updatedOrder), oldQuantity, oldPrice);
-      beesV8.processOrderEvent(orderLimitupdatedEvent);
+    if (updatedOrder && oldPrice !== orderObject.limitPrice) {
+      const orderLimitUpdatedEvent = new OrderLimitUpdatedEvent(new Order(updatedOrder), oldQuantity, oldPrice);
+      beesV8.processOrderEvent(orderLimitUpdatedEvent);
     }
-    else if (updatedOrder && oldPrice === parseFloat(orderObject.limitPrice) && oldQuantity !== parseFloat(orderObject.quantity)) { // [Tung:] service core logic should not be bothered by such input pre-processing logic, this should be done in controller already.
+    else if (updatedOrder && oldPrice === orderObject.limitPrice && oldQuantity !== orderObject.quantity) {
       const orderQuantityUpdatedEvent = new OrderQuantityUpdatedEvent(new Order(updatedOrder), oldQuantity, oldPrice);
       beesV8.processOrderEvent(orderQuantityUpdatedEvent);
     }
