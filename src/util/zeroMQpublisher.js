@@ -5,15 +5,18 @@
 
 const zeroMQ = require('zeromq');
 
-const socket = zeroMQ.socket('pub');
+let socket = zeroMQ.socket('pub');
 
 const config = require('../config/index');
 
 const {logger} = global;
 
-socket.bindSync(config.zeroMQHost);
 
-logger.info(`ZeroMQ publisher is connected to ${config.zeroMQHost}`);
+function open() {
+  socket = zeroMQ.socket('pub');
+  socket.bindSync(config.zeroMQHost);
+  logger.info(`ZeroMQ publisher is connected to ${config.zeroMQHost}`);
+}
 
 function publish(message, type) {
 
@@ -44,6 +47,7 @@ function close() {
 
 
 module.exports = {
+  open,
 
   publish,
 

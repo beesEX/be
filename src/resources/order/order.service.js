@@ -16,8 +16,8 @@ module.exports = {
 
   /**
    * Places new order on book
-   * @param newOrderObject: an order object with full properties of an order <- should consider to fill needed features in order.controller or here
-   * @returns {Promise<*>}
+   * @param {Object} newOrderObject: an order object with full properties of an order <- should consider to fill needed features in order.controller or here
+   * @returns {Promise<{Object}>} Promise of the newly placed order record object
    */
   placeOrder: async (newOrderObject) => {
     const createdOrder = await service.create(newOrderObject);
@@ -32,13 +32,15 @@ module.exports = {
   /**
    * Used by user to update a given order. Only limitPrice and quantity of order are able to change.
    * Only on book orders are allowed to be updated.
-   * @param orderObject: an object contains _id, limitPrice and quantity. New quantity must be greater than quantity already filled.
-   * @param userId: userId of the owner of the order to be updated
-   * @returns {Promise<void>}
+   * @param {Object} orderObject: an object contains _id, limitPrice and quantity. New quantity must be greater than quantity already filled.
+   * @param {string} userId: userId of the owner of the order to be updated
+   * @returns {Promise<{Object}>} Promise of the updated order record object
    */
   updateOrderByUser: async (orderObject, userId) => {
-    let qtyDelta = 0;
-    let priceDelta = 0;
+    orderObject = new Order(orderObject);
+
+    let oldQuantity = 0.0;
+    let oldPrice = 0.0;
 
     const updatedOrder = await service.update({
       _id: orderObject._id,
@@ -46,8 +48,8 @@ module.exports = {
       status: {$in: ON_BOOK_STATUS}
     }, (doc) => {
       if (orderObject.quantity > doc.filledQuantity) {
-        qtyDelta = orderObject.quantity - doc.quantity;
-        priceDelta = orderObject.limitPrice - doc.limitPrice;
+        oldQuantity = doc.quantity;
+        oldPrice = doc.limitPrice;
 
         doc.limitPrice = orderObject.limitPrice;
         doc.quantity = orderObject.quantity;
@@ -56,12 +58,12 @@ module.exports = {
     });
     logger.info('order.service.js: updateOrderByUser(): updatedOrder =', JSON.stringify(updatedOrder, null, 2));
 
-    if (updatedOrder && priceDelta !== 0) {
-      const orderLimitupdatedEvent = new OrderLimitUpdatedEvent(new Order(updatedOrder), qtyDelta, priceDelta);
-      beesV8.processOrderEvent(orderLimitupdatedEvent);
+    if (updatedOrder && oldPrice !== orderObject.limitPrice) {
+      const orderLimitUpdatedEvent = new OrderLimitUpdatedEvent(new Order(updatedOrder), oldQuantity, oldPrice);
+      beesV8.processOrderEvent(orderLimitUpdatedEvent);
     }
-    else if (updatedOrder && priceDelta === 0 && qtyDelta !== 0) {
-      const orderQuantityUpdatedEvent = new OrderQuantityUpdatedEvent(new Order(updatedOrder), qtyDelta, priceDelta);
+    else if (updatedOrder && oldPrice === orderObject.limitPrice && oldQuantity !== orderObject.quantity) {
+      const orderQuantityUpdatedEvent = new OrderQuantityUpdatedEvent(new Order(updatedOrder), oldQuantity, oldPrice);
       beesV8.processOrderEvent(orderQuantityUpdatedEvent);
     }
 
@@ -70,9 +72,9 @@ module.exports = {
 
   /**
    * Cancel order of given user. Only on book order are allowed to canceled.
-   * @param orderId: ID of order to be canceled
-   * @param userId: userId of the owner of the order to be canceled
-   * @returns {Promise<void>}
+   * @param {string} orderId: ID of order to be canceled
+   * @param {string} userId: userId of the owner of the order to be canceled
+   * @returns {undefined}
    */
   cancelOrder: async (orderId, userId) => {
     const canceledOrder = await service.update({_id: orderId, userId, status: {$in: ON_BOOK_STATUS}}, (doc) => {
@@ -90,9 +92,9 @@ module.exports = {
   /**
    * Retrieves orders on book of the given user
    *
-   * @param userId
-   * @param extraOptions
-   * @returns {Promise<Array<{name: string, code: (number)}>|*|Function>}
+   * @param {string} userId
+   * @param {Object} extraOptions
+   * @returns {Promise<{orders: Array<{Object}, count: {number}>}>} Promise of object containing array of order records and a count
    */
   getActiveOrders: async (userId, extraOptions) => {
 
@@ -136,5 +138,46 @@ module.exports = {
       orders: result.results,
       count: result.count
     };
-  }
+  },
+
+  /**
+   * Update pair of matched orders
+   *
+   * @param {Object} reasonObj
+   * @param {Object} matchObj
+   * @returns true if success, false if failed
+   */
+  updateOrdersbyMatch: async (reasonObj, matchObj) => {
+    logger.info(`order.service.js: updatedMatchOrder(): received reason object = ${JSON.stringify(reasonObj)} and match object = ${JSON.stringify(matchObj)}`);
+
+    // update reason order
+    const updatedReasonOrder = await service.update({
+      _id: reasonObj.orderId,
+      status: {$in: ON_BOOK_STATUS}
+    }, (doc) => {
+      doc.filledQuantity += matchObj.tradedQuantity;
+      //[Viet Anh] I need filledCompletely of order book event for sure
+      doc.status = (doc.filledQuantity === doc.quantity) ? orderSchema.ORDER_STATUS.FILLED : orderSchema.ORDER_STATUS.PARTIALLY_FILLED;
+      doc.lastUpdatedAt = new Date();
+    });
+
+    // update match order
+    const updatedMatchOrder = await service.update({
+      _id: matchObj.orderId,
+      status: {$in: ON_BOOK_STATUS}
+    }, (doc) => {
+      doc.filledQuantity += matchObj.tradedQuantity;
+      doc.status = (matchObj.filledCompletely) ? orderSchema.ORDER_STATUS.FILLED : orderSchema.ORDER_STATUS.PARTIALLY_FILLED;
+      doc.lastUpdatedAt = new Date();
+    });
+
+    if (updatedMatchOrder && updatedReasonOrder) {
+      logger.info(`order.service.js: updatedMatchOrder(): updated reason order = ${JSON.stringify(updatedReasonOrder)} and match order = ${JSON.stringify(updatedMatchOrder)}`);
+      return true;
+    }
+
+    // [Viet Anh] should I redo work to let both orders not be updated?
+    logger.error('order.service.js: updatedMatchOrder(): ERROR: failed to update');
+    return false;
+  },
 };

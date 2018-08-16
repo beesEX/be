@@ -67,10 +67,10 @@ class OrderPlacedEvent extends OrderEvent {
 }
 
 class OrderUpdatedEvent extends OrderEvent {
-  constructor(orderFromModel, qtyDelta, priceDelta) {
+  constructor(orderFromModel, oldQuantity, oldPrice) {
     super(orderFromModel);
-    this.qtyDelta = qtyDelta;
-    this.priceDelta = priceDelta;
+    this.oldQuantity = oldQuantity;
+    this.oldPrice = oldPrice;
   }
 }
 
@@ -82,15 +82,15 @@ class MarketOrderPlacedEvent extends OrderEvent {
 }
 
 class OrderQuantityUpdatedEvent extends OrderUpdatedEvent {
-  constructor(orderFromModel, qtyDelta, priceDelta) {
-    super(orderFromModel, qtyDelta, priceDelta);
+  constructor(orderFromModel, oldQuantity, oldPrice) {
+    super(orderFromModel, oldQuantity, oldPrice);
     super._type = OrderEvent.QUANTITY_UPDATED_EVENT;
   }
 }
 
 class OrderLimitUpdatedEvent extends OrderUpdatedEvent {
-  constructor(orderFromModel, qtyDelta, priceDelta) {
-    super(orderFromModel, qtyDelta, priceDelta);
+  constructor(orderFromModel, oldQuantity, oldPrice) {
+    super(orderFromModel, oldQuantity, oldPrice);
     super._type = OrderEvent.LIMIT_UPDATED_EVENT;
   }
 }

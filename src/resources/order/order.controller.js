@@ -13,8 +13,8 @@ exports.orderPlaceHandler = async (ctx) => {
     side: ctx.request.body.side,
     currency: ctx.request.body.currency,
     baseCurrency: ctx.request.body.baseCurrency,
-    limitPrice: parseFloat(ctx.request.body.limitPrice),
-    quantity: parseFloat(ctx.request.body.quantity),
+    limitPrice: typeof ctx.request.body.limitPrice === 'number' ? ctx.request.body.limitPrice : parseFloat(ctx.request.body.limitPrice),
+    quantity: typeof ctx.request.body.quantity === 'number' ? ctx.request.body.quantity : parseFloat(ctx.request.body.quantity),
     filledQuantity: 0.0,
     status: orderSchema.ORDER_STATUS.PLACED,
     createdAt: new Date(),
@@ -28,14 +28,21 @@ exports.orderPlaceHandler = async (ctx) => {
 /* POST /order/update */
 exports.orderUpdateHandler = async (ctx) => {
   logger.info('order.controller.js: orderUpdateHandler(): received request.body', JSON.stringify(ctx.request.body, null, 2));
-  ctx.body = await orderService.updateOrderByUser(ctx.request.body, ctx.state.user._id.toString());
+
+  const newOrderObj = {
+    _id: ctx.request.body._id,
+    limitPrice: typeof ctx.request.body.limitPrice === 'number' ? ctx.request.body.limitPrice : parseFloat(ctx.request.body.limitPrice),
+    quantity: typeof ctx.request.body.quantity === 'number' ? ctx.request.body.quantity : parseFloat(ctx.request.body.quantity),
+  };
+
+  ctx.body = await orderService.updateOrderByUser(newOrderObj, ctx.state.user._id.toString());
 };
 
 /* POST /order/cancel */
 exports.orderCancelHandler = async (ctx) => {
   logger.info('order.controller.js: orderCancelHandler(): received request.body', JSON.stringify(ctx.request.body, null, 2));
-  await orderService.cancelOrder(ctx.request.body.orderId, ctx.state.user._id.toString());
 
+  await orderService.cancelOrder(ctx.request.body.orderId, ctx.state.user._id.toString());
   ctx.body = null;
 };
 

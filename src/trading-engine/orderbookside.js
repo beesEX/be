@@ -1,7 +1,3 @@
-/**
- * One side of the order book ASK or BID, contains data structure to hold the orders of the side.
- *
- */
 const config = require('../config');
 const {createConsoleLogger} = require('@paralect/common-logger');
 
@@ -9,9 +5,13 @@ global.logger = createConsoleLogger({isDev: config.isDev});
 const {logger} = global;
 
 const OrderMap = require('./ordermap');
+const OrderBookEvent = require('./orderbook.event');
 
 const ZERO = 0.0000000000001;
 
+/**
+ * One side of the order book: ASK or BID, contains data structure to hold the orders of the side.
+ */
 module.exports = class OrderBookSide {
   constructor(side) {
     this.side = side; // 'ASK' or 'BID'
@@ -30,35 +30,54 @@ module.exports = class OrderBookSide {
   put order on book
   */
   putOrderOnBook(order) {
-    this.orderMap.addOrder(order);
+    if (!this.orderMap.addOrder(order)) {
+      logger.error('orderbookside.js putOrderOnBook(): ERROR when put order on book');
+    }
   }
 
   /*
   remove order from book
   */
   removeOrder(order) {
-    this.orderMap.removeOrder(order);
+    if (!this.orderMap.removeOrder(order)) {
+      logger.error('orderbookside.js removeOrder(): ERROR when remove order from book');
+    }
   }
 
   /*
   update quantity of existing order on book
   */
   updateQuantity(order) {
-    this.orderMap.updateOrderQuantity(order);
+    // check if new quantity is valid
+    const oldOrderElement = this.orderMap.getElementByOrder(order);
+    if (oldOrderElement) {
+      if (oldOrderElement.order.filledQuantity <= order.quantity) {
+        return this.orderMap.updateOrderQuantity(order);
+      }
+      logger.error(`orderbookside.js updateQuantity(): ERROR: order id ${order._id} has new quantity ${order.quantity} < filled quantity ${oldOrderElement.order.filledQuantity}`);
+      return null;
+    }
+    logger.error(`orderbookside.js updateQuantity(): ERROR: not found this order id ${order._id} at price ${order.limitPrice}`);
+    return null;
   }
 
   /*
   order matching core logic. Try to match the given order against counter orders of the book side.
   */
   tryToMatch(order) {
+    let matchingEventList = [];
     while (order.remainingQuantity() > ZERO) {
       const bestPriceLevel = this.bestPrice();
       if (bestPriceLevel && order.fulfill(bestPriceLevel)) {
-        this.match(order, bestPriceLevel);
-      }
+        const tmpTradingEventList = this.match(order, bestPriceLevel);
+        logger.debug(`orderbookside.js: tryToMatch(): tmpTradingEventList = ${JSON.stringify(tmpTradingEventList)}`);
 
-      return;
+        matchingEventList = matchingEventList.concat(tmpTradingEventList);
+      }
+      else break;
     }
+    logger.debug(`orderbookside.js: tryToMatch(): matchingEventList = ${JSON.stringify(matchingEventList)}`);
+    return matchingEventList;
   }
 
   /*
@@ -81,20 +100,31 @@ module.exports = class OrderBookSide {
    @param priceLevel - matched price
    */
   match(order, priceLevel) {
+    const matchingEventList = [];
+
     while (true) {
       const tmpLLOE = this.orderMap.getFirstElementOfPriceLevel(priceLevel);
       if (!tmpLLOE) break; // all orders at this price level are matched
 
+
       if (order.remainingQuantity() < tmpLLOE.order.remainingQuantity()) {
         // order will be fulfilled right now
         logger.info(`orderbookside.js: match(): Match id ${tmpLLOE.order._id} with trade quantity ${order.remainingQuantity()}`);
-        tmpLLOE.order.filledQuantity += order.remainingQuantity();
+
+        const tradedQuantity = order.remainingQuantity();
+        tmpLLOE.order.filledQuantity += tradedQuantity;
         order.filledQuantity = order.quantity;
+
+        matchingEventList.push(OrderBookEvent.createNewMatchObject(tmpLLOE.order, tradedQuantity, tmpLLOE.order.remainingQuantity() <= ZERO));
       }
       else {
         logger.info(`orderbookside.js: match(): Match id ${tmpLLOE.order._id} with trade quantity ${tmpLLOE.order.remainingQuantity()}`);
-        order.filledQuantity += tmpLLOE.order.remainingQuantity();
+
+        const tradedQuantity = tmpLLOE.order.remainingQuantity();
+        order.filledQuantity += tradedQuantity;
         tmpLLOE.order.filledQuantity = tmpLLOE.order.quantity;
+
+        matchingEventList.push(OrderBookEvent.createNewMatchObject(tmpLLOE.order, tradedQuantity, tmpLLOE.order.remainingQuantity() <= ZERO));
       }
 
       if (tmpLLOE.order.remainingQuantity() <= ZERO) {
@@ -103,6 +133,8 @@ module.exports = class OrderBookSide {
 
       if (order.remainingQuantity() <= ZERO) break;
     }
+
+    return matchingEventList;
   }
 
   getAggregatedState() {
