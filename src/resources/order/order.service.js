@@ -96,7 +96,7 @@ module.exports = {
    * @param {Object} extraOptions
    * @returns {Promise<{orders: Array<{Object}, count: {number}>}>} Promise of object containing array of order records and a count
    */
-  getActiveOrder: async (userId, extraOptions) => {
+  getActiveOrders: async (userId, extraOptions) => {
 
     let offset;
     let limit;
