@@ -2,6 +2,7 @@
 const { logger } = global;
 
 const orderSchema = require('./order.schema');
+const { Order } = require('./order.models');
 const orderService = require('./order.service');
 
 /* POST /order/place */
@@ -22,7 +23,11 @@ exports.orderPlaceHandler = async (ctx) => {
     userId: ctx.state.user._id.toString(),
   };
 
-  ctx.body = await orderService.placeOrder(newOrderObj);
+  try {
+    ctx.body = await orderService.placeOrder(new Order(newOrderObj));
+  } catch (e) {
+    ctx.body = { errors: [{code: 'ORD-001', msg: e.message}]};
+  }
 };
 
 /* POST /order/update */
