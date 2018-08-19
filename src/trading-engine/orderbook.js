@@ -6,7 +6,7 @@ const {Order, OrderEvent, OrderPlacedEvent, MarketOrderPlacedEvent, OrderQuantit
 // using later
 const config = require('../config');
 
-const TradeExecutionService = require('../settlement/tradeexecution.service');
+//const TradeExecutionService = require('../settlement/tradeexecution.service');
 
 const {logger} = global;
 
@@ -266,7 +266,7 @@ process.on('message', (event) => {
     default: {
       const orderbookEvent = orderbook.processOrderEvent(event.orderEvent);
       // send order book event to settlement module
-      if (!config.isTest) TradeExecutionService.executeTrades(orderbookEvent);
+      //if (!config.isTest) TradeExecutionService.executeTrades(orderbookEvent);
 
       // send order book event back to parent process
       process.send({
