@@ -8,20 +8,6 @@ const OrderService = require('../resources/order/order.service');
 
 module.exports = {
   executeTrades: async (orderbookEvent) => {
-    /*
-    This function does all needed settlement operations to actually execute the trade,
-    like debit or credit participating accounts (calling buy(), sell() of transaction service )
-    and realease locked fund (release() of transaction service) for
-    the tradedQuantity - by calling transaction service
-    and update the orders in DB accordingly - by calling order service.
-
-    It also needs to use order service to update participating orders of each match,
-
-
-    * */
-
-    orderbookEvent = JSON.parse(orderbookEvent);
-
     logger.info(`tradeexecution.service.js executeTrades(): received orderbookEvent = ${JSON.stringify(orderbookEvent)}`);
 
     if (!orderbookEvent || !orderbookEvent.reason || orderbookEvent.type !== ORDER_BOOK_EVENT) {
@@ -33,23 +19,82 @@ module.exports = {
     const matchList = orderbookEvent.matches;
     const isReasonObjFilledCompletely = orderbookEvent.filledCompletely;
 
-    if (orderbookEvent.reason.type === REASON_OBJECT_TYPE.CANCELED) {
-      // need user Id in each match object and reason object
-      //await Transaction.release()
-    }
-
     for (let i = 0; i < matchList.length; i += 1) {
       const status = await OrderService.updateOrdersbyMatch(reasonObj, matchList[i], i === matchList.length - 1 && isReasonObjFilledCompletely);
       if (!status) {
         logger.error(`tradeexecution.service.js executeTrades(): ----- ERROR: ------ RACE CONDITION ------`);
       }
       else {
-        // call transaction service
+        const tradePrice = matchList[i].price;
+        const tradeQuantity = matchList[i].tradedQuantity
 
+        // call transaction service
+        if (reasonObj.side === 'BUY') {
+          // release quote currency of reason user
+          Transaction.release(reasonObj.userId, reasonObj.currency, tradeQuantity * tradePrice);
+          // decrease quote currency of reason user
+          Transaction.sell(reasonObj.userId, reasonObj.currency, tradeQuantity * tradePrice, reasonObj.orderId);
+          // increase base currency of reason user
+          Transaction.buy(reasonObj.userId, reasonObj.baseCurrency, tradeQuantity, reasonObj.orderId);
+
+          // release base currency of match user
+          Transaction.release(matchList[i].userId, matchList[i].baseCurrency, tradeQuantity);
+          // decrease base base currency of match user
+          Transaction.sell(matchList[i].userId, matchList[i].baseCurrency, tradeQuantity, matchList[i].orderId);
+          // increase quote currency of match user
+          Transaction.buy(matchList[i].userId, matchList[i].currency, tradeQuantity * tradePrice, matchList[i].orderId);
+        }
+        else {
+          // release base currency of reason user
+          Transaction.release(reasonObj.userId, reasonObj.baseCurrency, tradeQuantity);
+          // decrease base base currency of reason user
+          Transaction.sell(reasonObj.userId, reasonObj.baseCurrency, tradeQuantity, reasonObj.orderId);
+          // increase quote currency of reason user
+          Transaction.buy(reasonObj.userId,reasonObj.currency, tradeQuantity, reasonObj.orderId);
+
+          // release quote currency of match user
+          Transaction.release(matchList[i].userId, matchList[i].currency, tradeQuantity * tradePrice);
+          // decrease quote currency of match user
+          Transaction.sell(matchList[i].userId, matchList[i].currency, tradeQuantity * tradePrice, matchList[i].orderId);
+          // increase base currency of match user
+          Transaction.buy(matchList[i].userId, matchList[i].baseCurrency, tradeQuantity, matchList[i].orderId);
+        }
+      }
+    }
+
+    if (reasonObj.type === REASON_OBJECT_TYPE.CANCELED) {
+      if (reasonObj.quantity > reasonObj.filledQuantity ) {
+        await Transaction.release(reasonObj.userId, reasonObj.baseCurrency, reasonObj.quantity - reasonObj.filledQuantity);
+      }
+      else if (reasonObj.quantity < reasonObj.filledQuantity) {
+        logger.error(`tradeexecution.service.js executeTrades(): ERROR: reasonObj.quantity = ${reasonObj.quantity} < reasonObj.filledQuantity = ${reasonObj.filledQuantity}`);
+        return false;
+      }
+      else {
+        logger.info(`tradeexecution.service.js executeTrades(): reasonObj.quantity = reasonObj.filledQuantity = ${reasonObj.filledQuantity}`);
+      }
+    }
+    else if (reasonObj.type === REASON_OBJECT_TYPE.UPDATED) {
+      if (reasonObj.quantity !== reasonObj.oldQuantity) {
+        // update quantity
+        if (reasonObj.quantity > reasonObj.filledQuantity) {
+          if (reasonObj.quantity > reasonObj.oldQuantity) {
+            await Transaction.lock(reasonObj.userId, reasonObj.baseCurrency, reasonObj.quantity - reasonObj.oldQuantity);
+          }
+          else {
+            await Transaction.release(reasonObj.userId, reasonObj.baseCurrency, reasonObj.oldQuantity - reasonObj.quantity);
+          }
+        }
+        else if (reasonObj.quantity < reasonObj.filledQuantity) {
+          logger.error(`tradeexecution.service.js executeTrades(): ERROR: reasonObj.quantity = ${reasonObj.quantity} < reasonObj.filledQuantity = ${reasonObj.filledQuantity}`);
+          return false;
+        }
+        else {
+          logger.info(`tradeexecution.service.js executeTrades(): reasonObj.quantity = reasonObj.filledQuantity = ${reasonObj.filledQuantity}`);
+        }
       }
     }
     return true;
-
   },
 
 };
