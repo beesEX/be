@@ -160,8 +160,8 @@ module.exports = {
     let sort;
 
     if (extraOptions) {
-      offset = parseInt(extraOptions.offset) || 0;
-      limit = parseInt(extraOptions.limit) || 100;
+      offset = parseInt(extraOptions.offset, 10) || 0;
+      limit = parseInt(extraOptions.limit, 10) || 100;
       sort = JSON.parse(extraOptions.sort) || {};
     }
     else {
