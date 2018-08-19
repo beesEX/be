@@ -37,37 +37,68 @@ module.exports = {
    * @returns {Promise<{Object}>} Promise of the updated order record object
    */
   updateOrderByUser: async (orderObject, userId) => {
+    logger.info(`order.service.js: updateOrderByUser(): received order object ${JSON.stringify(orderObject)}`);
+    if (!orderObject) {
+      logger.error(`order.service.js: updateOrderByUser(): ERROR: unexpected type of orderObject`);
+      return false;
+    }
+
     orderObject = new Order(orderObject);
 
-    let oldQuantity = 0.0;
-    let oldPrice = 0.0;
+    const updateOrder = await service.find({
+      userId,
+      _id: orderObject._id,
+      status: {$in: ON_BOOK_STATUS}
+    });
+    logger.info(`order.service.js: updateOrderByUser(): get order ${JSON.stringify(updateOrder)} from DB`);
+    if (!updateOrder) {
+      logger.error(`order.service.js: updateOrderByUser(): ERROR: not found order Id ${orderObject._id} of user Id ${userId} with on book status`);
+      return false;
+    }
+
+    const oldQuantity = updateOrder.quantity;
+    const oldPrice = updateOrder.limitPrice;
+
+    updateOrder.quantity = orderObject.quantity;
+    updateOrder.limitPrice = orderObject.limitPrice;
+
+    logger.info(`order.service.js: updateOrderByUser(): oldQuantity = ${oldQuantity} and newQuantity = ${updateOrder.quantity}`);
+    logger.info(`order.service.js: updateOrderByUser(): oldPrice = ${oldPrice} and newPrice = ${updateOrder.limitPrice}`);
+
+    let orderbookEvent = null;
+
+    if (oldPrice !== orderObject.limitPrice) {
+      const orderLimitUpdatedEvent = new OrderLimitUpdatedEvent(new Order(updateOrder), oldQuantity, oldPrice);
+      orderbookEvent = await beesV8.processOrderEvent(orderLimitUpdatedEvent);
+    }
+    else if (oldPrice === orderObject.limitPrice && oldQuantity !== orderObject.quantity) {
+      const orderQuantityUpdatedEvent = new OrderQuantityUpdatedEvent(new Order(updateOrder), oldQuantity, oldPrice);
+      orderbookEvent = await beesV8.processOrderEvent(orderQuantityUpdatedEvent);
+    }
+    logger.info(`order.service.js: updateOrderByUser(): received ${JSON.stringify(orderbookEvent)} from beesV8`);
+
+    if (!orderbookEvent || !orderbookEvent.reason) {
+      logger.info('order.service.js: updateOrderByUser(): failed to update order in order book');
+      return false;
+    }
 
     const updatedOrder = await service.update({
       _id: orderObject._id,
       userId,
       status: {$in: ON_BOOK_STATUS}
     }, (doc) => {
-      if (orderObject.quantity > doc.filledQuantity) {
-        oldQuantity = doc.quantity;
-        oldPrice = doc.limitPrice;
-
-        doc.limitPrice = orderObject.limitPrice;
-        doc.quantity = orderObject.quantity;
+      if (orderbookEvent.reason.quantity > doc.filledQuantity) {
+        doc.limitPrice = orderbookEvent.reason.price;
+        doc.quantity = orderbookEvent.reason.quantity;
         doc.lastUpdatedAt = new Date();
       }
     });
     logger.info('order.service.js: updateOrderByUser(): updatedOrder =', JSON.stringify(updatedOrder, null, 2));
 
-    if (updatedOrder && oldPrice !== orderObject.limitPrice) {
-      const orderLimitUpdatedEvent = new OrderLimitUpdatedEvent(new Order(updatedOrder), oldQuantity, oldPrice);
-      beesV8.processOrderEvent(orderLimitUpdatedEvent);
-    }
-    else if (updatedOrder && oldPrice === orderObject.limitPrice && oldQuantity !== orderObject.quantity) {
-      const orderQuantityUpdatedEvent = new OrderQuantityUpdatedEvent(new Order(updatedOrder), oldQuantity, oldPrice);
-      beesV8.processOrderEvent(orderQuantityUpdatedEvent);
-    }
+    if (updatedOrder) return updatedOrder;
 
-    return updatedOrder;
+    logger.info('order.service.js: updateOrderByUser(): failed to update order in DB');
+    return false;
   },
 
   /**
@@ -77,16 +108,42 @@ module.exports = {
    * @returns {undefined}
    */
   cancelOrder: async (orderId, userId) => {
-    const canceledOrder = await service.update({_id: orderId, userId, status: {$in: ON_BOOK_STATUS}}, (doc) => {
+    // get the order with given Id in DB
+    const cancelOrder = await service.find({
+      userId,
+      _id: orderId,
+      status: {$in: ON_BOOK_STATUS}
+    });
+    logger.info(`order.service.js: cancelOrder(): get order ${JSON.stringify(cancelOrder)} from DB`);
+
+    if (!cancelOrder) {
+      logger.error(`order.service.js: cancelOrder(): ERROR: not found order Id ${orderId} of user Id ${userId} with on book status`);
+      return false;
+    }
+
+    // found it
+    const orderCanceledOrderEvent = new OrderCanceledEvent(new Order(cancelOrder));
+    const orderbookEvent = await beesV8.processOrderEvent(orderCanceledOrderEvent);
+    logger.info(`order.service.js: cancelOrder(): received ${JSON.stringify(orderbookEvent)} from beesV8`);
+
+    if (!orderbookEvent || !orderbookEvent.reason) {
+      logger.error('order.service.js: cancelOrder(): ERROR: failed to cancel order in order book');
+      return false;
+    }
+
+    const canceledOrder = await service.update({
+      _id: orderId,
+      userId,
+      status: {$in: ON_BOOK_STATUS}
+    }, (doc) => {
       doc.status = orderSchema.ORDER_STATUS.CANCELED;
       doc.lastUpdatedAt = new Date();
     });
     logger.info('order.service.js: cancelOrder(): canceledOrder =', JSON.stringify(canceledOrder, null, 2));
 
-    if (canceledOrder) {
-      const orderCanceledOrderEvent = new OrderCanceledEvent(new Order(canceledOrder));
-      beesV8.processOrderEvent(orderCanceledOrderEvent);
-    }
+    if (cancelOrder) return true;
+    logger.info('order.service.js: cancelOrder(): failed to cancel order in DB');
+    return false;
   },
 
   /**
@@ -147,7 +204,7 @@ module.exports = {
    * @param {Object} matchObj
    * @returns true if success, false if failed
    */
-  updateOrdersbyMatch: async (reasonObj, matchObj) => {
+  updateOrdersbyMatch: async (reasonObj, matchObj, isFilledReasonObjCompletely) => {
     logger.info(`order.service.js: updatedMatchOrder(): received reason object = ${JSON.stringify(reasonObj)} and match object = ${JSON.stringify(matchObj)}`);
 
     // update reason order
@@ -156,8 +213,7 @@ module.exports = {
       status: {$in: ON_BOOK_STATUS}
     }, (doc) => {
       doc.filledQuantity += matchObj.tradedQuantity;
-      //[Viet Anh] I need filledCompletely of order book event for sure
-      doc.status = (doc.filledQuantity === doc.quantity) ? orderSchema.ORDER_STATUS.FILLED : orderSchema.ORDER_STATUS.PARTIALLY_FILLED;
+      doc.status = (isFilledReasonObjCompletely) ? orderSchema.ORDER_STATUS.FILLED : orderSchema.ORDER_STATUS.PARTIALLY_FILLED;
       doc.lastUpdatedAt = new Date();
     });
 
@@ -176,8 +232,8 @@ module.exports = {
       return true;
     }
 
-    // [Viet Anh] should I redo work to let both orders not be updated?
-    logger.error('order.service.js: updatedMatchOrder(): ERROR: failed to update');
+    if (!updatedReasonOrder) logger.error('order.service.js: updatedMatchOrder(): ERROR: failed to update reason object');
+    if (!updatedMatchOrder) logger.error('order.service.js: updatedMatchOrder(): ERROR: failed to update match object');
     return false;
   },
 };
