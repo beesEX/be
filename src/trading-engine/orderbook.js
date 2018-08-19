@@ -33,14 +33,16 @@ class OrderBook {
     const orderSymbol = `${event._order.currency}_${event._order.baseCurrency}`;
     if (orderSymbol !== this.symbol) {
       logger.warn(`orderbook.js processOrderEvent(): currency pair of order event ${orderSymbol} not matches that of order book ${this.symbol}`);
-      return;
+      return null;
     }
-    if (event._type === OrderEvent.LIMIT_PLACED_EVENT) this.placeLimit(new OrderPlacedEvent(order));
-    else if (event._type === OrderEvent.MARKET_PLACED_EVENT) this.placeMarket(new MarketOrderPlacedEvent(order));
-    else if (event._type === OrderEvent.LIMIT_UPDATED_EVENT) this.updateLimit(new OrderLimitUpdatedEvent(order, event.oldQuantity, event.oldPrice));
-    else if (event._type === OrderEvent.QUANTITY_UPDATED_EVENT) this.updateQuantity(new OrderQuantityUpdatedEvent(order, event.oldQuantity, event.oldPrice));
-    else if (event._type === OrderEvent.CANCELED_EVENT) this.cancel(new OrderCanceledEvent(order));
+    let orderbookEvent = null;
+    if (event._type === OrderEvent.LIMIT_PLACED_EVENT) orderbookEvent = this.placeLimit(new OrderPlacedEvent(order));
+    else if (event._type === OrderEvent.MARKET_PLACED_EVENT) orderbookEvent = this.placeMarket(new MarketOrderPlacedEvent(order));
+    else if (event._type === OrderEvent.LIMIT_UPDATED_EVENT) orderbookEvent = this.updateLimit(new OrderLimitUpdatedEvent(order, event.oldQuantity, event.oldPrice));
+    else if (event._type === OrderEvent.QUANTITY_UPDATED_EVENT) orderbookEvent = this.updateQuantity(new OrderQuantityUpdatedEvent(order, event.oldQuantity, event.oldPrice));
+    else if (event._type === OrderEvent.CANCELED_EVENT) orderbookEvent = this.cancel(new OrderCanceledEvent(order));
     else logger.warn(`orderbook.js processOrderEvent(): unknown event type ${event._type} will be rejected`);
+    return orderbookEvent;
   }
 
   /**
@@ -74,8 +76,7 @@ class OrderBook {
       }
     }
 
-    // send order book event back to parent process
-    process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO));
+    return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO);
   }
 
   /**
@@ -88,7 +89,7 @@ class OrderBook {
 
     if (order.type !== 'MARKET') {
       logger.info(`orderbook.js placeMarket(): received order ${order} is not a MARKET order and will be rejected`);
-      return;
+      return null;
     }
     logger.info(`orderbook.js placeMarket(): processing new MARKET order placed: ${JSON.stringify(order)}`);
 
@@ -105,8 +106,7 @@ class OrderBook {
       logger.info(`orderbook.js placeMarket(): ${order.remainingQuantity()} remaining units of MARKET order will be rejected`);
     }
 
-    // send order book event back to parent process
-    process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO));
+    return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO);
   }
 
   /**
@@ -130,9 +130,9 @@ class OrderBook {
       if (isSuccessfullyUpdated && order.remainingQuantity() <= ZERO) this.asks.removeOrder(order);
     }
 
-    // send order book event back to parent process
-    if (isSuccessfullyUpdated) process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO));
-    else logger.error(`orderbook.js updateQuantity(): failed to update event ${JSON.stringify(orderUpdatedEvent)}`);
+    if (isSuccessfullyUpdated) return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO);
+    logger.error(`orderbook.js updateQuantity(): failed to update event ${JSON.stringify(orderUpdatedEvent)}`);
+    return null;
   }
 
   /**
@@ -177,8 +177,7 @@ class OrderBook {
       }
     }
 
-    // send order book event back to parent process
-    process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO));
+    return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO);
   }
 
   /**
@@ -198,8 +197,7 @@ class OrderBook {
       this.asks.removeOrder(order);
     }
 
-    // send order book event back to parent process
-    process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO));
+    return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO);
   }
 
   /**
@@ -264,7 +262,13 @@ process.on('message', (event) => {
       break;
     }
     default: {
-      orderbook.processOrderEvent(event);
+      const orderbookEvent = orderbook.processOrderEvent(event.orderEvent);
+      // send order book event back to parent process
+      process.send({
+        id: event.id,
+        type: OrderBookEvent.ORDER_BOOK_EVENT,
+        orderbookEvent
+      });
     }
   }
 });
