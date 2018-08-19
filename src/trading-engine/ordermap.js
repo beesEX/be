@@ -51,7 +51,6 @@ class OrderLinkedList {
     this.mapOfOrderIdAndOrderLinkedListElement = {};
 
     const status = this.isLinkedListElement(element);
-
     if (status === STATUS.SUCCESS) {
       this.head = element;
       this.tail = this.head;
@@ -62,7 +61,7 @@ class OrderLinkedList {
 
   isLinkedListElement(element) {
     if (!(element instanceof OrderLinkedListElement)) return STATUS.UNEXPECTED_TYPE;
-    if (!element || !element.order || !element.order._id) return STATUS.UNEXPECTED_NULL;
+    if (!element || !element.order || typeof element.order._id === 'undefined' || element.order._id === null) return STATUS.UNEXPECTED_NULL;
     return STATUS.SUCCESS;
   }
 
