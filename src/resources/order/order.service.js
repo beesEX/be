@@ -204,7 +204,7 @@ module.exports = {
    * @param {Object} matchObj
    * @returns true if success, false if failed
    */
-  updateOrdersbyMatch: async (reasonObj, matchObj, isFilledReasonObjCompletely) => {
+  updateOrdersbyMatch: async (reasonObj, matchObj, isReasonObjFilledCompletely) => {
     logger.info(`order.service.js: updatedMatchOrder(): received reason object = ${JSON.stringify(reasonObj)} and match object = ${JSON.stringify(matchObj)}`);
 
     // update reason order
@@ -213,7 +213,7 @@ module.exports = {
       status: {$in: ON_BOOK_STATUS}
     }, (doc) => {
       doc.filledQuantity += matchObj.tradedQuantity;
-      doc.status = (isFilledReasonObjCompletely) ? orderSchema.ORDER_STATUS.FILLED : orderSchema.ORDER_STATUS.PARTIALLY_FILLED;
+      doc.status = (isReasonObjFilledCompletely) ? orderSchema.ORDER_STATUS.FILLED : orderSchema.ORDER_STATUS.PARTIALLY_FILLED;
       doc.lastUpdatedAt = new Date();
     });
 
