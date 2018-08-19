@@ -2,9 +2,11 @@ const {logger} = global;
 
 const { schema, TRANSACTION_TYPE } = require('./transaction.schema');
 const constants = require('app.constants');
+//const {DATABASE_DOCUMENTS} = require('app.constants');
 const db = require('db');
 
 const service = db.createService(constants.DATABASE_DOCUMENTS.TRANSACTIONS, schema);
+//const service = db.createService(DATABASE_DOCUMENTS.TRANSACTIONS, schema);
 
 const CREDIT_AVAIL = [TRANSACTION_TYPE.DEPOSIT, TRANSACTION_TYPE.BUY, TRANSACTION_TYPE.RELEASED];
 const DEBIT_AVAIL = [TRANSACTION_TYPE.WITHDRAW, TRANSACTION_TYPE.SELL, TRANSACTION_TYPE.LOCKED];
