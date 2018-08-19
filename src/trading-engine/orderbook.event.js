@@ -46,6 +46,8 @@ module.exports = {
         orderId: orderEvent._order._id,
         userId: orderEvent._order.userId,
         side: orderEvent._order.side,
+        currency: orderEvent._order.currency,
+        baseCurrency: orderEvent._order.baseCurrency,
         price: (orderEvent._type === OrderEvent.MARKET_PLACED_EVENT) ? null : orderEvent._order.limitPrice,
         quantity: orderEvent._order.quantity
       };
@@ -56,6 +58,8 @@ module.exports = {
         orderId: orderEvent._order._id,
         userId: orderEvent._order.userId,
         side: orderEvent._order.side,
+        currency: orderEvent._order.currency,
+        baseCurrency: orderEvent._order.baseCurrency,
         price: orderEvent._order.limitPrice,
         quantity: orderEvent._order.quantity,
         filledQuantity: orderEvent._order.filledQuantity
@@ -67,6 +71,8 @@ module.exports = {
         orderId: orderEvent._order._id,
         userId: orderEvent._order.userId,
         side: orderEvent._order.side,
+        currency: orderEvent._order.currency,
+        baseCurrency: orderEvent._order.baseCurrency,
         price: orderEvent._order.limitPrice,
         oldPrice: orderEvent.oldPrice,
         quantity: orderEvent._order.quantity,
