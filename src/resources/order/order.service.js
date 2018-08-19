@@ -1,10 +1,12 @@
 const {logger} = global;
 
 const orderSchema = require('./order.schema');
-const constants = require('app.constants');
+//const constants = require('app.constants');
+const {DATABASE_DOCUMENTS} = require('app.constants');
 const db = require('db');
 
-const service = db.createService(constants.DATABASE_DOCUMENTS.ORDERS, orderSchema.schema);
+//const service = db.createService(constants.DATABASE_DOCUMENTS.ORDERS, orderSchema.schema);
+const service = db.createService(DATABASE_DOCUMENTS.ORDERS, orderSchema.schema);
 // usage: https://github.com/paralect/node-mongo/blob/master/API.md#mongo-service
 
 const beesV8 = require('trading-engine/beesV8');
