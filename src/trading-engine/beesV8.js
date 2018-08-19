@@ -7,8 +7,6 @@ const {
   ORDER_BOOK_EVENT
 } = require('./orderbook.event');
 
-//const TradeExecutionService = require('../settlement/tradeexecution.service');
-
 const { logger } = global;
 
 //const config = require('../config');
@@ -38,16 +36,12 @@ class BeesV8 {
   start() {
     logger.info(`BeesV8 for ${this.symbol} starts`);
 
-    // start zero MQ
-    //if (!config.isTest) open();
-
     this.orderbookChildProcess = fork('src/trading-engine/orderbook.js');
 
     this.orderbookChildProcess.on('message', (message) => {
       logger.info(`beesV8.js: receives message from orderboook-childprocess: ${JSON.stringify(message)}`);
 
       if (message.type === ORDER_BOOK_EVENT) {
-        //if (!config.isTest) TradeExecutionService.executeTrades(message.orderbookEvent);
         const resolveFunction = this.mapOfIdAndResolveFunction[message.id];
         if (resolveFunction) {
           resolveFunction(message.orderbookEvent);
@@ -150,7 +144,6 @@ class BeesV8 {
    */
   stop() {
     this.orderbookChildProcess.kill();
-    //if (!config.isTest) close();
   }
 
 }
