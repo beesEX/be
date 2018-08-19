@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "backend server of beesEX platform",
   "main": "src/app.js",
-  "author": "Vu, Duc Tung; Ho, Viet Anh; Ta, Hoang Lam; Le, Ngoc Son",
+  "author": "Vu, Duc Tung; Ho, Viet Anh; Ta, Lam Hoang; Le, Ngoc Son",
   "license": "MIT",
   "scripts": {
     "start": "NODE_ENV=development nodemon --watch src src/app.js",

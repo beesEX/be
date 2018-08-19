@@ -1,16 +1,5 @@
 # beesEX backend server
 
-[![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors)
-[![license](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat-square)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
-[![Build Status](http://product-stack-ci.paralect.com/api/badges/paralect/koa-api-starter/status.svg)](http://product-stack-ci.paralect.com/paralect/koa-api-starter)
-[![David Dependancy Status](https://david-dm.org/paralect/koa-api-starter.svg)](https://david-dm.org/paralect/koa-api-starter)
-
-[![Watch on GitHub](https://img.shields.io/github/watchers/paralect/koa-api-starter.svg?style=social&label=Watch)](https://github.com/paralect/koa-api-starter/watchers)
-[![Star on GitHub](https://img.shields.io/github/stars/paralect/koa-api-starter.svg?style=social&label=Stars)](https://github.com/paralect/koa-api-starter/stargazers)
-[![Follow](https://img.shields.io/twitter/follow/paralect.svg?style=social&label=Follow)](https://twitter.com/paralect)
-[![Tweet](https://img.shields.io/twitter/url/https/github.com/paralect/koa-api-starter.svg?style=social)](https://twitter.com/intent/tweet?text=I%27m%20using%20Stack%20components%20to%20build%20my%20next%20product%20🚀.%20Check%20it%20out:%20https://github.com/paralect/stack)
-
 Backend server of beesEX platform. It provides backend API and functionality for following feature groups:
 
 1. account and user management
