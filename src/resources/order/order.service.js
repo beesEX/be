@@ -1,12 +1,12 @@
 const {logger} = global;
 
 const orderSchema = require('./order.schema');
-//const constants = require('app.constants');
-const {DATABASE_DOCUMENTS} = require('app.constants');
+const constants = require('app.constants');
+//const {DATABASE_DOCUMENTS} = require('app.constants');
 const db = require('db');
 
-//const service = db.createService(constants.DATABASE_DOCUMENTS.ORDERS, orderSchema.schema);
-const service = db.createService(DATABASE_DOCUMENTS.ORDERS, orderSchema.schema);
+const service = db.createService(constants.DATABASE_DOCUMENTS.ORDERS, orderSchema.schema);
+//const service = db.createService(DATABASE_DOCUMENTS.ORDERS, orderSchema.schema);
 // usage: https://github.com/paralect/node-mongo/blob/master/API.md#mongo-service
 
 const beesV8 = require('trading-engine/beesV8');
@@ -14,14 +14,41 @@ const { Order, OrderPlacedEvent, OrderQuantityUpdatedEvent, OrderLimitUpdatedEve
 
 const ON_BOOK_STATUS = [orderSchema.ORDER_STATUS.PLACED, orderSchema.ORDER_STATUS.PARTIALLY_FILLED];
 
+
+const { idGenerator } = require('@paralect/node-mongo');
+const txService = require('../../wealth-management/transaction.service');
+
+
 module.exports = {
 
   /**
-   * Places new order on book
+   * Checks available balance of user, locks amount required by the order, and places the order on book.
+   * For now, fund check and lock only applies for LIMIT order.
+   *
    * @param {Object} newOrderObject: an order object with full properties of an order <- should consider to fill needed features in order.controller or here
    * @returns {Promise<{Object}>} Promise of the newly placed order record object
    */
+
   placeOrder: async (newOrderObject) => {
+    let fundCheckSuccessful = false;
+    if (newOrderObject.type === 'LIMIT') {
+      const orderId = idGenerator.generate();
+      newOrderObject._id = orderId;
+
+      if (newOrderObject.side === 'BUY') {
+        const requiredAmount = newOrderObject.quantity * newOrderObject.limitPrice;
+        fundCheckSuccessful = await txService.checkFundAndLock(newOrderObject.userId, newOrderObject.baseCurrency, requiredAmount, orderId);
+      }
+      else { // for SELL orders
+        const requiredAmount = newOrderObject.quantity;
+        fundCheckSuccessful = await txService.checkFundAndLock(newOrderObject.userId, newOrderObject.currency, requiredAmount, orderId);
+      }
+    }
+
+    if (newOrderObject.type === 'LIMIT' && !fundCheckSuccessful) {
+      throw new Error('not enought fund available');
+    }
+
     const createdOrder = await service.create(newOrderObject);
     logger.info('order.service.js: placedOrder(): createdOrder =', JSON.stringify(createdOrder, null, 2));
 
