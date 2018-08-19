@@ -29,6 +29,7 @@ module.exports = {
   createNewMatchObject: (order, tradedQuantity, isFilledCompletely) => {
     return {
       orderId: order._id,
+      userId: order.userId,
       price: order.limitPrice,
       quantity: order.quantity,
       tradedQuantity,
@@ -43,6 +44,7 @@ module.exports = {
       return {
         type: REASON_OBJECT_TYPE.PLACED,
         orderId: orderEvent._order._id,
+        userId: orderEvent._order.userId,
         side: orderEvent._order.side,
         price: (orderEvent._type === OrderEvent.MARKET_PLACED_EVENT) ? null : orderEvent._order.limitPrice,
         quantity: orderEvent._order.quantity
@@ -52,6 +54,7 @@ module.exports = {
       return {
         type: REASON_OBJECT_TYPE.CANCELED,
         orderId: orderEvent._order._id,
+        userId: orderEvent._order.userId,
         side: orderEvent._order.side,
         price: orderEvent._order.limitPrice,
         quantity: orderEvent._order.quantity,
@@ -62,6 +65,7 @@ module.exports = {
       return {
         type: REASON_OBJECT_TYPE.UPDATED,
         orderId: orderEvent._order._id,
+        userId: orderEvent._order.userId,
         side: orderEvent._order.side,
         price: orderEvent._order.limitPrice,
         oldPrice: orderEvent.oldPrice,
