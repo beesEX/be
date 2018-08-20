@@ -32,7 +32,9 @@ module.exports = class OrderBookSide {
   putOrderOnBook(order) {
     if (!this.orderMap.addOrder(order)) {
       logger.error('orderbookside.js putOrderOnBook(): ERROR when put order on book');
+      return false;
     }
+    return true;
   }
 
   /*
@@ -41,7 +43,9 @@ module.exports = class OrderBookSide {
   removeOrder(order) {
     if (!this.orderMap.removeOrder(order)) {
       logger.error('orderbookside.js removeOrder(): ERROR when remove order from book');
+      return false;
     }
+    return true;
   }
 
   /*
