@@ -8,8 +8,8 @@ const {OrderEvent} = require('../resources/order/order.models');
 const {open, publish, close} = require('../util/zeroMQpublisher');
 
 //TODO: need to lock write mode in DB
-//const db = require('../db');
-//const constants = require('app.constants');
+const db = require('../db');
+const constants = require('../app.constants');
 
 function isSameOrder(order1, order2) {
   const zero = 0.000000000000000000001;
@@ -28,8 +28,8 @@ function isSameOrder(order1, order2) {
 describe('get the aggregated state of the order book', async () => {
 
   before(async () => {
-    //await db.get(constants.DATABASE_DOCUMENTS.TRANSACTIONS).drop();
-    //await db.get(constants.DATABASE_DOCUMENTS.ORDERS).drop();
+    await db.get(constants.DATABASE_DOCUMENTS.TRANSACTIONS).drop();
+    await db.get(constants.DATABASE_DOCUMENTS.ORDERS).drop();
 
     // open zeroMQ
     open();
@@ -252,8 +252,8 @@ describe('test event process of trading engine', async () => {
   let itNumber = 0;
 
   before(async () => {
-    //await db.get(constants.DATABASE_DOCUMENTS.TRANSACTIONS).drop();
-    //await db.get(constants.DATABASE_DOCUMENTS.ORDERS).drop();
+    await db.get(constants.DATABASE_DOCUMENTS.TRANSACTIONS).drop();
+    await db.get(constants.DATABASE_DOCUMENTS.ORDERS).drop();
 
     // open zeroMQ
     open();
