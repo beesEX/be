@@ -6,7 +6,7 @@ const {Order, OrderEvent, OrderPlacedEvent, MarketOrderPlacedEvent, OrderQuantit
 // using later
 const config = require('../config');
 
-//const TradeExecutionService = require('../settlement/tradeexecution.service');
+const TradeExecutionService = require('../settlement/tradeexecution.service');
 
 const {logger} = global;
 
@@ -147,15 +147,20 @@ class OrderBook {
 
     logger.info(`orderbook.js updateLimit(): processing updated LIMIT order with limit price change: ${JSON.stringify(order)}`);
 
-    const oldOrder = new Order(JSON.parse(JSON.stringify(order)));
+    const oldOrder = new Order(order);
     oldOrder.limitPrice = orderUpdatedEvent.oldPrice;
 
     // remove existing order with old price from book
+    let isRemoved = false;
     if (order.side === 'BUY') {
-      this.bids.removeOrder(oldOrder);
+      isRemoved = this.bids.removeOrder(oldOrder);
     }
     else { // SELL
-      this.asks.removeOrder(oldOrder);
+      isRemoved = this.asks.removeOrder(oldOrder);
+    }
+    if (!isRemoved) {
+      logger.error('orderbook.js updateLimit(): ERROR: unable to remove order before updating limit price');
+      return null;
     }
 
     let matchingEventList = [];
@@ -171,15 +176,21 @@ class OrderBook {
     if (order.remainingQuantity() > ZERO) {
       logger.info(`orderbook.js updateLimit(): ${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
 
+      let isPut = false;
       if (order.side === 'BUY') {
-        this.bids.putOrderOnBook(order);
+        isPut = this.bids.putOrderOnBook(order);
       }
       else { // SELL
-        this.asks.putOrderOnBook(order);
+        isPut = this.asks.putOrderOnBook(order);
+      }
+      if (!isPut) {
+        logger.error('orderbook.js updateLimit(): ERROR: unable to put on order book side');
+        return null;
       }
     }
 
     return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO);
+
   }
 
   /**
@@ -192,14 +203,17 @@ class OrderBook {
 
     logger.info(`orderbook.js cancel(): processing LIMIT order canceled: ${JSON.stringify(order)}`);
 
+    let isCanceled = false;
     if (order.side === 'BUY') {
-      this.bids.removeOrder(order);
+      isCanceled = this.bids.removeOrder(order);
     }
     else { // SELL
-      this.asks.removeOrder(order);
+      isCanceled = this.asks.removeOrder(order);
     }
 
-    return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO);
+    if (isCanceled) return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO);
+    logger.error('orderbook.js cancel(): unable to cancel order');
+    return null;
   }
 
   /**
@@ -266,7 +280,7 @@ process.on('message', (event) => {
     default: {
       const orderbookEvent = orderbook.processOrderEvent(event.orderEvent);
       // send order book event to settlement module
-      //if (!config.isTest) TradeExecutionService.executeTrades(orderbookEvent);
+      if (!config.isTest && orderbookEvent) TradeExecutionService.executeTrades(orderbookEvent);
 
       // send order book event back to parent process
       process.send({
