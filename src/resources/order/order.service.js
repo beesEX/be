@@ -1,15 +1,15 @@
 const {logger} = global;
 
 const orderSchema = require('./order.schema');
-const constants = require('app.constants');
+const constants = require('../../app.constants');
 //const {DATABASE_DOCUMENTS} = require('app.constants');
-const db = require('db');
+const db = require('../../db');
 
 const service = db.createService(constants.DATABASE_DOCUMENTS.ORDERS, orderSchema.schema);
 //const service = db.createService(DATABASE_DOCUMENTS.ORDERS, orderSchema.schema);
 // usage: https://github.com/paralect/node-mongo/blob/master/API.md#mongo-service
 
-const beesV8 = require('trading-engine/beesV8');
+const beesV8 = require('../../trading-engine/beesV8');
 const { Order, OrderPlacedEvent, OrderQuantityUpdatedEvent, OrderLimitUpdatedEvent, OrderCanceledEvent, } = require('./order.models');
 
 const ON_BOOK_STATUS = [orderSchema.ORDER_STATUS.PLACED, orderSchema.ORDER_STATUS.PARTIALLY_FILLED];
@@ -74,17 +74,22 @@ module.exports = {
 
     orderObject = new Order(orderObject);
 
-    const updateOrder = await service.find({
+    let updateOrder = await service.find({
       userId,
       _id: orderObject._id,
       status: {$in: ON_BOOK_STATUS}
     });
-    logger.info(`order.service.js: updateOrderByUser(): get order ${JSON.stringify(updateOrder)} from DB`);
-    if (!updateOrder) {
+    logger.info(`order.service.js: updateOrderByUser(): get result ${JSON.stringify(updateOrder)} from DB`);
+    if (!updateOrder || !updateOrder.results || updateOrder.results.length === 0) {
       logger.error(`order.service.js: updateOrderByUser(): ERROR: not found order Id ${orderObject._id} of user Id ${userId} with on book status`);
       return false;
     }
+    if (updateOrder.results.length !== 1) {
+      logger.error('order.service.js: updateOrderByUser(): ERROR: there are more than one order fulfilled condition!');
+      return false;
+    }
 
+    updateOrder = new Order(updateOrder.results[0]);
     const oldQuantity = updateOrder.quantity;
     const oldPrice = updateOrder.limitPrice;
 
@@ -97,11 +102,11 @@ module.exports = {
     let orderbookEvent = null;
 
     if (oldPrice !== orderObject.limitPrice) {
-      const orderLimitUpdatedEvent = new OrderLimitUpdatedEvent(new Order(updateOrder), oldQuantity, oldPrice);
+      const orderLimitUpdatedEvent = new OrderLimitUpdatedEvent(updateOrder, oldQuantity, oldPrice);
       orderbookEvent = await beesV8.processOrderEvent(orderLimitUpdatedEvent);
     }
     else if (oldPrice === orderObject.limitPrice && oldQuantity !== orderObject.quantity) {
-      const orderQuantityUpdatedEvent = new OrderQuantityUpdatedEvent(new Order(updateOrder), oldQuantity, oldPrice);
+      const orderQuantityUpdatedEvent = new OrderQuantityUpdatedEvent(updateOrder, oldQuantity, oldPrice);
       orderbookEvent = await beesV8.processOrderEvent(orderQuantityUpdatedEvent);
     }
     logger.info(`order.service.js: updateOrderByUser(): received ${JSON.stringify(orderbookEvent)} from beesV8`);
@@ -138,20 +143,26 @@ module.exports = {
    */
   cancelOrder: async (orderId, userId) => {
     // get the order with given Id in DB
-    const cancelOrder = await service.find({
+    let cancelOrder = await service.find({
       userId,
       _id: orderId,
       status: {$in: ON_BOOK_STATUS}
     });
-    logger.info(`order.service.js: cancelOrder(): get order ${JSON.stringify(cancelOrder)} from DB`);
+    logger.info(`order.service.js: cancelOrder(): get result ${JSON.stringify(cancelOrder)} from DB`);
 
-    if (!cancelOrder) {
+    if (!cancelOrder || !cancelOrder.results || cancelOrder.results.length === 0) {
       logger.error(`order.service.js: cancelOrder(): ERROR: not found order Id ${orderId} of user Id ${userId} with on book status`);
       return false;
     }
+    if (cancelOrder.results.length !== 1) {
+      logger.error('order.service.js: cancelOrder(): ERROR: there are more than one order fulfilled condition!');
+      return false;
+    }
+
+    cancelOrder = new Order(cancelOrder.results[0]);
 
     // found it
-    const orderCanceledOrderEvent = new OrderCanceledEvent(new Order(cancelOrder));
+    const orderCanceledOrderEvent = new OrderCanceledEvent(cancelOrder);
     const orderbookEvent = await beesV8.processOrderEvent(orderCanceledOrderEvent);
     logger.info(`order.service.js: cancelOrder(): received ${JSON.stringify(orderbookEvent)} from beesV8`);
 
