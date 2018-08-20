@@ -134,7 +134,7 @@ class OrderBook {
 
     if (isSuccessfullyUpdated) return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO);
     logger.error(`orderbook.js updateQuantity(): failed to update event ${JSON.stringify(orderUpdatedEvent)}`);
-    return null;
+    return null; // [Tung:] just returning 'null', no order book event? what for event will the beesV8 then receive??? That's i mean in the task, you must have some special structure of order book event in case update/cancel was not possible, just returning null/false doesn't work
   }
 
   /**
@@ -160,7 +160,7 @@ class OrderBook {
     }
     if (!isRemoved) {
       logger.error('orderbook.js updateLimit(): ERROR: unable to remove order before updating limit price');
-      return null;
+      return null; // [Tung:] just returning 'null', no order book event? what for event will the beesV8 then receive??? That's i mean in the task, you must have some special structure of order book event in case update/cancel was not possible, just returning null/false doesn't work
     }
 
     let matchingEventList = [];
@@ -185,7 +185,7 @@ class OrderBook {
       }
       if (!isPut) {
         logger.error('orderbook.js updateLimit(): ERROR: unable to put on order book side');
-        return null;
+        return null; // [Tung:] just returning 'null', no order book event? what for event will the beesV8 then receive??? That's i mean in the task, you must have some special structure of order book event in case update/cancel was not possible, just returning null/false doesn't work
       }
     }
 
@@ -212,8 +212,9 @@ class OrderBook {
     }
 
     if (isCanceled) return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO);
+
     logger.error('orderbook.js cancel(): unable to cancel order');
-    return null;
+    return null;// [Tung:] just returning 'null', no order book event? what for event will the beesV8 then receive??? That's i mean in the task, you must have some special structure of order book event in case update/cancel was not possible, just returning null/false doesn't work
   }
 
   /**
@@ -280,10 +281,10 @@ process.on('message', (event) => {
     default: {
       const orderbookEvent = orderbook.processOrderEvent(event.orderEvent);
       // send order book event to settlement module
-      if (!config.isTest && orderbookEvent) TradeExecutionService.executeTrades(orderbookEvent);
+      if (!config.isTest && orderbookEvent) TradeExecutionService.executeTrades(orderbookEvent); // [Tuns:] why should this call not run in Test-environment? is this call not core logic?
 
       // send order book event back to parent process
-      process.send({
+      process.send({ // [Tung:] pls send the orderbookEvent obj as message directly
         id: event.id,
         type: OrderBookEvent.ORDER_BOOK_EVENT,
         orderbookEvent

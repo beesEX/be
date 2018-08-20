@@ -44,9 +44,11 @@ class BeesV8 {
       if (message.type === ORDER_BOOK_EVENT) {
         const resolveFunction = this.mapOfIdAndResolveFunction[message.id];
         if (resolveFunction) {
-          resolveFunction(message.orderbookEvent);
+          resolveFunction(message.orderbookEvent); // [Tung:] orderbook child process should send orderbookevent as message directly
           delete this.mapOfIdAndResolveFunction[message.id];
         }
+
+        // publishes orderbook event to UI per zeroMQ
         zmqPublish(JSON.stringify(message.orderbookEvent), `Orderbook-${this.symbol}`).then(() => {
           logger.info(`beesV8.js: publishes orderbook event per zeroMQ to UI server: \n ${JSON.stringify(message, null, 2)}`);
         });
@@ -73,6 +75,7 @@ class BeesV8 {
   processOrderEvent(event) {
     logger.info('beesV8.js processOrderEvent(): sends to order book child process order event = ', JSON.stringify(event));
 
+    // [Tung:] pls use the event directly as message, rename OrderEvent._type -> OrderEvent.type, add field OrderEvent.id
     const messageId = uuid();
     const message = {
       type: EVENT_GET_ORDERBOOK_EVENT,

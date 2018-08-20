@@ -55,7 +55,7 @@ module.exports = class OrderBookSide {
     // check if new quantity is valid
     const oldOrderElement = this.orderMap.getElementByOrder(order);
     if (oldOrderElement) {
-      if (oldOrderElement.order.filledQuantity <= order.quantity) {
+      if (oldOrderElement.order.filledQuantity <= order.quantity) { // [Tung:] if the comparision is true, should the order be removed from book immediately?
         return this.orderMap.updateOrderQuantity(order);
       }
       logger.error(`orderbookside.js updateQuantity(): ERROR: order id ${order._id} has new quantity ${order.quantity} < filled quantity ${oldOrderElement.order.filledQuantity}`);

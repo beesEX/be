@@ -63,33 +63,33 @@ module.exports = {
    * Only on book orders are allowed to be updated.
    * @param {Object} orderObject: an object contains _id, limitPrice and quantity. New quantity must be greater than quantity already filled.
    * @param {string} userId: userId of the owner of the order to be updated
-   * @returns {Promise<{Object}>} Promise of the updated order record object
+   * @returns {Promise<{Object}>} Promise of the updated order record object if updating was successful, otherwise false
    */
   updateOrderByUser: async (orderObject, userId) => {
     logger.info(`order.service.js: updateOrderByUser(): received order object ${JSON.stringify(orderObject)}`);
-    if (!orderObject) {
-      logger.error(`order.service.js: updateOrderByUser(): ERROR: unexpected type of orderObject`);
+    if (!orderObject) { // [Tung:] i guess, this means to be a null-check of input param, but it's not sufficient to get the code run correctly, for now i would remove it for simplicity, util we have time and do a meaningful Joi schema validation instead. Having not-sufficient precondition-checking code just pollutes your code!
+      logger.error('order.service.js: updateOrderByUser(): ERROR: unexpected type of orderObject');
       return false;
     }
 
-    orderObject = new Order(orderObject);
+    orderObject = new Order(orderObject); // [Tung:] why do this? get any advantage when having the input again as Order object?
 
-    let updateOrder = await service.find({
+    let updateOrder = await service.find({ // [Tung:] you should rename the variable to: const 'orderToUpdateQuery' or just 'query'
       userId,
       _id: orderObject._id,
       status: {$in: ON_BOOK_STATUS}
     });
     logger.info(`order.service.js: updateOrderByUser(): get result ${JSON.stringify(updateOrder)} from DB`);
     if (!updateOrder || !updateOrder.results || updateOrder.results.length === 0) {
-      logger.error(`order.service.js: updateOrderByUser(): ERROR: not found order Id ${orderObject._id} of user Id ${userId} with on book status`);
+      logger.error(`order.service.js: updateOrderByUser(): ERROR: not found order with id=${orderObject._id} of userId=${userId} with on book status`);
       return false;
     }
     if (updateOrder.results.length !== 1) {
-      logger.error('order.service.js: updateOrderByUser(): ERROR: there are more than one order fulfilled condition!');
+      logger.error(`order.service.js: updateOrderByUser(): ERROR: there are more than one orders found for userId=${userId} and orderId=${orderObject._id} with on book status`);
       return false;
     }
 
-    updateOrder = new Order(updateOrder.results[0]);
+    updateOrder = new Order(updateOrder.results[0]); // [Tung:] reassign of local var is a bad practice, this line should be: const toBeUpdatedOrder = new Order(orderToUpdateQuery.results[0]);
     const oldQuantity = updateOrder.quantity;
     const oldPrice = updateOrder.limitPrice;
 
@@ -140,11 +140,11 @@ module.exports = {
    * Cancel order of given user. Only on book order are allowed to canceled.
    * @param {string} orderId: ID of order to be canceled
    * @param {string} userId: userId of the owner of the order to be canceled
-   * @returns {undefined}
+   * @returns {Promise<boolean>} Promise of true if canceling of the order was successful, otherwise false
    */
   cancelOrder: async (orderId, userId) => {
     // get the order with given Id in DB
-    let cancelOrder = await service.find({
+    let cancelOrder = await service.find({ // [Tung:] you should rename the variable to: const 'orderToCancelQuery' or just 'query'
       userId,
       _id: orderId,
       status: {$in: ON_BOOK_STATUS}
@@ -152,15 +152,15 @@ module.exports = {
     logger.info(`order.service.js: cancelOrder(): get result ${JSON.stringify(cancelOrder)} from DB`);
 
     if (!cancelOrder || !cancelOrder.results || cancelOrder.results.length === 0) {
-      logger.error(`order.service.js: cancelOrder(): ERROR: not found order Id ${orderId} of user Id ${userId} with on book status`);
+      logger.error(`order.service.js: cancelOrder(): ERROR: not found order with id=${orderId} of userId=${userId} with on book status`);
       return false;
     }
     if (cancelOrder.results.length !== 1) {
-      logger.error('order.service.js: cancelOrder(): ERROR: there are more than one order fulfilled condition!');
+      logger.error(`order.service.js: cancelOrder(): ERROR: there are more than one orders found for userId=${userId} and orderId=${orderId} with on book status`);
       return false;
     }
 
-    cancelOrder = new Order(cancelOrder.results[0]);
+    cancelOrder = new Order(cancelOrder.results[0]); // [Tung:] reassign of local var is a bad practice, this line should be: const toBeCanceledOrder = new Order(orderToCancelQuery.results[0]);
 
     // found it
     const orderCanceledOrderEvent = new OrderCanceledEvent(cancelOrder);
@@ -241,9 +241,9 @@ module.exports = {
   /**
    * Update pair of matched orders
    *
-   * @param {Object} reasonObj
-   * @param {Object} matchObj
-   * @returns true if success, false if failed
+   * @param {Object} reasonObj: 'reason'-field of OrderbookEvent
+   * @param {Object} matchObj: one of elements of the 'matches'-Array field of OrderbookEvent
+   * @returns {Promise<boolean>} Promise of boolean, true if success, false if failed
    */
   updateOrdersbyMatch: async (reasonObj, matchObj, isReasonObjFilledCompletely) => {
     logger.info(`order.service.js: updatedMatchOrder(): received reason object = ${JSON.stringify(reasonObj)} and match object = ${JSON.stringify(matchObj)}`);
@@ -268,8 +268,8 @@ module.exports = {
       doc.lastUpdatedAt = new Date();
     });
 
-    if (updatedMatchOrder && updatedReasonOrder) {
-      logger.info(`order.service.js: updatedMatchOrder(): updated reason order = ${JSON.stringify(updatedReasonOrder)} and match order = ${JSON.stringify(updatedMatchOrder)}`);
+    if (updatedReasonOrder && updatedMatchOrder) {
+      logger.info(`order.service.js: updateOrdersbyMatch(): updated order under processing = ${JSON.stringify(updatedReasonOrder)} and matched counter order = ${JSON.stringify(updatedMatchOrder)}`);
       return true;
     }
 
