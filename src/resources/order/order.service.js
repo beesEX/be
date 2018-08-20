@@ -241,8 +241,8 @@ module.exports = {
   /**
    * Update pair of matched orders
    *
-   * @param {Object} reasonObj: 'reason'-field of OrderbookEvent
-   * @param {Object} matchObj: one of elements of the 'matches'-Array field of OrderbookEvent
+   * @param {Object} reasonObj: 'reason'-field of OrderbookEvent, represents order under processing of the match.
+   * @param {Object} matchObj: one of elements of the 'matches'-Array field of OrderbookEvent, represent the counter order of the match.
    * @returns {Promise<boolean>} Promise of boolean, true if success, false if failed
    */
   updateOrdersbyMatch: async (reasonObj, matchObj, isReasonObjFilledCompletely) => {
