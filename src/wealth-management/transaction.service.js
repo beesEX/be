@@ -1,9 +1,9 @@
 const {logger} = global;
 
 const { schema, TRANSACTION_TYPE } = require('./transaction.schema');
-const constants = require('app.constants');
+const constants = require('../app.constants');
 //const {DATABASE_DOCUMENTS} = require('app.constants');
-const db = require('db');
+const db = require('../db');
 
 const service = db.createService(constants.DATABASE_DOCUMENTS.TRANSACTIONS, schema);
 //const service = db.createService(DATABASE_DOCUMENTS.TRANSACTIONS, schema);
