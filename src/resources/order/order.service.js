@@ -121,9 +121,10 @@ module.exports = {
       userId,
       status: {$in: ON_BOOK_STATUS}
     }, (doc) => {
-      if (orderbookEvent.reason.quantity > doc.filledQuantity) {
+      if (orderbookEvent.reason.quantity >= doc.filledQuantity) {
         doc.limitPrice = orderbookEvent.reason.price;
         doc.quantity = orderbookEvent.reason.quantity;
+        if (doc.filledQuantity === orderbookEvent.reason.quantity) doc.status = orderSchema.ORDER_STATUS.FILLED;
         doc.lastUpdatedAt = new Date();
       }
     });

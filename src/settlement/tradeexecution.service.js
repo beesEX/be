@@ -38,11 +38,11 @@ module.exports = {
           await Transaction.buy(reasonObj.userId, reasonObj.baseCurrency, tradeQuantity, reasonObj.orderId);
 
           // release base currency of match user
-          await Transaction.release(matchList[i].userId, matchList[i].baseCurrency, tradeQuantity);
+          await Transaction.release(matchList[i].userId, reasonObj.baseCurrency, tradeQuantity);
           // decrease base base currency of match user
-          await Transaction.sell(matchList[i].userId, matchList[i].baseCurrency, tradeQuantity, matchList[i].orderId);
+          await Transaction.sell(matchList[i].userId, reasonObj.baseCurrency, tradeQuantity, matchList[i].orderId);
           // increase quote currency of match user
-          await Transaction.buy(matchList[i].userId, matchList[i].currency, tradeQuantity * tradePrice, matchList[i].orderId);
+          await Transaction.buy(matchList[i].userId, reasonObj.currency, tradeQuantity * tradePrice, matchList[i].orderId);
         }
         else {
           // release base currency of reason user
@@ -53,44 +53,38 @@ module.exports = {
           await Transaction.buy(reasonObj.userId,reasonObj.currency, tradeQuantity, reasonObj.orderId);
 
           // release quote currency of match user
-          await Transaction.release(matchList[i].userId, matchList[i].currency, tradeQuantity * tradePrice);
+          await Transaction.release(matchList[i].userId, reasonObj.currency, tradeQuantity * tradePrice);
           // decrease quote currency of match user
-          await Transaction.sell(matchList[i].userId, matchList[i].currency, tradeQuantity * tradePrice, matchList[i].orderId);
+          await Transaction.sell(matchList[i].userId, reasonObj.currency, tradeQuantity * tradePrice, matchList[i].orderId);
           // increase base currency of match user
-          await Transaction.buy(matchList[i].userId, matchList[i].baseCurrency, tradeQuantity, matchList[i].orderId);
+          await Transaction.buy(matchList[i].userId, reasonObj.baseCurrency, tradeQuantity, matchList[i].orderId);
         }
       }
     }
 
     if (reasonObj.type === REASON_OBJECT_TYPE.CANCELED) {
-      if (reasonObj.quantity > reasonObj.filledQuantity ) {
+      if (reasonObj.quantity > reasonObj.filledQuantity) {
         await Transaction.release(reasonObj.userId, reasonObj.baseCurrency, reasonObj.quantity - reasonObj.filledQuantity);
       }
       else if (reasonObj.quantity < reasonObj.filledQuantity) {
         logger.error(`tradeexecution.service.js executeTrades(): ERROR: reasonObj.quantity = ${reasonObj.quantity} < reasonObj.filledQuantity = ${reasonObj.filledQuantity}`);
         return false;
       }
-      else {
-        logger.info(`tradeexecution.service.js executeTrades(): reasonObj.quantity = reasonObj.filledQuantity = ${reasonObj.filledQuantity}`);
-      }
     }
     else if (reasonObj.type === REASON_OBJECT_TYPE.UPDATED) {
       if (reasonObj.quantity !== reasonObj.oldQuantity) {
         // update quantity
-        if (reasonObj.quantity > reasonObj.filledQuantity) {
+        if (reasonObj.quantity >= reasonObj.filledQuantity) {
           if (reasonObj.quantity > reasonObj.oldQuantity) {
             await Transaction.lock(reasonObj.userId, reasonObj.baseCurrency, reasonObj.quantity - reasonObj.oldQuantity);
           }
-          else {
+          else if (reasonObj.quantity < reasonObj.oldQuantity) {
             await Transaction.release(reasonObj.userId, reasonObj.baseCurrency, reasonObj.oldQuantity - reasonObj.quantity);
           }
         }
-        else if (reasonObj.quantity < reasonObj.filledQuantity) {
+        else {
           logger.error(`tradeexecution.service.js executeTrades(): ERROR: reasonObj.quantity = ${reasonObj.quantity} < reasonObj.filledQuantity = ${reasonObj.filledQuantity}`);
           return false;
-        }
-        else {
-          logger.info(`tradeexecution.service.js executeTrades(): reasonObj.quantity = reasonObj.filledQuantity = ${reasonObj.filledQuantity}`);
         }
       }
     }
