@@ -31,33 +31,33 @@ module.exports = {
         // call transaction service
         if (reasonObj.side === 'BUY') {
           // release quote currency of reason user
-          Transaction.release(reasonObj.userId, reasonObj.currency, tradeQuantity * tradePrice);
+          await Transaction.release(reasonObj.userId, reasonObj.currency, tradeQuantity * tradePrice);
           // decrease quote currency of reason user
-          Transaction.sell(reasonObj.userId, reasonObj.currency, tradeQuantity * tradePrice, reasonObj.orderId);
+          await Transaction.sell(reasonObj.userId, reasonObj.currency, tradeQuantity * tradePrice, reasonObj.orderId);
           // increase base currency of reason user
-          Transaction.buy(reasonObj.userId, reasonObj.baseCurrency, tradeQuantity, reasonObj.orderId);
+          await Transaction.buy(reasonObj.userId, reasonObj.baseCurrency, tradeQuantity, reasonObj.orderId);
 
           // release base currency of match user
-          Transaction.release(matchList[i].userId, matchList[i].baseCurrency, tradeQuantity);
+          await Transaction.release(matchList[i].userId, matchList[i].baseCurrency, tradeQuantity);
           // decrease base base currency of match user
-          Transaction.sell(matchList[i].userId, matchList[i].baseCurrency, tradeQuantity, matchList[i].orderId);
+          await Transaction.sell(matchList[i].userId, matchList[i].baseCurrency, tradeQuantity, matchList[i].orderId);
           // increase quote currency of match user
-          Transaction.buy(matchList[i].userId, matchList[i].currency, tradeQuantity * tradePrice, matchList[i].orderId);
+          await Transaction.buy(matchList[i].userId, matchList[i].currency, tradeQuantity * tradePrice, matchList[i].orderId);
         }
         else {
           // release base currency of reason user
-          Transaction.release(reasonObj.userId, reasonObj.baseCurrency, tradeQuantity);
+          await Transaction.release(reasonObj.userId, reasonObj.baseCurrency, tradeQuantity);
           // decrease base base currency of reason user
-          Transaction.sell(reasonObj.userId, reasonObj.baseCurrency, tradeQuantity, reasonObj.orderId);
+          await Transaction.sell(reasonObj.userId, reasonObj.baseCurrency, tradeQuantity, reasonObj.orderId);
           // increase quote currency of reason user
-          Transaction.buy(reasonObj.userId,reasonObj.currency, tradeQuantity, reasonObj.orderId);
+          await Transaction.buy(reasonObj.userId,reasonObj.currency, tradeQuantity, reasonObj.orderId);
 
           // release quote currency of match user
-          Transaction.release(matchList[i].userId, matchList[i].currency, tradeQuantity * tradePrice);
+          await Transaction.release(matchList[i].userId, matchList[i].currency, tradeQuantity * tradePrice);
           // decrease quote currency of match user
-          Transaction.sell(matchList[i].userId, matchList[i].currency, tradeQuantity * tradePrice, matchList[i].orderId);
+          await Transaction.sell(matchList[i].userId, matchList[i].currency, tradeQuantity * tradePrice, matchList[i].orderId);
           // increase base currency of match user
-          Transaction.buy(matchList[i].userId, matchList[i].baseCurrency, tradeQuantity, matchList[i].orderId);
+          await Transaction.buy(matchList[i].userId, matchList[i].baseCurrency, tradeQuantity, matchList[i].orderId);
         }
       }
     }
