@@ -5,4 +5,6 @@ beesEX-BE.iml
 .idea/modules.xml
 .idea/vcs.xml
 .idea/workspace.xml
+.nyc_output
+coverage
 package-lock.json
