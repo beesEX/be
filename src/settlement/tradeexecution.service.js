@@ -28,32 +28,33 @@ module.exports = {
         const tradePrice = matchList[i].price; // [Tung]: const tradedPrice
         const tradeQuantity = matchList[i].tradedQuantity; // [Tung]: const tradedQuantity
         // const tradedAmount = tradedQuantity * tradedPrice; // and use it below, instead recalculating it again and again
-        // call transaction service
+
+        // call transaction service [Tung]; logic in this if-else-block should be better handled by a specialized function in transaction service, some function named 'settlementTrade(reasonObj, matchObj)'
         if (reasonObj.side === 'BUY') {
           // release quote currency of reason user
-          await Transaction.release(reasonObj.userId, reasonObj.currency, tradeQuantity * tradePrice); // [Tung]: for BUY order, release the baseCurrency, take a look at placeOrder() in order service to know how fund has been locked
+          await Transaction.releaseByTrade(reasonObj.userId, reasonObj.currency, tradeQuantity * tradePrice, reasonObj.orderId); // [Tung]: for BUY order, release the baseCurrency, take a look at placeOrder() in order service to know how fund has been locked
           // decrease quote currency of reason user
           await Transaction.sell(reasonObj.userId, reasonObj.currency, tradeQuantity * tradePrice, reasonObj.orderId); // [Tung]: for BUY order, sell the baseCurrency, baseCurrency is what you used to place the BUY order.
           // increase base currency of reason user
           await Transaction.buy(reasonObj.userId, reasonObj.baseCurrency, tradeQuantity, reasonObj.orderId); // [Tung]: for BUY order, buy the currency, currency is what you want to buy with the BUY order
 
           // release base currency of match user
-          await Transaction.release(matchList[i].userId, reasonObj.baseCurrency, tradeQuantity); // [Tung]: for SELL order, release currency, take a look at placeOrder() in order service to know how fund has been locked
+          await Transaction.releaseByTrade(matchList[i].userId, reasonObj.baseCurrency, tradeQuantity, matchList[i].orderId); // [Tung]: for SELL order, release currency, take a look at placeOrder() in order service to know how fund has been locked
           // decrease base base currency of match user
           await Transaction.sell(matchList[i].userId, reasonObj.baseCurrency, tradeQuantity, matchList[i].orderId); // [Tung]: for SELL order, sell the currency, currency is what you used to place the SELL order.
           // increase quote currency of match user
           await Transaction.buy(matchList[i].userId, reasonObj.currency, tradeQuantity * tradePrice, matchList[i].orderId); // [Tung]: for SELL order, buy the baseCurrency, baseCurrency is what you want to receive with the SELL order
         }
-        else {
+        else { // [Tung]: the same comments as above apply for this else-block, but in reverse means
           // release base currency of reason user
-          await Transaction.release(reasonObj.userId, reasonObj.baseCurrency, tradeQuantity);
+          await Transaction.releaseByTrade(reasonObj.userId, reasonObj.baseCurrency, tradeQuantity, reasonObj.orderId);
           // decrease base base currency of reason user
           await Transaction.sell(reasonObj.userId, reasonObj.baseCurrency, tradeQuantity, reasonObj.orderId);
           // increase quote currency of reason user
           await Transaction.buy(reasonObj.userId,reasonObj.currency, tradeQuantity, reasonObj.orderId);
 
           // release quote currency of match user
-          await Transaction.release(matchList[i].userId, reasonObj.currency, tradeQuantity * tradePrice);
+          await Transaction.releaseByTrade(matchList[i].userId, reasonObj.currency, tradeQuantity * tradePrice, matchList[i].orderId);
           // decrease quote currency of match user
           await Transaction.sell(matchList[i].userId, reasonObj.currency, tradeQuantity * tradePrice, matchList[i].orderId);
           // increase base currency of match user
@@ -64,7 +65,7 @@ module.exports = {
 
     if (reasonObj.type === REASON_OBJECT_TYPE.CANCELED) { // [Tung]: logic in this if-block does not belong here, it belongs to cancelOrder() in order service, but just remove, i will do it in my task
       if (reasonObj.quantity > reasonObj.filledQuantity) {
-        await Transaction.release(reasonObj.userId, reasonObj.baseCurrency, reasonObj.quantity - reasonObj.filledQuantity);
+        await Transaction.releaseByTrade(reasonObj.userId, reasonObj.baseCurrency, reasonObj.quantity - reasonObj.filledQuantity, reasonObj.orderId);
       }
       else if (reasonObj.quantity < reasonObj.filledQuantity) {
         logger.error(`tradeexecution.service.js executeTrades(): ERROR: reasonObj.quantity = ${reasonObj.quantity} < reasonObj.filledQuantity = ${reasonObj.filledQuantity}`);
@@ -79,7 +80,7 @@ module.exports = {
             await Transaction.lock(reasonObj.userId, reasonObj.baseCurrency, reasonObj.quantity - reasonObj.oldQuantity);
           }
           else if (reasonObj.quantity < reasonObj.oldQuantity) {
-            await Transaction.release(reasonObj.userId, reasonObj.baseCurrency, reasonObj.oldQuantity - reasonObj.quantity);
+            await Transaction.releaseByTrade(reasonObj.userId, reasonObj.baseCurrency, reasonObj.oldQuantity - reasonObj.quantity, reasonObj.orderId);
           }
         }
         else {

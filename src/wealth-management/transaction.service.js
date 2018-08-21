@@ -20,7 +20,7 @@ class TXService {
    *
    * @param {string} userId
    * @param {string} currency
-   * @returns {number} total balance
+   * @returns {Promise<number>} Promise of number representing the total balance
    */
   async getBalance(userId, currency) {
     const creditPromise = service.aggregate([
@@ -56,7 +56,7 @@ class TXService {
    *
    * @param {string} userId
    * @param {string} currency
-   * @returns {number} balance available for trading
+   * @returns {Promise<number>} Promise of number representing the balance available for trading
    */
   async getAvailableBalance(userId, currency) {
     const creditPromise = service.aggregate([
@@ -89,7 +89,7 @@ class TXService {
    * @param currency
    * @param amount
    * @param fromWallet external wallet address from which the amount was transfer
-   * @returns {transaction-obj} the tx record of the deposit
+   * @returns {Promise<{Object}>} Promise of the tx record of the deposit
    */
   async deposit(userId, currency, amount, fromWallet) {
     const tx = { currency, type: TRANSACTION_TYPE.DEPOSIT, amount, fromWallet, createdAt: new Date(), userId };
@@ -106,7 +106,7 @@ class TXService {
    * @param currency
    * @param amount
    * @param toWallet external wallet address to which the amount should be transfer
-   * @returns {transaction-obj} the tx record of the withdraw
+   * @returns {Promise<{Object}>} Promise of the tx record of the withdraw
    */
   async withdraw(userId, currency, amount, toWallet) {
     const tx = { currency, type: TRANSACTION_TYPE.WITHDRAW, amount, toWallet, createdAt: new Date(), userId };
@@ -123,7 +123,7 @@ class TXService {
    * @param currency
    * @param amount
    * @param orderId id of a new order or updated order
-   * @returns {transaction-obj} the tx record of the fund lock
+   * @returns {Promise<{Object}>} Promise of the tx record of the fund lock
    */
   async lock(userId, currency, amount, orderId) {
     const tx = { currency, type: TRANSACTION_TYPE.LOCKED, amount, orderId, createdAt: new Date(), userId };
@@ -134,17 +134,60 @@ class TXService {
   }
 
   /**
-   * Releases an amount of the given currency account of the user, which has been locked before.
+   * Releases the remaining locked fund amount of an order.
+   * This function is intended to be called when order gets updated or canceled.
    *
    * @param userId
    * @param currency
    * @param amount
-   * @returns {transaction-obj} the tx record of the fund release
+   * @param orderId
+   * @returns {Promise<{Object}>} Promise of the tx record if success
    */
-  async release(userId, currency, amount) {
-    const tx = { currency, type: TRANSACTION_TYPE.RELEASED, amount, createdAt: new Date(), userId };
+  async releaseLockedFund(userId, currency, orderId) {
+    const fundLockQueryPromise = service.find({ userId, currency, type: TRANSACTION_TYPE.LOCKED, orderId });
+    const fundReleaseQueryPromise = service.find({ userId, currency, type: TRANSACTION_TYPE.RELEASED, orderId });
+
+    const [fundLockQuery, fundReleaseQuery] = await Promise.all([fundLockQueryPromise, fundReleaseQueryPromise]);
+
+    if (fundLockQuery.results.length === 0) {
+      throw new Error('no fund locked for the orderId=', orderId);
+    }
+    if (fundLockQuery.results.length > 1) {
+      throw new Error('there are more than one fund lock tx found for the orderId=', orderId);
+    }
+    const totalLockedAmount = fundLockQuery.results[0].amount;
+
+    let totalReleasedAmount = 0;
+    for (let i = 0; i < fundReleaseQuery.results.length; i += 1) {
+      totalReleasedAmount += fundReleaseQuery.results[i].amount;
+    }
+
+    const remainingLockedAmount = totalLockedAmount - totalReleasedAmount;
+    if (remainingLockedAmount < 0) {
+      throw new Error(`system has released more fund than locked amount for orderId=${orderId}!!!`);
+    }
+
+    const tx = { currency, type: TRANSACTION_TYPE.RELEASED, remainingLockedAmount, createdAt: new Date(), userId, orderId };
     const fundreleasedTX = await service.create(tx);
-    logger.info('transaction.service.js: release(): new fund release tx = ', JSON.stringify(fundreleasedTX));
+    logger.info('transaction.service.js: releaseLockedFund(): release remaining locked fund tx = ', JSON.stringify(fundreleasedTX));
+
+    return fundreleasedTX;
+  }
+
+  /**
+   * Releases an amount of the given currency account of the user for a matched order, whose fund has been locked before.
+   * This function is intended to be called while executing trades of matched orders.
+   *
+   * @param userId
+   * @param currency
+   * @param amount
+   * @param orderId
+   * @return {Promise<{Object}>} Promise of the tx record if success
+   */
+  async releaseByTrade(userId, currency, amount, orderId) {
+    const tx = { currency, type: TRANSACTION_TYPE.RELEASED, amount, createdAt: new Date(), userId, orderId };
+    const fundreleasedTX = await service.create(tx);
+    logger.info('transaction.service.js: releaseByTrade(): fund release by trade tx = ', JSON.stringify(fundreleasedTX));
 
     return fundreleasedTX;
   }
@@ -173,7 +216,7 @@ class TXService {
    * @param currency
    * @param amount
    * @param orderId id of matched order for which the trade was executed
-   * @returns {transaction-obj} the tx record of the fund debit
+   * @returns {Promise<{Object}>} Promise of the tx record of the fund debit
    */
   async sell(userId, currency, amount, orderId) {
     const tx = { currency, type: TRANSACTION_TYPE.SELL, amount, orderId, createdAt: new Date(), userId };
@@ -188,7 +231,7 @@ class TXService {
    *
    * @param userId
    * @param currency
-   * @returns {Array<{transaction-obj}>}
+   * @returns {Promise<Array<{transaction-obj}>>} Promise of array of found tx records
    */
   async getTransactions(userId, currency) {
     const findQuery = await service.find({ userId, currency }, { sort: { createdAt: -1 } });
