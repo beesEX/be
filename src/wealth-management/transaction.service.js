@@ -135,11 +135,10 @@ class TXService {
 
   /**
    * Releases the remaining locked fund amount of an order.
-   * This function is intended to be called when order gets updated or canceled.
+   * This function is intended to be called when order gets canceled.
    *
    * @param userId
    * @param currency
-   * @param amount
    * @param orderId
    * @returns {Promise<{Object}>} Promise of the tx record if success
    */
@@ -149,13 +148,10 @@ class TXService {
 
     const [fundLockQuery, fundReleaseQuery] = await Promise.all([fundLockQueryPromise, fundReleaseQueryPromise]);
 
-    if (fundLockQuery.results.length === 0) {
-      throw new Error('no fund locked for the orderId=', orderId);
+    let totalLockedAmount = 0;
+    for (let i = 0; i < fundLockQuery.results.length; i += 1) {
+      totalLockedAmount += fundLockQuery.results[i].amount;
     }
-    if (fundLockQuery.results.length > 1) {
-      throw new Error('there are more than one fund lock tx found for the orderId=', orderId);
-    }
-    const totalLockedAmount = fundLockQuery.results[0].amount;
 
     let totalReleasedAmount = 0;
     for (let i = 0; i < fundReleaseQuery.results.length; i += 1) {
@@ -172,6 +168,46 @@ class TXService {
     logger.info('transaction.service.js: releaseLockedFund(): release remaining locked fund tx = ', JSON.stringify(fundreleasedTX));
 
     return fundreleasedTX;
+  }
+
+  /**
+   * Releases the remaining locked fund amount of an order and locks new amount immediately
+   * This function is intended to be called when order gets updated.
+   *
+   * @param userId
+   * @param currency
+   * @param amount
+   * @param orderId
+   * @returns {Promise<{Object}>} Promise of the tx record if success
+   */
+  async releaseLockedFundAndLockNewAmount(userId, currency, amount, orderId) {
+    const fundLockQueryPromise = service.find({ userId, currency, type: TRANSACTION_TYPE.LOCKED, orderId });
+    const fundReleaseQueryPromise = service.find({ userId, currency, type: TRANSACTION_TYPE.RELEASED, orderId });
+
+    const [fundLockQuery, fundReleaseQuery] = await Promise.all([fundLockQueryPromise, fundReleaseQueryPromise]);
+
+    let totalLockedAmount = 0;
+    for (let i = 0; i < fundLockQuery.results.length; i += 1) {
+      totalLockedAmount += fundLockQuery.results[i].amount;
+    }
+
+    let totalReleasedAmount = 0;
+    for (let i = 0; i < fundReleaseQuery.results.length; i += 1) {
+      totalReleasedAmount += fundReleaseQuery.results[i].amount;
+    }
+
+    const remainingLockedAmount = totalLockedAmount - totalReleasedAmount;
+    if (remainingLockedAmount < 0) {
+      throw new Error(`system has released more fund than locked amount for orderId=${orderId}!!!`);
+    }
+
+    const createdAt = new Date();
+    const releaseRemainingTX = { currency, type: TRANSACTION_TYPE.RELEASED, remainingLockedAmount, createdAt, userId, orderId };
+    const fundLockTX = { currency, type: TRANSACTION_TYPE.LOCKED, amount, createdAt, userId, orderId };
+    const txArray = await service.create([releaseRemainingTX, fundLockTX]);
+    logger.info(`transaction.service.js: releaseLockedFundAndLockNewAmount(): release remaining locked fund tx = ${JSON.stringify(txArray[0])}, lock new fund amount tx = ${JSON.stringify(txArray[1])}`);
+
+    return txArray;
   }
 
   /**

@@ -20,7 +20,7 @@ module.exports = {
     const isReasonObjFilledCompletely = orderbookEvent.filledCompletely;
 
     for (let i = 0; i < matchList.length; i += 1) { // wait for all async calls in each for-iteration with await Promise.all([array-of-Promise-to-wait]), these async calls do not need to wait for each other in sequence like you do, they can be executed in parallel, we just want to wait for all of them coming back at the end.
-      const status = await OrderService.updateOrdersbyMatch(reasonObj, matchList[i], i === matchList.length - 1 && isReasonObjFilledCompletely); // [Tung]: change API of updateOrdersByMatch as commented, the last boolean expression is very odd, i needed 30sec to understand what you want to express with it :-), isReasonObjFilledCompletely is intended to be used in UI
+      const status = await OrderService.updateOrdersByMatch(reasonObj, matchList[i], i === matchList.length - 1 && isReasonObjFilledCompletely); // [Tung]: change API of updateOrdersByMatch as commented, the last boolean expression is very odd, i needed 30sec to understand what you want to express with it :-), isReasonObjFilledCompletely is intended to be used in UI
       if (!status) {
         logger.error('tradeexecution.service.js executeTrades(): ----- ERROR: ------ RACE CONDITION ------');
       }
@@ -63,32 +63,8 @@ module.exports = {
       }
     }
 
-    if (reasonObj.type === REASON_OBJECT_TYPE.CANCELED) { // [Tung]: logic in this if-block does not belong here, it belongs to cancelOrder() in order service, but just remove, i will do it in my task
-      if (reasonObj.quantity > reasonObj.filledQuantity) {
-        await Transaction.releaseByTrade(reasonObj.userId, reasonObj.baseCurrency, reasonObj.quantity - reasonObj.filledQuantity, reasonObj.orderId);
-      }
-      else if (reasonObj.quantity < reasonObj.filledQuantity) {
-        logger.error(`tradeexecution.service.js executeTrades(): ERROR: reasonObj.quantity = ${reasonObj.quantity} < reasonObj.filledQuantity = ${reasonObj.filledQuantity}`);
-        return false;
-      }
-    }
-    else if (reasonObj.type === REASON_OBJECT_TYPE.UPDATED) { // [Tung]: logic in this elseif-block does not belong here, it belongs to updateOrderByUser() in order service, but just remove, i will do it in my task
-      if (reasonObj.quantity !== reasonObj.oldQuantity) {
-        // update quantity
-        if (reasonObj.quantity >= reasonObj.filledQuantity) {
-          if (reasonObj.quantity > reasonObj.oldQuantity) {
-            await Transaction.lock(reasonObj.userId, reasonObj.baseCurrency, reasonObj.quantity - reasonObj.oldQuantity);
-          }
-          else if (reasonObj.quantity < reasonObj.oldQuantity) {
-            await Transaction.releaseByTrade(reasonObj.userId, reasonObj.baseCurrency, reasonObj.oldQuantity - reasonObj.quantity, reasonObj.orderId);
-          }
-        }
-        else {
-          logger.error(`tradeexecution.service.js executeTrades(): ERROR: reasonObj.quantity = ${reasonObj.quantity} < reasonObj.filledQuantity = ${reasonObj.filledQuantity}`);
-          return false;
-        }
-      }
-    }
+    // [Tung]: the if-else-if-block was removed, because it belongs to my task #8, i have implemented them in update/cancel functions of order service, take a look there
+
     return true; // [Tung]: no log message signaling trade execution of order book event was successful?
   },
 

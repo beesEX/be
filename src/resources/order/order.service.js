@@ -2,11 +2,9 @@ const {logger} = global;
 
 const orderSchema = require('./order.schema');
 const constants = require('../../app.constants');
-//const {DATABASE_DOCUMENTS} = require('app.constants');
 const db = require('../../db');
 
 const service = db.createService(constants.DATABASE_DOCUMENTS.ORDERS, orderSchema.schema);
-//const service = db.createService(DATABASE_DOCUMENTS.ORDERS, orderSchema.schema);
 // usage: https://github.com/paralect/node-mongo/blob/master/API.md#mongo-service
 
 const beesV8 = require('../../trading-engine/beesV8');
@@ -128,16 +126,27 @@ module.exports = {
         doc.lastUpdatedAt = new Date();
       }
     });
-    logger.info('order.service.js: updateOrderByUser(): updatedOrder =', JSON.stringify(updatedOrder, null, 2));
 
-    if (updatedOrder) return updatedOrder;
+    if (updatedOrder) {
+      // locks new required amount after order update was successful
+      if (updatedOrder.side === 'BUY') {
+        const newRequiredAmount = (updatedOrder.quantity - updatedOrder.filledQuantity) * updatedOrder.limitPrice;
+        txService.releaseLockedFundAndLockNewAmount(userId, updatedOrder.baseCurrency, newRequiredAmount, updatedOrder._id.toString());
+      } else { // updatedOrder.side === 'SELL'
+        const newRequiredAmount = updatedOrder.quantity - updatedOrder.filledQuantity;
+        txService.releaseLockedFundAndLockNewAmount(userId, updatedOrder.currency, newRequiredAmount, updatedOrder._id.toString());
+      }
+
+      logger.info('order.service.js: updateOrderByUser(): updatedOrder =', JSON.stringify(updatedOrder, null, 2));
+      return updatedOrder;
+    }
 
     logger.info('order.service.js: updateOrderByUser(): failed to update order in DB');
     return false;
   },
 
   /**
-   * Cancel order of given user. Only on book order are allowed to canceled.
+   * Cancel order of given user. Only on book order are allowed to be canceled.
    * @param {string} orderId: ID of order to be canceled
    * @param {string} userId: userId of the owner of the order to be canceled
    * @returns {Promise<boolean>} Promise of true if canceling of the order was successful, otherwise false
@@ -180,9 +189,18 @@ module.exports = {
       doc.status = orderSchema.ORDER_STATUS.CANCELED;
       doc.lastUpdatedAt = new Date();
     });
-    logger.info('order.service.js: cancelOrder(): canceledOrder =', JSON.stringify(canceledOrder, null, 2));
 
-    if (cancelOrder) return true;
+    if (cancelOrder) {
+      // release remaining locked fund of the canceled order if any exists
+      if (canceledOrder.side === 'BUY') {
+        txService.releaseLockedFund(userId, canceledOrder.baseCurrency, canceledOrder._id.toString());
+      } else { // canceledOrder.side === 'SELL'
+        txService.releaseLockedFund(userId, canceledOrder.currency, canceledOrder._id.toString());
+      }
+
+      logger.info('order.service.js: cancelOrder(): canceledOrder =', JSON.stringify(canceledOrder, null, 2));
+      return true;
+    }
     logger.info('order.service.js: cancelOrder(): failed to cancel order in DB');
     return false;
   },
@@ -245,8 +263,8 @@ module.exports = {
    * @param {Object} matchObj: one of elements of the 'matches'-Array field of OrderbookEvent, represent the counter order of the match.
    * @returns {Promise<boolean>} Promise of boolean, true if success, false if failed
    */
-  updateOrdersbyMatch: async (reasonObj, matchObj, isReasonObjFilledCompletely) => { // [Tung]: use quantity - filledQuantity comparision of reason-Obj at each match pls, do not use the input isReasonObjFilledCompletely, it's intended to be used in UI
-    logger.info(`order.service.js: updatedMatchOrder(): received reason object = ${JSON.stringify(reasonObj)} and match object = ${JSON.stringify(matchObj)}`);
+  updateOrdersByMatch: async (reasonObj, matchObj, isReasonObjFilledCompletely) => { // [Tung]: use quantity - filledQuantity comparision of reason-Obj at each match pls, do not use the input isReasonObjFilledCompletely, it's intended to be used in UI
+    logger.info(`order.service.js: updateOrdersByMatch(): received reason object = ${JSON.stringify(reasonObj)} and match object = ${JSON.stringify(matchObj)}`);
 
     // update reason order
     const updatedReasonOrder = await service.update({
@@ -269,12 +287,12 @@ module.exports = {
     });
 
     if (updatedReasonOrder && updatedMatchOrder) {
-      logger.info(`order.service.js: updateOrdersbyMatch(): updated order under processing = ${JSON.stringify(updatedReasonOrder)} and matched counter order = ${JSON.stringify(updatedMatchOrder)}`);
+      logger.info(`order.service.js: updateOrdersByMatch(): updated successful; order under processing = ${JSON.stringify(updatedReasonOrder)} and matched counter order = ${JSON.stringify(updatedMatchOrder)}`);
       return true;
     }
 
-    if (!updatedReasonOrder) logger.error('order.service.js: updatedMatchOrder(): ERROR: failed to update reason object');
-    if (!updatedMatchOrder) logger.error('order.service.js: updatedMatchOrder(): ERROR: failed to update match object');
+    if (!updatedReasonOrder) logger.error('order.service.js: updateOrdersByMatch(): ERROR: failed to update reason object');
+    if (!updatedMatchOrder) logger.error('order.service.js: updateOrdersByMatch(): ERROR: failed to update match object');
     return false;
   },
 };
