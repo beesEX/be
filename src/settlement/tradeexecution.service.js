@@ -12,8 +12,8 @@ module.exports = {
 
     if (!orderbookEvent || !orderbookEvent.reason || orderbookEvent.type !== ORDER_BOOK_EVENT) {
       logger.info('tradeexecution.service.js executeTrades(): ERROR: unexpected type');
-      return false;
-    }
+      return false; // [Tung]: throw an Error obj instead of returning false, mix of return types (Object in success case, false if failed) is a bad practice in error handling, because the caller could not handle the returned value consistently, does false represent a regular answer or something has failed? Therefor always throw an error for exception cases!
+    } // [Tung]: you can code error handling logic in low level components such as ordermap etc. like you want, but at least at higher level components (service, controller) the above error handling rule should be followed!
 
     const reasonObj = orderbookEvent.reason;
     const matchList = orderbookEvent.matches;

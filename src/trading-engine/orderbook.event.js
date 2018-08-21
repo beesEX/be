@@ -6,10 +6,10 @@ const {logger} = global;
 
 const {OrderEvent} = require('../resources/order/order.models');
 
-const EVENT_GET_AGGREGATED_STATE = 'GET_AGGREGATED_STATE';
-const EVENT_GET_ORDERBOOK_STATE = 'GET_ORDERBOOK_STATE';
-const ORDER_BOOK_EVENT = 'ORDER_BOOK_EVENT';
-const EVENT_GET_ORDERBOOK_EVENT = 'EVENT_GET_ORDERBOOK_EVENT';
+const EVENT_GET_AGGREGATED_STATE = 'GET_AGGREGATED_STATE'; // [Tung]: you can change these constants to be consistent with naming of `ORDER_BOOK_EVENT`
+const EVENT_GET_ORDERBOOK_STATE = 'GET_ORDERBOOK_STATE'; // [Tung]: you can change these constants to be consistent with naming of `ORDER_BOOK_EVENT`
+const ORDER_BOOK_EVENT = 'ORDER_BOOK_EVENT'; // [Tung]: why two constants for a single event type? just use `ORDER_BOOK_EVENT`
+const EVENT_GET_ORDERBOOK_EVENT = 'EVENT_GET_ORDERBOOK_EVENT'; // [Tung]: why two constants for a single event type? just use `ORDER_BOOK_EVENT`
 
 const REASON_OBJECT_TYPE = {
   PLACED: 'PLACED',

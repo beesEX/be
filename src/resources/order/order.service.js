@@ -61,13 +61,14 @@ module.exports = {
    * Only on book orders are allowed to be updated.
    * @param {Object} orderObject: an object contains _id, limitPrice and quantity. New quantity must be greater than quantity already filled.
    * @param {string} userId: userId of the owner of the order to be updated
-   * @returns {Promise<{Object}>} Promise of the updated order record object if updating was successful, otherwise false
+   * @returns {Promise<{Object}>} Promise of the updated order record object if updating was successful
    */
   updateOrderByUser: async (orderObject, userId) => {
     logger.info(`order.service.js: updateOrderByUser(): received order object ${JSON.stringify(orderObject)}`);
     if (!orderObject) { // [Tung:] i guess, this means to be a null-check of input param, but it's not sufficient to get the code run correctly, for now i would remove it for simplicity, util we have time and do a meaningful Joi schema validation instead. Having not-sufficient precondition-checking code just pollutes your code!
       logger.error('order.service.js: updateOrderByUser(): ERROR: unexpected type of orderObject');
-      return false;
+      return false;// [Tung]: throw an Error obj instead of returning false, mix of return types (Object in success case, false if failed) is a bad practice in error handling, because the caller could not handle the returned value consistently, does false represent a regular answer or something has failed? Therefor always throw an error for exception cases!
+      // [Tung]: you can code error handling logic in low level components such as ordermap etc. like you want, but at least at higher level components (service, controller) the above error handling rule should be followed!
     }
 
     orderObject = new Order(orderObject); // [Tung:] why do this? get any advantage when having the input again as Order object?
@@ -80,11 +81,13 @@ module.exports = {
     logger.info(`order.service.js: updateOrderByUser(): get result ${JSON.stringify(updateOrder)} from DB`);
     if (!updateOrder || !updateOrder.results || updateOrder.results.length === 0) {
       logger.error(`order.service.js: updateOrderByUser(): ERROR: not found order with id=${orderObject._id} of userId=${userId} with on book status`);
-      return false;
+      return false;// [Tung]: throw an Error obj instead of returning false, mix of return types (Object in success case, false if failed) is a bad practice in error handling, because the caller could not handle the returned value consistently, does false represent a regular answer or something has failed? Therefor always throw an error for exception cases!
+      // [Tung]: you can code error handling logic in low level components such as ordermap etc. like you want, but at least at higher level components (service, controller) the above error handling rule should be followed!
     }
     if (updateOrder.results.length !== 1) {
       logger.error(`order.service.js: updateOrderByUser(): ERROR: there are more than one orders found for userId=${userId} and orderId=${orderObject._id} with on book status`);
-      return false;
+      return false;// [Tung]: throw an Error obj instead of returning false, mix of return types (Object in success case, false if failed) is a bad practice in error handling, because the caller could not handle the returned value consistently, does false represent a regular answer or something has failed? Therefor always throw an error for exception cases!
+      // [Tung]: you can code error handling logic in low level components such as ordermap etc. like you want, but at least at higher level components (service, controller) the above error handling rule should be followed!
     }
 
     updateOrder = new Order(updateOrder.results[0]); // [Tung:] reassign of local var is a bad practice, this line should be: const toBeUpdatedOrder = new Order(orderToUpdateQuery.results[0]);
@@ -111,7 +114,8 @@ module.exports = {
 
     if (!orderbookEvent || !orderbookEvent.reason) {
       logger.info('order.service.js: updateOrderByUser(): failed to update order in order book');
-      return false;
+      return false;// [Tung]: throw an Error obj instead of returning false, mix of return types (Object in success case, false if failed) is a bad practice in error handling, because the caller could not handle the returned value consistently, does false represent a regular answer or something has failed? Therefor always throw an error for exception cases!
+      // [Tung]: you can code error handling logic in low level components such as ordermap etc. like you want, but at least at higher level components (service, controller) the above error handling rule should be followed!
     }
 
     const updatedOrder = await service.update({
@@ -142,7 +146,8 @@ module.exports = {
     }
 
     logger.info('order.service.js: updateOrderByUser(): failed to update order in DB');
-    return false;
+    return false;// [Tung]: throw an Error obj instead of returning false, mix of return types (Object in success case, false if failed) is a bad practice in error handling, because the caller could not handle the returned value consistently, does false represent a regular answer or something has failed? Therefor always throw an error for exception cases!
+    // [Tung]: you can code error handling logic in low level components such as ordermap etc. like you want, but at least at higher level components (service, controller) the above error handling rule should be followed!
   },
 
   /**
@@ -162,11 +167,13 @@ module.exports = {
 
     if (!cancelOrder || !cancelOrder.results || cancelOrder.results.length === 0) {
       logger.error(`order.service.js: cancelOrder(): ERROR: not found order with id=${orderId} of userId=${userId} with on book status`);
-      return false;
+      return false;// [Tung]: throw an Error obj instead of returning false, mix of return types (Object in success case, false if failed) is a bad practice in error handling, because the caller could not handle the returned value consistently, does false represent a regular answer or something has failed? Therefor always throw an error for exception cases!
+      // [Tung]: you can code error handling logic in low level components such as ordermap etc. like you want, but at least at higher level components (service, controller) the above error handling rule should be followed!
     }
     if (cancelOrder.results.length !== 1) {
       logger.error(`order.service.js: cancelOrder(): ERROR: there are more than one orders found for userId=${userId} and orderId=${orderId} with on book status`);
-      return false;
+      return false;// [Tung]: throw an Error obj instead of returning false, mix of return types (Object in success case, false if failed) is a bad practice in error handling, because the caller could not handle the returned value consistently, does false represent a regular answer or something has failed? Therefor always throw an error for exception cases!
+      // [Tung]: you can code error handling logic in low level components such as ordermap etc. like you want, but at least at higher level components (service, controller) the above error handling rule should be followed!
     }
 
     cancelOrder = new Order(cancelOrder.results[0]); // [Tung:] reassign of local var is a bad practice, this line should be: const toBeCanceledOrder = new Order(orderToCancelQuery.results[0]);
