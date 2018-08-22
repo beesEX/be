@@ -271,7 +271,7 @@ module.exports = {
    * @param {Object} matchObj: one of elements of the 'matches'-Array field of OrderbookEvent, represent the counter order of the match.
    * @returns {Promise<boolean>} Promise of boolean, true if success, false if failed
    */
-  updateOrdersByMatch: async (reasonObj, matchObj, isReasonObjFilledCompletely) => { // [Tung]: use quantity - filledQuantity comparision of reason-Obj at each match pls, do not use the input isReasonObjFilledCompletely, it's intended to be used in UI
+  updateOrdersByMatch: async (reasonObj, matchObj) => {
     logger.info(`order.service.js: updateOrdersByMatch(): received reason object = ${JSON.stringify(reasonObj)} and match object = ${JSON.stringify(matchObj)}`);
 
     // update reason order
@@ -280,7 +280,7 @@ module.exports = {
       status: {$in: ON_BOOK_STATUS}
     }, (doc) => {
       doc.filledQuantity += matchObj.tradedQuantity;
-      doc.status = (isReasonObjFilledCompletely) ? orderSchema.ORDER_STATUS.FILLED : orderSchema.ORDER_STATUS.PARTIALLY_FILLED; // [Tung]: use quantity - filledQuantity comparision of reason-Obj at each match pls, do not use the input isReasonObjFilledCompletely, it's intended to be used in UI
+      doc.status = (doc.filledQuantity === doc.quantity) ? orderSchema.ORDER_STATUS.FILLED : orderSchema.ORDER_STATUS.PARTIALLY_FILLED;
       doc.lastUpdatedAt = new Date();
     });
 
