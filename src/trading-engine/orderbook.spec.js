@@ -25,22 +25,26 @@ function isSameOrder(order1, order2) {
   return true;
 }
 
-describe('get the aggregated state of the order book', async () => {
+describe('get the aggregated state of the order book', () => {
 
-  before(async () => {
-    await db.get(constants.DATABASE_DOCUMENTS.TRANSACTIONS).drop();
-    await db.get(constants.DATABASE_DOCUMENTS.ORDERS).drop();
+  before(() => {
+    return new Promise(async (resolve) => {
+      await db.get(constants.DATABASE_DOCUMENTS.TRANSACTIONS).drop();
+      await db.get(constants.DATABASE_DOCUMENTS.ORDERS).drop();
 
-    // open zeroMQ
-    open();
+      // open zeroMQ
+      open();
+
+      resolve(true);
+    });
   });
 
-  after(async () => {
+  after(() => {
     // close zeroMQ
     close();
   });
 
-  await it('get aggregated state from the empty order book should be successful', async () => {
+  it('get aggregated state from the empty order book should be successful', async () => {
 
     await beesV8.start();
 
@@ -58,7 +62,7 @@ describe('get the aggregated state of the order book', async () => {
 
   });
 
-  await it('get aggregated state from the order book with one side being empty should be successful', async () => {
+  it('get aggregated state from the order book with one side being empty should be successful', async () => {
 
     await beesV8.start();
 
@@ -110,7 +114,7 @@ describe('get the aggregated state of the order book', async () => {
 
   });
 
-  await it('get aggregated state from the order book with one side having more than 2 prices should be successful', async () => {
+  it('get aggregated state from the order book with one side having more than 2 prices should be successful', async () => {
 
     await beesV8.start();
 
@@ -160,7 +164,7 @@ describe('get the aggregated state of the order book', async () => {
 
   });
 
-  await it('get aggregated state from the order book with 2 sides having more than 2 prices should be successful', async () => {
+  it('get aggregated state from the order book with 2 sides having more than 2 prices should be successful', async () => {
 
     await beesV8.start();
 
@@ -247,53 +251,64 @@ describe('get the aggregated state of the order book', async () => {
 // =====================================================================
 //                        ORDER BOOK TEST
 // =====================================================================
+let itNumber = 0;
+const itName = [
+  'test place limit event',
+  'test cancel order event',
+  'test place market event',
+  'test update quantity event',
+  'test update limit event',
+  'test combination of all event types'
+];
 
-describe('test event process of trading engine', async () => {
-  let itNumber = 0;
-
-  before(async () => {
-    await db.get(constants.DATABASE_DOCUMENTS.TRANSACTIONS).drop();
-    await db.get(constants.DATABASE_DOCUMENTS.ORDERS).drop();
-
-    // open zeroMQ
-    open();
-
+const showItHighlight = async () => {
+  if (itNumber < itName.length) {
     console.log('');
-    console.log('================================================================================');
-    console.log('                 TEST EVENT PROCESS OF TRADING ENGINE');
-    console.log('================================================================================');
+    console.log('---------------------------------------------------------');
+    console.log(` TRADING ENGINE: ${itName[itNumber]}`);
+    console.log('---------------------------------------------------------');
     console.log('');
+    itNumber += 1;
+  }
+};
+
+describe('test event process of trading engine', () => {
+  before(() => {
+    return new Promise(async (resolve) => {
+      await db.get(constants.DATABASE_DOCUMENTS.TRANSACTIONS).drop();
+      await db.get(constants.DATABASE_DOCUMENTS.ORDERS).drop();
+
+      // open zeroMQ
+      open();
+
+      console.log('');
+      console.log('================================================================================');
+      console.log('                 TEST EVENT PROCESS OF TRADING ENGINE');
+      console.log('================================================================================');
+      console.log('');
+
+      resolve(true);
+    });
   });
 
-  after(async () => {
+  after(() => {
     // close zeroMQ
     close();
   });
 
   beforeEach(() => {
-    const itName = [
-      'test place limit event',
-      'test cancel order event',
-      'test place market event',
-      'test update quantity event',
-      'test update limit event',
-      'test combination of all event types'];
-
-    if (itNumber < itName.length) {
-      console.log('');
-      console.log('---------------------------------------------------------');
-      console.log(` TRADING ENGINE: ${itName[itNumber]}`);
-      console.log('---------------------------------------------------------');
-      console.log('');
-      itNumber += 1;
-    }
+    return new Promise((resolve) => {
+      showItHighlight().then(() => {
+        resolve(true);
+      });
+    });
   });
 
   // --------------------------------------------
   // test place limit event
   // --------------------------------------------
 
-  await it('test place limit event', async () => {
+  it('test place limit event', async () => {
 
     // description:
     /*
@@ -844,7 +859,7 @@ describe('test event process of trading engine', async () => {
   // test cancel order
   // --------------------------------------------
 
-  await it('test cancel order event', async () => {
+  it('test cancel order event', async () => {
     await beesV8.start();
 
     // description:
@@ -1566,7 +1581,7 @@ describe('test event process of trading engine', async () => {
   // --------------------------------------------------
   // test place market
   // --------------------------------------------------
-  await it('test place market event', async () => {
+  it('test place market event', async () => {
     await beesV8.start();
 
     const orderEvent0 = {
@@ -2068,7 +2083,7 @@ describe('test event process of trading engine', async () => {
   // test update quantity
   // --------------------------------------------
 
-  await it('test update quantity event', async () => {
+  it('test update quantity event', async () => {
     await beesV8.start();
 
     // description:
@@ -3008,7 +3023,7 @@ describe('test event process of trading engine', async () => {
   // test update limit price
   // --------------------------------------------
 
-  await it('test update limit event', async () => {
+  it('test update limit event', async () => {
     await beesV8.start();
 
     const orderEvent0 = {
@@ -3676,7 +3691,7 @@ describe('test event process of trading engine', async () => {
   // --------------------------------------------
   // TODO: test combination of all event types
   // --------------------------------------------
-  await it('test combination of all event types', async () => {
+  it('test combination of all event types', async () => {
     await beesV8.start();
 
     // description:
