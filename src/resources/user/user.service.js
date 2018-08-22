@@ -31,6 +31,7 @@ service.updateInfo = (_id, { email, name }) => {
     },
     (doc) => {
       const userDoc = doc;
+      userDoc._id = _id;
       userDoc.email = email;
       userDoc.name = name;
     },

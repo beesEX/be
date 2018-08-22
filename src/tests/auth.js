@@ -1,4 +1,4 @@
-exports.signin = (request, user, password = 'qwerty') => {
+exports.signin = (request, user, password = 'qwertz') => {
   return new Promise((resolve, reject) => {
     request
       .post('/account/signin')
