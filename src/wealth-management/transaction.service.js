@@ -163,7 +163,7 @@ class TXService {
       throw new Error(`system has released more fund than locked amount for orderId=${orderId}!!!`);
     }
 
-    const tx = { currency, type: TRANSACTION_TYPE.RELEASED, remainingLockedAmount, createdAt: new Date(), userId, orderId };
+    const tx = { currency, type: TRANSACTION_TYPE.RELEASED, amount: remainingLockedAmount, createdAt: new Date(), userId, orderId };
     const fundreleasedTX = await service.create(tx);
     logger.info('transaction.service.js: releaseLockedFund(): release remaining locked fund tx = ', JSON.stringify(fundreleasedTX));
 
@@ -202,7 +202,7 @@ class TXService {
     }
 
     const createdAt = new Date();
-    const releaseRemainingTX = { currency, type: TRANSACTION_TYPE.RELEASED, remainingLockedAmount, createdAt, userId, orderId };
+    const releaseRemainingTX = { currency, type: TRANSACTION_TYPE.RELEASED, amount: remainingLockedAmount, createdAt, userId, orderId };
     const fundLockTX = { currency, type: TRANSACTION_TYPE.LOCKED, amount, createdAt, userId, orderId };
     const txArray = await service.create([releaseRemainingTX, fundLockTX]);
 
