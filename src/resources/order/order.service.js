@@ -45,6 +45,7 @@ module.exports = {
       throw new Error('not enought fund available');
     }
 
+    newOrderObject.status = orderSchema.ORDER_STATUS.PLACED;
     const createdOrder = await service.create(newOrderObject);
     logger.info('order.service.js: placedOrder(): createdOrder =', JSON.stringify(createdOrder, null, 2));
 

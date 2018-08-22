@@ -8,7 +8,7 @@ const OrderService = require('../resources/order/order.service');
 
 const settlementTrade = async (reasonObj, matchObj) => {
   const tradedPrice = matchObj.price;
-  const tradedQuantity = matchObj.tradedQuantity;
+  const { tradedQuantity } = matchObj;
   const tradedAmount = tradedQuantity * tradedPrice;
 
   if (reasonObj.side === 'BUY') {
@@ -60,7 +60,7 @@ const executeTrades = async (orderbookEvent) => {
     updateOrdersByMatchPromises.push(OrderService.updateOrdersByMatch(reasonObj, matchList[i]));
     updateOrdersByMatchPromises.push(settlementTrade(reasonObj, matchList[i]));
   }
-  await Promise.all(updateOrdersByMatchPromises).catch((err) => { throw err;});
+  await Promise.all(updateOrdersByMatchPromises).catch((err) => { throw err; });
 
   logger.info('tradeexecution.service.js executeTrades(): Successfully traded');
   return true;

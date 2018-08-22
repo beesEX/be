@@ -1,7 +1,7 @@
 const faker = require('faker');
 
-const BaseBuilder = require('tests/base.builder');
-const userService = require('resources/user/user.service');
+const BaseBuilder = require('../../tests/base.builder');
+const userService = require('../../resources/user/user.service');
 
 const qwertyHash = '$2a$10$3N9oc22PIjUZDwNaHFboduwKCRyHE.Wu3JX81budkoY8ZlZLMkviC';
 
