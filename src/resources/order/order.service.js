@@ -97,6 +97,20 @@ module.exports = {
     logger.info(`order.service.js: updateOrderByUser(): oldQuantity = ${oldQuantity} and newQuantity = ${toBeUpdatedOrder.quantity}`);
     logger.info(`order.service.js: updateOrderByUser(): oldPrice = ${oldPrice} and newPrice = ${toBeUpdatedOrder.limitPrice}`);
 
+    // locking the new required fund amount as precondition of order update
+    let fundLocked = false;
+    if (toBeUpdatedOrder.side === 'BUY') {
+      const newRequiredAmount = (toBeUpdatedOrder.quantity - toBeUpdatedOrder.filledQuantity) * toBeUpdatedOrder.limitPrice;
+      fundLocked = await txService.releaseLockedFundAndLockNewAmount(userId, toBeUpdatedOrder.baseCurrency, newRequiredAmount, toBeUpdatedOrder._id.toString());
+    } else { // toBeUpdatedOrder.side === 'SELL'
+      const newRequiredAmount = toBeUpdatedOrder.quantity - toBeUpdatedOrder.filledQuantity;
+      fundLocked = await txService.releaseLockedFundAndLockNewAmount(userId, toBeUpdatedOrder.currency, newRequiredAmount, toBeUpdatedOrder._id.toString());
+    }
+    if (!fundLocked) {
+      logger.error('order.service.js: updateOrderByUser(): failed to update order; new required fund amount could not be locked');
+      throw new Error('new required fund amount could not be locked prior to update order');
+    }
+
     let orderbookEvent = null;
 
     if (oldPrice !== orderObject.limitPrice) {
@@ -129,16 +143,7 @@ module.exports = {
     });
 
     if (updatedOrder) {
-      // locks new required amount after order update was successful
-      if (updatedOrder.side === 'BUY') {
-        const newRequiredAmount = (updatedOrder.quantity - updatedOrder.filledQuantity) * updatedOrder.limitPrice;
-        txService.releaseLockedFundAndLockNewAmount(userId, updatedOrder.baseCurrency, newRequiredAmount, updatedOrder._id.toString());
-      } else { // updatedOrder.side === 'SELL'
-        const newRequiredAmount = updatedOrder.quantity - updatedOrder.filledQuantity;
-        txService.releaseLockedFundAndLockNewAmount(userId, updatedOrder.currency, newRequiredAmount, updatedOrder._id.toString());
-      }
-
-      logger.info('order.service.js: updateOrderByUser(): updatedOrder =', JSON.stringify(updatedOrder, null, 2));
+      logger.info('order.service.js: updateOrderByUser(): order update was successful; updatedOrder =', JSON.stringify(updatedOrder, null, 2));
       return updatedOrder;
     }
 
@@ -291,6 +296,27 @@ module.exports = {
 
     if (updatedReasonOrder && updatedMatchOrder) {
       logger.info(`order.service.js: updateOrdersByMatch(): updated successful; order under processing = ${JSON.stringify(updatedReasonOrder)} and matched counter order = ${JSON.stringify(updatedMatchOrder)}`);
+
+      // release remaining locked fund if any exists after the reason order under processing has been filled completely
+      if (updatedReasonOrder.status === orderSchema.ORDER_STATUS.FILLED) {
+        if (updatedReasonOrder.side === 'BUY') {
+          txService.releaseLockedFund(updatedReasonOrder.userId, updatedReasonOrder.baseCurrency, updatedReasonOrder._id.toString());
+        }
+        else { // updatedReasonOrder.side === 'SELL'
+          txService.releaseLockedFund(updatedReasonOrder.userId, updatedReasonOrder.currency, updatedReasonOrder._id.toString());
+        }
+      }
+
+      // release remaining locked fund if any exists after the matched counter order has been filled completely
+      if (updatedMatchOrder.status === orderSchema.ORDER_STATUS.FILLED) {
+        if (updatedMatchOrder.side === 'BUY') {
+          txService.releaseLockedFund(updatedMatchOrder.userId, updatedMatchOrder.baseCurrency, updatedMatchOrder._id.toString());
+        }
+        else { // updatedReasonOrder.side === 'SELL'
+          txService.releaseLockedFund(updatedMatchOrder.userId, updatedMatchOrder.currency, updatedMatchOrder._id.toString());
+        }
+      }
+
       return true;
     }
 

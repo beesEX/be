@@ -178,7 +178,7 @@ class TXService {
    * @param currency
    * @param amount
    * @param orderId
-   * @returns {Promise<{Object}>} Promise of the tx record if success
+   * @returns {Promise<{boolean}>} Promise of boolean value, true if new amount of fund was locked successful, otherwise false
    */
   async releaseLockedFundAndLockNewAmount(userId, currency, amount, orderId) {
     const fundLockQueryPromise = service.find({ userId, currency, type: TRANSACTION_TYPE.LOCKED, orderId });
@@ -205,9 +205,13 @@ class TXService {
     const releaseRemainingTX = { currency, type: TRANSACTION_TYPE.RELEASED, remainingLockedAmount, createdAt, userId, orderId };
     const fundLockTX = { currency, type: TRANSACTION_TYPE.LOCKED, amount, createdAt, userId, orderId };
     const txArray = await service.create([releaseRemainingTX, fundLockTX]);
-    logger.info(`transaction.service.js: releaseLockedFundAndLockNewAmount(): release remaining locked fund tx = ${JSON.stringify(txArray[0])}, lock new fund amount tx = ${JSON.stringify(txArray[1])}`);
 
-    return txArray;
+    if (txArray && txArray.length === 2) {
+      logger.info(`transaction.service.js: releaseLockedFundAndLockNewAmount(): release remaining locked fund tx = ${JSON.stringify(txArray[0])}, lock new fund amount tx = ${JSON.stringify(txArray[1])}`);
+      return true;
+    }
+
+    return false;
   }
 
   /**
