@@ -293,7 +293,25 @@ module.exports = class OrderMap {
       return false; // not found
     }
 
+    // update new quantity
     orderLinkedListElement.order.quantity = order.quantity;
+
+    // check remaining quantity: if remaining quantity = 0 -> remove this order on book
+    if (orderLinkedListElement.order.quantity === orderLinkedListElement.order.filledQuantity) {
+      if (orderLinkedList.hasOnlyOneElement()) {
+        // only this order at this price level -> delete this price level
+        this.priceLevelSet.delete(orderLinkedListElement.order.limitPrice);
+        delete this.mapOfPriceAndOrderLinkedList[orderLinkedListElement.order.limitPrice];
+      }
+      else {
+        const status = orderLinkedList.removeElement(orderLinkedListElement);
+        if (status !== STATUS.SUCCESS) {
+          logger.error(`ordermap.js: removeOrder(): ERROR: ${status}`);
+          return false;
+        }
+      }
+    }
+
     return true;
   }
 };

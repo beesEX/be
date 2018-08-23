@@ -120,15 +120,13 @@ class OrderBook {
 
     logger.info(`orderbook.js updateQuantity(): processing updated LIMIT order : ${JSON.stringify(order)}`);
 
-    let isSuccessfullyUpdated;
+    let isSuccessfullyUpdated = false;
 
     if (order.side === 'BUY') {
       isSuccessfullyUpdated = this.bids.updateQuantity(order);
-      if (isSuccessfullyUpdated && order.remainingQuantity() <= ZERO) this.bids.removeOrder(order);
     }
     else { // SELL
       isSuccessfullyUpdated = this.asks.updateQuantity(order);
-      if (isSuccessfullyUpdated && order.remainingQuantity() <= ZERO) this.asks.removeOrder(order);
     }
 
     if (isSuccessfullyUpdated) return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO);
