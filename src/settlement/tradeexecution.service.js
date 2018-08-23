@@ -1,45 +1,45 @@
-const config = require('../config');
 const {logger} = global;
 
-const {REASON_OBJECT_TYPE, ORDER_BOOK_EVENT} = require('../trading-engine/orderbook.event');
+const {ORDER_BOOK_EVENT} = require('../trading-engine/orderbook.event');
 
 const Transaction = require('../wealth-management/transaction.service');
 const OrderService = require('../resources/order/order.service');
 
 const settlementTrade = async (reasonObj, matchObj) => {
-  const tradedPrice = matchObj.price;
-  const { tradedQuantity } = matchObj;
+  const { currency, baseCurrency } = reasonObj;
+  const { price: tradedPrice, tradedQuantity } = matchObj;
   const tradedAmount = tradedQuantity * tradedPrice;
 
+  // [Tung]: the await(s) ware still there, all async calls in this if-else-block still wait for each other, you have to collect their Promises with an Promise.all() and return the Promise of the Promise-all()
   if (reasonObj.side === 'BUY') {
     // release quote currency of reason user
-    await Transaction.releaseByTrade(reasonObj.userId, reasonObj.baseCurrency, tradedAmount, reasonObj.orderId);
+    await Transaction.releaseByTrade(reasonObj.userId, baseCurrency, tradedAmount, reasonObj.orderId);
     // decrease quote currency of reason user
-    await Transaction.sell(reasonObj.userId, reasonObj.baseCurrency, tradedAmount, reasonObj.orderId);
+    await Transaction.sell(reasonObj.userId, baseCurrency, tradedAmount, reasonObj.orderId);
     // increase base currency of reason user
-    await Transaction.buy(reasonObj.userId, reasonObj.currency, tradedQuantity, reasonObj.orderId);
+    await Transaction.buy(reasonObj.userId, currency, tradedQuantity, reasonObj.orderId);
 
     // release base currency of match user
-    await Transaction.releaseByTrade(matchObj.userId, reasonObj.currency, tradedQuantity, matchObj.orderId);
+    await Transaction.releaseByTrade(matchObj.userId, currency, tradedQuantity, matchObj.orderId);
     // decrease base base currency of match user
-    await Transaction.sell(matchObj.userId, reasonObj.currency, tradedQuantity, matchObj.orderId);
+    await Transaction.sell(matchObj.userId, currency, tradedQuantity, matchObj.orderId);
     // increase quote currency of match user
-    await Transaction.buy(matchObj.userId, reasonObj.baseCurrency, tradedAmount, matchObj.orderId);
+    await Transaction.buy(matchObj.userId, baseCurrency, tradedAmount, matchObj.orderId);
   }
   else {
     // release base currency of reason user
-    await Transaction.releaseByTrade(reasonObj.userId, reasonObj.currency, tradedQuantity, reasonObj.orderId);
+    await Transaction.releaseByTrade(reasonObj.userId, currency, tradedQuantity, reasonObj.orderId);
     // decrease base base currency of reason user
-    await Transaction.sell(reasonObj.userId, reasonObj.currency, tradedQuantity, reasonObj.orderId);
+    await Transaction.sell(reasonObj.userId, currency, tradedQuantity, reasonObj.orderId);
     // increase quote currency of reason user
-    await Transaction.buy(reasonObj.userId,reasonObj.baseCurrency, tradedQuantity, reasonObj.orderId);
+    await Transaction.buy(reasonObj.userId, baseCurrency, tradedQuantity, reasonObj.orderId);
 
     // release quote currency of match user
-    await Transaction.releaseByTrade(matchObj.userId, reasonObj.baseCurrency, tradedAmount, matchObj.orderId);
+    await Transaction.releaseByTrade(matchObj.userId, baseCurrency, tradedAmount, matchObj.orderId);
     // decrease quote currency of match user
-    await Transaction.sell(matchObj.userId, reasonObj.baseCurrency, tradedAmount, matchObj.orderId);
+    await Transaction.sell(matchObj.userId, baseCurrency, tradedAmount, matchObj.orderId);
     // increase base currency of match user
-    await Transaction.buy(matchObj.userId, reasonObj.currency, tradedQuantity, matchObj.orderId);
+    await Transaction.buy(matchObj.userId, currency, tradedQuantity, matchObj.orderId);
   }
 };
 

@@ -279,11 +279,13 @@ process.on('message', (event) => {
     }
     default: {
       const orderbookEvent = orderbook.processOrderEvent(event);
+
       // send order book event to settlement module
       if (orderbookEvent && orderbookEvent.reason && !config.isTest) TradeExecutionService.executeTrades(orderbookEvent);
-      orderbookEvent.id = event.id;
+
       // send order book event back to parent process
-      process.send( orderbookEvent );
+      orderbookEvent.id = event.id;
+      process.send(orderbookEvent);
     }
   }
 });

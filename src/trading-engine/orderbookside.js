@@ -56,7 +56,7 @@ module.exports = class OrderBookSide {
     const oldOrderElement = this.orderMap.getElementByOrder(order);
     if (oldOrderElement) {
       if (oldOrderElement.order.filledQuantity <= order.quantity) {
-        return this.orderMap.updateOrderQuantity(order);
+        return this.orderMap.updateOrderQuantity(order); // [Tung]: if the new updated quantity === filledQuantity why should the order not be taken down from book? I know, the order may be removed from book by future matches sometime later, but such match will have tradedQuantity === 0. The orderMap.updateOrderQuantity() function should have logic to remove the order in this case
       }
       logger.error(`orderbookside.js updateQuantity(): ERROR: order id ${order._id} has new quantity ${order.quantity} < filled quantity ${oldOrderElement.order.filledQuantity}`);
       return null;
