@@ -33,7 +33,7 @@ class BeesV8 {
    * start the engine
    */
   start() {
-    logger.info(`BeesV8 for ${this.symbol} starts`);
+    logger.info(`beesV8.js: start(): beesV8 trading engine for ${this.symbol} starts...`);
 
     this.orderbookChildProcess = fork('src/trading-engine/orderbook.js');
 
@@ -65,6 +65,8 @@ class BeesV8 {
         logger.error(`beesV8.js: unknown message type ${JSON.stringify(message.type)}`);
       }
     });
+
+    logger.info(`beesV8.js: start(): beesV8 trading engine for ${this.symbol} started successfully`);
   }
 
   /**
@@ -142,12 +144,11 @@ class BeesV8 {
    */
   stop() {
     this.orderbookChildProcess.kill();
+    logger.info(`beesV8.js: start(): beesV8 trading engine for ${this.symbol} has been stopped`);
   }
 
 }
 
-logger.info('starting the trading engine');
 const beesV8 = new BeesV8();
-logger.info('beesEX trading engine is up and ready');
 
 module.exports = beesV8;

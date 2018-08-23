@@ -2,12 +2,15 @@ global.logger = require('../../logger');
 
 const {describe, it} = require('mocha');
 const { expect } = require('chai');
-const userFactory = require('../../resources/user/user.factory');
-const orderService = require('./order.service');
-const txService = require('../../wealth-management/transaction.service');
-const beesV8 = require('../../trading-engine/beesV8');
-const {open, close} = require('../../util/zeroMQpublisher');
 const db = require('../../db');
+const userFactory = require('../../resources/user/user.factory');
+
+const {open, close} = require('../../util/zeroMQpublisher');
+const beesV8 = require('../../trading-engine/beesV8');
+const txService = require('../../wealth-management/transaction.service');
+const orderService = require('./order.service');
+
+
 const constants = require('../../app.constants');
 const orderSchema = require('./order.schema');
 
@@ -48,6 +51,10 @@ describe('place new LIMIT order', () => {
 
   it('placing LIMIT BUY order with enough fund on baseCurrency account should be successful', async () => {
     await txService.deposit(userId, 'USDT', 6001, 'test wallet');
+    const availableBalance = await txService.getAvailableBalance(userId, 'USDT');
+    expect(availableBalance).to.be.equal(6001);
+    const balance = await txService.getBalance(userId, 'USDT');
+    expect(balance).to.be.equal(6001);
 
     const order = {
       type: 'LIMIT',
@@ -69,5 +76,8 @@ describe('place new LIMIT order', () => {
 
     const available = await txService.getAvailableBalance(userId, 'USDT');
     expect(available).to.be.equal(1);
+
+    const txArray = await txService.getTransactions(userId, 'USDT');
+    expect(txArray.length).to.be.equal(2);
   });
 });
