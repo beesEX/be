@@ -146,10 +146,16 @@ class TXService {
           this._creditAvailSumMap.set(key, availableCreditSum + amount);
         }
       }
+      else {
+        const availableCreditSum = this._creditAvailSumMap.get(key);
+        if (availableCreditSum !== undefined) {
+          this._creditAvailSumMap.set(key, availableCreditSum + amount);
+        }
 
-      const totalCreditSum = this._creditTotalSumMap.get(key);
-      if (totalCreditSum !== undefined) {
-        this._creditTotalSumMap.set(key, totalCreditSum + amount);
+        const totalCreditSum = this._creditTotalSumMap.get(key);
+        if (totalCreditSum !== undefined) {
+          this._creditTotalSumMap.set(key, totalCreditSum + amount);
+        }
       }
     } else if (DEBIT_AVAIL.includes(type)) {
       if (type === TRANSACTION_TYPE.LOCKED) {
@@ -158,10 +164,16 @@ class TXService {
           this._debitAvailSumMap.set(key, availableDebitSum + amount);
         }
       }
+      else {
+        const availableDebitSum = this._debitAvailSumMap.get(key);
+        if (availableDebitSum !== undefined) {
+          this._debitAvailSumMap.set(key, availableDebitSum + amount);
+        }
 
-      const totalDebitSum = this._debitTotalSumMap.get(key);
-      if (totalDebitSum !== undefined) {
-        this._debitTotalSumMap.set(key, totalDebitSum + amount);
+        const totalDebitSum = this._debitTotalSumMap.get(key);
+        if (totalDebitSum !== undefined) {
+          this._debitTotalSumMap.set(key, totalDebitSum + amount);
+        }
       }
     }
   }
