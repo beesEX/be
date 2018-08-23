@@ -217,13 +217,14 @@ class TXService {
   }
 
   /**
-   * Releases the remaining locked fund amount of an order.
-   * This function is intended to be called when order gets canceled.
+   * Releases the remaining locked fund amount of an order, if any.
+   * This function is intended to be called when order gets canceled or when has been matched completely.
+   * Just fire-n-forget, caller does not expect anything coming from this function.
    *
    * @param userId
    * @param currency
    * @param orderId
-   * @returns {Promise<{Object}>} Promise of the tx record if success
+   * @returns {Promise<{undefined}>} Promise of nothing
    */
   async releaseLockedFund(userId, currency, orderId) {
     const fundLockQueryPromise = service.find({ userId, currency, type: TRANSACTION_TYPE.LOCKED, orderId });
@@ -246,12 +247,12 @@ class TXService {
       throw new Error(`system has released more fund than locked amount for orderId=${orderId}!!!`);
     }
 
-    const tx = { currency, type: TRANSACTION_TYPE.RELEASED, amount: remainingLockedAmount, createdAt: new Date(), userId, orderId };
-    const fundreleasedTX = await service.create(tx);
-    this._updateSumsCache(fundreleasedTX);
-    logger.info('transaction.service.js: releaseLockedFund(): release remaining locked fund tx = ', JSON.stringify(fundreleasedTX));
-
-    return fundreleasedTX;
+    if (remainingLockedAmount > 0) {
+      const tx = { currency, type: TRANSACTION_TYPE.RELEASED, amount: remainingLockedAmount, createdAt: new Date(), userId, orderId };
+      const fundreleasedTX = await service.create(tx);
+      this._updateSumsCache(fundreleasedTX);
+      logger.info('transaction.service.js: releaseLockedFund(): release remaining locked fund tx = ', JSON.stringify(fundreleasedTX));
+    }
   }
 
   /**
