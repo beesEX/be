@@ -1,10 +1,9 @@
 const OrderBookSide = require('./orderbookside');
 const OrderBookEvent = require('./orderbook.event');
 
-const {Order, OrderEvent, OrderPlacedEvent, MarketOrderPlacedEvent, OrderQuantityUpdatedEvent, OrderLimitUpdatedEvent, OrderCanceledEvent} = require('../resources/order/order.models');
-
-// using later
 const config = require('../config');
+
+const {Order, OrderEvent, OrderPlacedEvent, MarketOrderPlacedEvent, OrderQuantityUpdatedEvent, OrderLimitUpdatedEvent, OrderCanceledEvent} = require('../resources/order/order.models');
 
 const TradeExecutionService = require('../settlement/tradeexecution.service');
 
@@ -22,7 +21,7 @@ class OrderBook {
     this.asks = askSide; // BookSide containing SELL orders
     this.bids = bidSide; // BookSide containing BUY orders
 
-    // TODO: load all orders in DB of this symbol and save in to order book side
+    // TODO: load all orders in DB of this symbol and save into order book side
   }
 
   /**
@@ -35,7 +34,7 @@ class OrderBook {
     const orderSymbol = `${event._order.currency}_${event._order.baseCurrency}`;
     if (orderSymbol !== this.symbol) {
       logger.warn(`orderbook.js processOrderEvent(): currency pair of order event ${orderSymbol} not matches that of order book ${this.symbol}`);
-      return null;
+      return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
     }
     let orderbookEvent = null;
     if (event._type === OrderEvent.LIMIT_PLACED_EVENT) orderbookEvent = this.placeLimit(new OrderPlacedEvent(order));
@@ -44,6 +43,7 @@ class OrderBook {
     else if (event._type === OrderEvent.QUANTITY_UPDATED_EVENT) orderbookEvent = this.updateQuantity(new OrderQuantityUpdatedEvent(order, event.oldQuantity, event.oldPrice));
     else if (event._type === OrderEvent.CANCELED_EVENT) orderbookEvent = this.cancel(new OrderCanceledEvent(order));
     else logger.warn(`orderbook.js processOrderEvent(): unknown event type ${event._type} will be rejected`);
+    if (!orderbookEvent) return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
     return orderbookEvent;
   }
 
@@ -71,10 +71,10 @@ class OrderBook {
       logger.info(`orderbook.js placeLimit(): ${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
 
       if (order.side === 'BUY') {
-        this.bids.putOrderOnBook(order);
+        if (!this.bids.putOrderOnBook(order)) return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
       }
       else { // SELL
-        this.asks.putOrderOnBook(order);
+        if (!this.asks.putOrderOnBook(order)) return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
       }
     }
 
@@ -91,7 +91,7 @@ class OrderBook {
 
     if (order.type !== 'MARKET') {
       logger.info(`orderbook.js placeMarket(): received order ${order} is not a MARKET order and will be rejected`);
-      return null;
+      return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
     }
     logger.info(`orderbook.js placeMarket(): processing new MARKET order placed: ${JSON.stringify(order)}`);
 
@@ -107,7 +107,6 @@ class OrderBook {
     if (order.remainingQuantity() > ZERO) {
       logger.info(`orderbook.js placeMarket(): ${order.remainingQuantity()} remaining units of MARKET order will be rejected`);
     }
-
     return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO);
   }
 
@@ -134,7 +133,7 @@ class OrderBook {
 
     if (isSuccessfullyUpdated) return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO);
     logger.error(`orderbook.js updateQuantity(): failed to update event ${JSON.stringify(orderUpdatedEvent)}`);
-    return null; // [Tung:] just returning 'null', no order book event? what for event will the beesV8 then receive??? That's i mean in the task, you must have some special structure of order book event in case update/cancel was not possible, just returning null/false doesn't work
+    return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
   }
 
   /**
@@ -160,7 +159,7 @@ class OrderBook {
     }
     if (!isRemoved) {
       logger.error('orderbook.js updateLimit(): ERROR: unable to remove order before updating limit price');
-      return null; // [Tung:] just returning 'null', no order book event? what for event will the beesV8 then receive??? That's i mean in the task, you must have some special structure of order book event in case update/cancel was not possible, just returning null/false doesn't work
+      return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
     }
 
     let matchingEventList = [];
@@ -185,7 +184,7 @@ class OrderBook {
       }
       if (!isPut) {
         logger.error('orderbook.js updateLimit(): ERROR: unable to put on order book side');
-        return null; // [Tung:] just returning 'null', no order book event? what for event will the beesV8 then receive??? That's i mean in the task, you must have some special structure of order book event in case update/cancel was not possible, just returning null/false doesn't work
+        return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
       }
     }
 
@@ -214,7 +213,7 @@ class OrderBook {
     if (isCanceled) return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO);
 
     logger.error('orderbook.js cancel(): unable to cancel order');
-    return null;// [Tung:] just returning 'null', no order book event? what for event will the beesV8 then receive??? That's i mean in the task, you must have some special structure of order book event in case update/cancel was not possible, just returning null/false doesn't work
+    return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
   }
 
   /**
@@ -254,41 +253,37 @@ logger.info(`orderbook.js: ${orderbook.symbol} orderbook is ready to accept even
 // Order Book event handling logic for events received from parent process, sent by beesV8.js
 process.on('message', (event) => {
   switch (event.type) {
-    case OrderBookEvent.EVENT_GET_AGGREGATED_STATE: {
-      logger.debug(`orderbook.js: received a message from parent process of type ${OrderBookEvent.EVENT_GET_AGGREGATED_STATE}`);
+    case OrderBookEvent.GET_AGGREGATED_STATE_EVENT: {
+      logger.debug(`orderbook.js: received a message from parent process of type ${OrderBookEvent.GET_AGGREGATED_STATE_EVENT}`);
 
       const state = orderbook.getAggregatedState();
       process.send({
         id: event.id,
-        type: OrderBookEvent.EVENT_GET_AGGREGATED_STATE,
+        type: OrderBookEvent.GET_AGGREGATED_STATE_EVENT,
         state
       });
 
       break;
     }
-    case OrderBookEvent.EVENT_GET_ORDERBOOK_STATE: {
-      logger.debug(`orderbook.js: received a message from parent process of type ${OrderBookEvent.EVENT_GET_ORDERBOOK_STATE}`);
+    case OrderBookEvent.GET_ORDERBOOK_STATE_EVENT: {
+      logger.debug(`orderbook.js: received a message from parent process of type ${OrderBookEvent.GET_ORDERBOOK_STATE_EVENT}`);
 
       const state = orderbook.getOrderBookState();
       process.send({
         id: event.id,
-        type: OrderBookEvent.EVENT_GET_ORDERBOOK_STATE,
+        type: OrderBookEvent.GET_ORDERBOOK_STATE_EVENT,
         state
       });
 
       break;
     }
     default: {
-      const orderbookEvent = orderbook.processOrderEvent(event.orderEvent);
+      const orderbookEvent = orderbook.processOrderEvent(event);
       // send order book event to settlement module
-      if (!config.isTest && orderbookEvent) TradeExecutionService.executeTrades(orderbookEvent); // [Tuns:] why should this call not run in Test-environment? is this call not core logic?
-
+      if (orderbookEvent && orderbookEvent.reason && !config.isTest) TradeExecutionService.executeTrades(orderbookEvent);
+      orderbookEvent.id = event.id;
       // send order book event back to parent process
-      process.send({ // [Tung:] pls send the orderbookEvent obj as message directly
-        id: event.id,
-        type: OrderBookEvent.ORDER_BOOK_EVENT,
-        orderbookEvent
-      });
+      process.send( orderbookEvent );
     }
   }
 });

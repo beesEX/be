@@ -13,33 +13,33 @@ const settlementTrade = async (reasonObj, matchObj) => {
 
   if (reasonObj.side === 'BUY') {
     // release quote currency of reason user
-    await Transaction.releaseByTrade(reasonObj.userId, reasonObj.currency, tradedAmount, reasonObj.orderId); // [Tung]: for BUY order, release the baseCurrency, take a look at placeOrder() in order service to know how fund has been locked
+    await Transaction.releaseByTrade(reasonObj.userId, reasonObj.baseCurrency, tradedAmount, reasonObj.orderId);
     // decrease quote currency of reason user
-    await Transaction.sell(reasonObj.userId, reasonObj.currency, tradedAmount, reasonObj.orderId); // [Tung]: for BUY order, sell the baseCurrency, baseCurrency is what you used to place the BUY order.
+    await Transaction.sell(reasonObj.userId, reasonObj.baseCurrency, tradedAmount, reasonObj.orderId);
     // increase base currency of reason user
-    await Transaction.buy(reasonObj.userId, reasonObj.baseCurrency, tradedQuantity, reasonObj.orderId); // [Tung]: for BUY order, buy the currency, currency is what you want to buy with the BUY order
+    await Transaction.buy(reasonObj.userId, reasonObj.currency, tradedQuantity, reasonObj.orderId);
 
     // release base currency of match user
-    await Transaction.releaseByTrade(matchObj.userId, reasonObj.baseCurrency, tradedQuantity, matchObj.orderId); // [Tung]: for SELL order, release currency, take a look at placeOrder() in order service to know how fund has been locked
+    await Transaction.releaseByTrade(matchObj.userId, reasonObj.currency, tradedQuantity, matchObj.orderId);
     // decrease base base currency of match user
-    await Transaction.sell(matchObj.userId, reasonObj.baseCurrency, tradedQuantity, matchObj.orderId); // [Tung]: for SELL order, sell the currency, currency is what you used to place the SELL order.
+    await Transaction.sell(matchObj.userId, reasonObj.currency, tradedQuantity, matchObj.orderId);
     // increase quote currency of match user
-    await Transaction.buy(matchObj.userId, reasonObj.currency, tradedAmount, matchObj.orderId); // [Tung]: for SELL order, buy the baseCurrency, baseCurrency is what you want to receive with the SELL order
+    await Transaction.buy(matchObj.userId, reasonObj.baseCurrency, tradedAmount, matchObj.orderId);
   }
   else {
     // release base currency of reason user
-    await Transaction.releaseByTrade(reasonObj.userId, reasonObj.baseCurrency, tradedQuantity, reasonObj.orderId);
+    await Transaction.releaseByTrade(reasonObj.userId, reasonObj.currency, tradedQuantity, reasonObj.orderId);
     // decrease base base currency of reason user
-    await Transaction.sell(reasonObj.userId, reasonObj.baseCurrency, tradedQuantity, reasonObj.orderId);
+    await Transaction.sell(reasonObj.userId, reasonObj.currency, tradedQuantity, reasonObj.orderId);
     // increase quote currency of reason user
-    await Transaction.buy(reasonObj.userId,reasonObj.currency, tradedQuantity, reasonObj.orderId);
+    await Transaction.buy(reasonObj.userId,reasonObj.baseCurrency, tradedQuantity, reasonObj.orderId);
 
     // release quote currency of match user
-    await Transaction.releaseByTrade(matchObj.userId, reasonObj.currency, tradedAmount, matchObj.orderId);
+    await Transaction.releaseByTrade(matchObj.userId, reasonObj.baseCurrency, tradedAmount, matchObj.orderId);
     // decrease quote currency of match user
-    await Transaction.sell(matchObj.userId, reasonObj.currency, tradedAmount, matchObj.orderId);
+    await Transaction.sell(matchObj.userId, reasonObj.baseCurrency, tradedAmount, matchObj.orderId);
     // increase base currency of match user
-    await Transaction.buy(matchObj.userId, reasonObj.baseCurrency, tradedQuantity, matchObj.orderId);
+    await Transaction.buy(matchObj.userId, reasonObj.currency, tradedQuantity, matchObj.orderId);
   }
 };
 
@@ -48,8 +48,8 @@ const executeTrades = async (orderbookEvent) => {
 
   if (!orderbookEvent || !orderbookEvent.reason || orderbookEvent.type !== ORDER_BOOK_EVENT) {
     logger.error('tradeexecution.service.js executeTrades(): ERROR: unexpected type');
-    return false; // [Tung]: throw an Error obj instead of returning false, mix of return types (Object in success case, false if failed) is a bad practice in error handling, because the caller could not handle the returned value consistently, does false represent a regular answer or something has failed? Therefor always throw an error for exception cases!
-  } // [Tung]: you can code error handling logic in low level components such as ordermap etc. like you want, but at least at higher level components (service, controller) the above error handling rule should be followed!
+    throw new Error('Unexpected type of orderbookEvent');
+  }
 
   const reasonObj = orderbookEvent.reason;
   const matchList = orderbookEvent.matches;

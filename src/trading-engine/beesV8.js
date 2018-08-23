@@ -1,9 +1,8 @@
 const { fork } = require('child_process');
 const uuid = require('uuid/v4');
 const {
-  EVENT_GET_AGGREGATED_STATE,
-  EVENT_GET_ORDERBOOK_STATE,
-  EVENT_GET_ORDERBOOK_EVENT,
+  GET_AGGREGATED_STATE_EVENT,
+  GET_ORDERBOOK_STATE_EVENT,
   ORDER_BOOK_EVENT
 } = require('./orderbook.event');
 
@@ -44,16 +43,18 @@ class BeesV8 {
       if (message.type === ORDER_BOOK_EVENT) {
         const resolveFunction = this.mapOfIdAndResolveFunction[message.id];
         if (resolveFunction) {
-          resolveFunction(message.orderbookEvent); // [Tung:] orderbook child process should send orderbookevent as message directly
+          resolveFunction(message);
           delete this.mapOfIdAndResolveFunction[message.id];
         }
 
-        // publishes orderbook event to UI per zeroMQ
-        zmqPublish(JSON.stringify(message.orderbookEvent), `Orderbook-${this.symbol}`).then(() => {
-          logger.info(`beesV8.js: publishes orderbook event per zeroMQ to UI server: \n ${JSON.stringify(message, null, 2)}`);
-        });
+        // publishes orderbook event to UI per zeroMQ if success
+        if (message.reason) {
+          zmqPublish(JSON.stringify(message), `Orderbook-${this.symbol}`).then(() => {
+            logger.info(`beesV8.js: publishes orderbook event per zeroMQ to UI server: \n ${JSON.stringify(message, null, 2)}`);
+          });
+        }
       }
-      else if (message.type === EVENT_GET_ORDERBOOK_STATE || message.type === EVENT_GET_AGGREGATED_STATE) {
+      else if (message.type === GET_ORDERBOOK_STATE_EVENT || message.type === GET_AGGREGATED_STATE_EVENT) {
         const resolveFunction = this.mapOfIdAndResolveFunction[message.id];
         if (resolveFunction) {
           resolveFunction(message.state);
@@ -75,15 +76,9 @@ class BeesV8 {
   processOrderEvent(event) {
     logger.info('beesV8.js processOrderEvent(): sends to order book child process order event = ', JSON.stringify(event));
 
-    // [Tung:] pls use the event directly as message, rename OrderEvent._type -> OrderEvent.type, add field OrderEvent.id
     const messageId = uuid();
-    const message = {
-      type: EVENT_GET_ORDERBOOK_EVENT,
-      id: messageId,
-      orderEvent: event
-    };
-
-    this.orderbookChildProcess.send(message);
+    event.id = messageId;
+    this.orderbookChildProcess.send(event);
 
     return new Promise((resolve, reject) => {
       this.mapOfIdAndResolveFunction[messageId] = resolve;
@@ -104,7 +99,7 @@ class BeesV8 {
 
     const messageId = uuid();
     const message = {
-      type: EVENT_GET_AGGREGATED_STATE,
+      type: GET_AGGREGATED_STATE_EVENT,
       id: messageId
     };
 
@@ -130,7 +125,7 @@ class BeesV8 {
 
     const messageId = uuid();
     const message = {
-      type: EVENT_GET_ORDERBOOK_STATE,
+      type: GET_ORDERBOOK_STATE_EVENT,
       id: messageId
     };
 
