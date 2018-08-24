@@ -30,38 +30,25 @@ class TXService {
    * @returns {Promise<number>} Promise of number representing the total balance
    */
   async getBalance(userId, currency) {
-    const key = userId + currency;
-    let totalBalance;
-    let creditSum = this._creditTotalSumMap.get(key);
-    let debitSum = this._debitTotalSumMap.get(key);
+    const creditPromise = service.aggregate([
+      {$match: {userId, currency, type: {$in: CREDIT_TOTAL}}},
+      {$group: {_id: null, sum: {$sum: '$amount'}}},
+      {$project: {_id: 0, sum: 1}}
+    ]);
 
-    if (creditSum !== undefined && debitSum !== undefined) {
-      totalBalance = creditSum - debitSum;
-    } else {
-      const creditPromise = service.aggregate([
-        {$match: {userId, currency, type: {$in: CREDIT_TOTAL}}},
-        {$group: {_id: null, sum: {$sum: '$amount'}}},
-        {$project: {_id: 0, sum: 1}}
-      ]);
+    const debitPromise = service.aggregate([
+      {$match: {userId, currency, type: {$in: DEBIT_TOTAL}}},
+      {$group: {_id: null, sum: {$sum: '$amount'}}},
+      {$project: {_id: 0, sum: 1}}
+    ]);
 
-      const debitPromise = service.aggregate([
-        {$match: {userId, currency, type: {$in: DEBIT_TOTAL}}},
-        {$group: {_id: null, sum: {$sum: '$amount'}}},
-        {$project: {_id: 0, sum: 1}}
-      ]);
+    let creditSum = 0;
+    let debitSum = 0;
+    const [credit, debit] = await Promise.all([creditPromise, debitPromise]);
+    if (credit.length > 0) creditSum = credit[0].sum;
+    if (debit.length > 0) debitSum = debit[0].sum;
 
-      creditSum = 0;
-      debitSum = 0;
-      const [credit, debit] = await Promise.all([creditPromise, debitPromise]);
-      if (credit.length > 0) creditSum = credit[0].sum;
-      if (debit.length > 0) debitSum = debit[0].sum;
-
-      totalBalance = creditSum - debitSum;
-
-      // hold accumulated credit + debit sums in memory to accelerate
-      this._creditTotalSumMap.set(key, creditSum);
-      this._debitTotalSumMap.set(key, debitSum);
-    }
+    const totalBalance = creditSum - debitSum;
 
     if (totalBalance < 0) {
       logger.error(`transaction.service.js getBalance(): system bookkepping calculations had errors; ${currency} account of userId=${userId} has negative total balance!`);
@@ -85,38 +72,25 @@ class TXService {
    * @returns {Promise<number>} Promise of number representing the balance available for trading
    */
   async getAvailableBalance(userId, currency) {
-    const key = userId + currency;
-    let availableBalance;
-    let creditSum = this._creditAvailSumMap.get(key);
-    let debitSum = this._debitAvailSumMap.get(key);
+    const creditPromise = service.aggregate([
+      {$match: {userId, currency, type: {$in: CREDIT_AVAIL}}},
+      {$group: {_id: null, sum: {$sum: '$amount'}}},
+      {$project: {_id: 0, sum: 1}}
+    ]);
 
-    if (creditSum !== undefined && debitSum !== undefined) {
-      availableBalance = creditSum - debitSum;
-    } else {
-      const creditPromise = service.aggregate([
-        {$match: {userId, currency, type: {$in: CREDIT_AVAIL}}},
-        {$group: {_id: null, sum: {$sum: '$amount'}}},
-        {$project: {_id: 0, sum: 1}}
-      ]);
+    const debitPromise = service.aggregate([
+      {$match: {userId, currency, type: {$in: DEBIT_AVAIL}}},
+      {$group: {_id: null, sum: {$sum: '$amount'}}},
+      {$project: {_id: 0, sum: 1}}
+    ]);
 
-      const debitPromise = service.aggregate([
-        {$match: {userId, currency, type: {$in: DEBIT_AVAIL}}},
-        {$group: {_id: null, sum: {$sum: '$amount'}}},
-        {$project: {_id: 0, sum: 1}}
-      ]);
+    let creditSum = 0;
+    let debitSum = 0;
+    const [credit, debit] = await Promise.all([creditPromise, debitPromise]);
+    if (credit.length > 0) creditSum = credit[0].sum;
+    if (debit.length > 0) debitSum = debit[0].sum;
 
-      creditSum = 0;
-      debitSum = 0;
-      const [credit, debit] = await Promise.all([creditPromise, debitPromise]);
-      if (credit.length > 0) creditSum = credit[0].sum;
-      if (debit.length > 0) debitSum = debit[0].sum;
-
-      availableBalance = creditSum - debitSum;
-
-      // hold accumulated credit + debit sums in memory to accelerate
-      this._creditAvailSumMap.set(key, creditSum);
-      this._debitAvailSumMap.set(key, debitSum);
-    }
+    const availableBalance = creditSum - debitSum;
 
     if (availableBalance < 0) {
       logger.error(`transaction.service.js getAvailableBalance(): system bookkepping calculations had errors; ${currency} account of userId=${userId} has negative available balance!`);
@@ -135,7 +109,7 @@ class TXService {
    * @param {object} tx: transaction record needs to be accumulated to the four internal map
    * @private
    */
-  _updateSumsCache(tx) {
+  _updateBalances(tx) {
     const key = tx.userId + tx.currency;
     const {type, amount} = tx;
 
@@ -179,6 +153,17 @@ class TXService {
   }
 
   /**
+   * clear all cached user's currency balances
+   * @private
+   */
+  invalidateBalancesCache() {
+    this._creditTotalSumMap = new Map();
+    this._debitTotalSumMap = new Map();
+    this._creditAvailSumMap = new Map();
+    this._debitAvailSumMap = new Map();
+  }
+
+  /**
    * Deposits an amount for the given currency account of the user.
    *
    * @param userId
@@ -191,7 +176,7 @@ class TXService {
     const tx = { currency, type: TRANSACTION_TYPE.DEPOSIT, amount, fromWallet, createdAt: new Date(), userId };
     const depositTX = await service.create(tx);
 
-    this._updateSumsCache(depositTX);
+    this._updateBalances(depositTX);
     logger.info('transaction.service.js: deposit(): new deposit tx = ', JSON.stringify(depositTX));
 
     return depositTX;
@@ -210,7 +195,7 @@ class TXService {
     const tx = { currency, type: TRANSACTION_TYPE.WITHDRAW, amount, toWallet, createdAt: new Date(), userId };
     const withdrawTX = await service.create(tx);
 
-    this._updateSumsCache(withdrawTX);
+    this._updateBalances(withdrawTX);
     logger.info('transaction.service.js: withdraw(): new withdraw tx = ', JSON.stringify(withdrawTX));
 
     return withdrawTX;
@@ -250,7 +235,7 @@ class TXService {
     if (remainingLockedAmount > 0) {
       const tx = { currency, type: TRANSACTION_TYPE.RELEASED, amount: remainingLockedAmount, createdAt: new Date(), userId, orderId };
       const fundreleasedTX = await service.create(tx);
-      this._updateSumsCache(fundreleasedTX);
+      this._updateBalances(fundreleasedTX);
       logger.info('transaction.service.js: releaseLockedFund(): release remaining locked fund tx = ', JSON.stringify(fundreleasedTX));
     }
   }
@@ -292,8 +277,8 @@ class TXService {
     const txArray = await service.create([releaseRemainingTX, fundLockTX]);
 
     if (txArray && txArray.length === 2) {
-      this._updateSumsCache(txArray[0]);
-      this._updateSumsCache(txArray[1]);
+      this._updateBalances(txArray[0]);
+      this._updateBalances(txArray[1]);
       logger.info(`transaction.service.js: releaseLockedFundAndLockNewAmount(): release remaining locked fund tx = ${JSON.stringify(txArray[0])}, lock new fund amount tx = ${JSON.stringify(txArray[1])}`);
       return true;
     }
@@ -315,7 +300,7 @@ class TXService {
     const tx = { currency, type: TRANSACTION_TYPE.RELEASED, amount, createdAt: new Date(), userId, orderId };
     const fundreleasedTX = await service.create(tx);
 
-    this._updateSumsCache(fundreleasedTX);
+    this._updateBalances(fundreleasedTX);
     logger.info('transaction.service.js: releaseByTrade(): fund release by trade tx = ', JSON.stringify(fundreleasedTX));
 
     return fundreleasedTX;
@@ -334,7 +319,7 @@ class TXService {
     const tx = { currency, type: TRANSACTION_TYPE.BUY, amount, orderId, createdAt: new Date(), userId };
     const tradedTX = await service.create(tx);
 
-    this._updateSumsCache(tradedTX);
+    this._updateBalances(tradedTX);
     logger.info('transaction.service.js: buy(): new fund crediting by trade tx = ', JSON.stringify(tradedTX));
 
     return tradedTX;
@@ -353,7 +338,7 @@ class TXService {
     const tx = { currency, type: TRANSACTION_TYPE.SELL, amount, orderId, createdAt: new Date(), userId };
     const tradedTX = await service.create(tx);
 
-    this._updateSumsCache(tradedTX);
+    this._updateBalances(tradedTX);
     logger.info('transaction.service.js: sell(): new fund debiting by trade tx = ', JSON.stringify(tradedTX));
 
     return tradedTX;
@@ -386,13 +371,13 @@ class TXService {
       const tx = { currency, type: TRANSACTION_TYPE.LOCKED, amount, orderId, createdAt: new Date(), userId };
       const fundlockedTX = await service.create(tx);
       if (fundlockedTX) {
-        this._updateSumsCache(fundlockedTX);
+        this._updateBalances(fundlockedTX);
         logger.info(`transaction.service.js checkFundAndLock(): successful locked ${amount} ${currency} of userId=${userId} for orderId=${orderId}`);
         return true;
       }
     }
 
-    logger.info(`transaction.service.js checkFundAndLock(): could not lock ${amount} ${currency} of userId=${userId} for orderId=${orderId}`);
+    logger.info(`transaction.service.js checkFundAndLock(): fund covering not enough; could not lock ${amount} ${currency} of userId=${userId} for orderId=${orderId}`);
     return false;
   }
 }
