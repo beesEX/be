@@ -1,6 +1,7 @@
 const { fork } = require('child_process');
 const uuid = require('uuid/v4');
 const {
+  ORDER_BOOK_READY_EVENT,
   GET_AGGREGATED_STATE_EVENT,
   GET_ORDERBOOK_STATE_EVENT,
   ORDER_BOOK_EVENT
@@ -27,6 +28,7 @@ class BeesV8 {
   constructor() {
     this.symbol = 'BTC_USDT'; // hardcode
     this.mapOfIdAndResolveFunction = {};
+    this._starterCallback = undefined;
   }
 
   /**
@@ -40,7 +42,11 @@ class BeesV8 {
     this.orderbookChildProcess.on('message', (message) => {
       logger.info(`beesV8.js: receives message from orderboook-childprocess: ${JSON.stringify(message)}`);
 
-      if (message.type === ORDER_BOOK_EVENT) {
+      if (message.type === ORDER_BOOK_READY_EVENT) {
+        logger.info(`beesV8.js: start(): beesV8 trading engine for ${message.symbol} started successfully`);
+        this._starterCallback();
+      }
+      else if (message.type === ORDER_BOOK_EVENT) {
         const resolveFunction = this.mapOfIdAndResolveFunction[message.id];
         if (resolveFunction) {
           resolveFunction(message);
@@ -66,7 +72,9 @@ class BeesV8 {
       }
     });
 
-    logger.info(`beesV8.js: start(): beesV8 trading engine for ${this.symbol} started successfully`);
+    return new Promise((resolve, rejection) => {
+      this._starterCallback = resolve;
+    });
   }
 
   /**

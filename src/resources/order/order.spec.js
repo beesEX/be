@@ -1,7 +1,8 @@
 global.logger = require('../../logger');
 
+const sleep = require('../../tests/sleep');
 const {describe, it} = require('mocha');
-const { expect, assert } = require('chai');
+const { expect } = require('chai');
 const db = require('../../db');
 const userFactory = require('../../resources/user/user.factory');
 
@@ -40,7 +41,7 @@ describe('place new LIMIT order', () => {
 
     txService.invalidateBalancesCache();
 
-    beesV8.start();
+    await beesV8.start();
   });
 
   afterEach(async () => {
@@ -217,12 +218,12 @@ describe('place new LIMIT order', () => {
     };
     await orderService.placeOrder(orderSELL);
 
+    await sleep(1500);
+
     const availableBalanceAfterBTC = await txService.getAvailableBalance(userId, 'BTC');
     expect(availableBalanceAfterBTC).to.be.equal(5);
 
     const availableBalanceAfterUSDT = await txService.getAvailableBalance(userId, 'USDT');
     expect(availableBalanceAfterUSDT).to.be.equal(5);
-
-
   });
 });

@@ -246,7 +246,12 @@ class OrderBook {
 const askSide = new OrderBookSide('ASK');
 const bidSide = new OrderBookSide('BID');
 const orderbook = new OrderBook('BTC_USDT', askSide, bidSide);
-logger.info(`orderbook.js: ${orderbook.symbol} orderbook is ready to accept events`);
+
+const readyEvent = {
+  type: OrderBookEvent.ORDER_BOOK_READY_EVENT,
+  symbol: 'BTC_USDT'
+};
+process.send(readyEvent);
 
 // Order Book event handling logic for events received from parent process, sent by beesV8.js
 process.on('message', (event) => {
@@ -279,7 +284,7 @@ process.on('message', (event) => {
       const orderbookEvent = orderbook.processOrderEvent(event);
 
       // send order book event to settlement module
-      if (orderbookEvent && orderbookEvent.reason && !config.isTest) TradeExecutionService.executeTrades(orderbookEvent);
+      if (orderbookEvent && orderbookEvent.reason) TradeExecutionService.executeTrades(orderbookEvent);
 
       // send order book event back to parent process
       orderbookEvent.id = event.id;

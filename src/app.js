@@ -21,8 +21,12 @@ const app = new Koa();
 require('./config/koa')(app);
 
 app.listen(config.port, () => {
-  beesV8.start();
-  if (!config.isTest) zeroMQ.open();
+  beesV8.start().then(() => {
+    logger.info('beesV8 trading engine is up and ready to accept order');
+  });
+
+  zeroMQ.open();
+
   logger.warn(`Api server listening on ${config.port}, in ${process.env.NODE_ENV} mode`);
 });
 

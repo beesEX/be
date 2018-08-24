@@ -6,6 +6,7 @@ const {logger} = global;
 
 const {OrderEvent} = require('../resources/order/order.models');
 
+const ORDER_BOOK_READY_EVENT = 'ORDER_BOOK_READY_EVENT';
 const GET_AGGREGATED_STATE_EVENT = 'GET_AGGREGATED_STATE';
 const GET_ORDERBOOK_STATE_EVENT = 'GET_ORDERBOOK_STATE';
 const ORDER_BOOK_EVENT = 'ORDER_BOOK_EVENT';
@@ -18,6 +19,7 @@ const REASON_OBJECT_TYPE = {
 
 module.exports = {
 
+  ORDER_BOOK_READY_EVENT,
   GET_AGGREGATED_STATE_EVENT,
   GET_ORDERBOOK_STATE_EVENT,
   ORDER_BOOK_EVENT,
