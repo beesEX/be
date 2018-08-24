@@ -13,33 +13,33 @@ const settlementTrade = async (reasonObj, matchObj) => {
   const transactionProcesses = [];
 
   if (reasonObj.side === 'BUY') {
-    // release quote currency of reason user
+    // release base currency of reason user
     transactionProcesses.push(Transaction.releaseByTrade(reasonObj.userId, baseCurrency, tradedAmount, reasonObj.orderId));
-    // decrease quote currency of reason user
+    // decrease base currency of reason user
     transactionProcesses.push(Transaction.sell(reasonObj.userId, baseCurrency, tradedAmount, reasonObj.orderId));
-    // increase base currency of reason user
+    // increase quote currency of reason user
     transactionProcesses.push(Transaction.buy(reasonObj.userId, currency, tradedQuantity, reasonObj.orderId));
 
-    // release base currency of match user
+    // release quote currency of match user
     transactionProcesses.push(Transaction.releaseByTrade(matchObj.userId, currency, tradedQuantity, matchObj.orderId));
-    // decrease base base currency of match user
+    // decrease quote base currency of match user
     transactionProcesses.push(Transaction.sell(matchObj.userId, currency, tradedQuantity, matchObj.orderId));
-    // increase quote currency of match user
+    // increase base currency of match user
     transactionProcesses.push(Transaction.buy(matchObj.userId, baseCurrency, tradedAmount, matchObj.orderId));
   }
   else {
-    // release base currency of reason user
+    // release quote currency of reason user
     transactionProcesses.push(Transaction.releaseByTrade(reasonObj.userId, currency, tradedQuantity, reasonObj.orderId));
-    // decrease base base currency of reason user
+    // decrease quote base currency of reason user
     transactionProcesses.push(Transaction.sell(reasonObj.userId, currency, tradedQuantity, reasonObj.orderId));
-    // increase quote currency of reason user
-    transactionProcesses.push(Transaction.buy(reasonObj.userId, baseCurrency, tradedQuantity, reasonObj.orderId));
+    // increase base currency of reason user
+    transactionProcesses.push(Transaction.buy(reasonObj.userId, baseCurrency, tradedAmount, reasonObj.orderId));
 
-    // release quote currency of match user
+    // release base currency of match user
     transactionProcesses.push(Transaction.releaseByTrade(matchObj.userId, baseCurrency, tradedAmount, matchObj.orderId));
-    // decrease quote currency of match user
+    // decrease base currency of match user
     transactionProcesses.push(Transaction.sell(matchObj.userId, baseCurrency, tradedAmount, matchObj.orderId));
-    // increase base currency of match user
+    // increase quote currency of match user
     transactionProcesses.push(Transaction.buy(matchObj.userId, currency, tradedQuantity, matchObj.orderId));
   }
 
