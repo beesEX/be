@@ -129,7 +129,7 @@ class OrderBook {
       isSuccessfullyUpdated = this.asks.updateQuantity(order);
     }
 
-    if (isSuccessfullyUpdated) return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO);
+    if (isSuccessfullyUpdated) return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO); // [Tung]: filledQuantity of input order is not updated while processing, so it may differs from the order on book, so checking remainingQuantity like that is not precise to race condition.
     logger.error(`orderbook.js updateQuantity(): failed to update event ${JSON.stringify(orderUpdatedEvent)}`);
     return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
   }
