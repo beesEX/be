@@ -285,8 +285,6 @@ const originalProcessSendFn = process.send;
 
 process.send = (message) => {
 
-  logger.debug(requestNamespace.get('requestId'));
-
   message.requestId = requestNamespace.get('requestId');
 
   originalProcessSendFn.call(process, message);
