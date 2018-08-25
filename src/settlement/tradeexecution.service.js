@@ -57,13 +57,10 @@ const executeTrades = async (orderbookEvent) => {
   const reasonObj = orderbookEvent.reason;
   const matchList = orderbookEvent.matches;
 
-  const updateOrdersByMatchPromises = [];
-
   for (let i = 0; i < matchList.length; i += 1) {
-    updateOrdersByMatchPromises.push(OrderService.updateOrdersByMatch(reasonObj, matchList[i]));
-    updateOrdersByMatchPromises.push(settlementTrade(reasonObj, matchList[i]));
+    await settlementTrade(reasonObj, matchList[i]);
+    await OrderService.updateOrdersByMatch(reasonObj, matchList[i]);
   }
-  await Promise.all(updateOrdersByMatchPromises).catch((err) => { throw err; });
 
   logger.info('tradeexecution.service.js executeTrades(): Successfully traded');
   return true;
