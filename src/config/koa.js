@@ -3,6 +3,7 @@ const bodyParser = require('koa-bodyparser');
 const helmet = require('koa-helmet');
 const validate = require('koa-validate');
 const requestLogger = require('koa-logger');
+const requestIdExtractor = require('../util/middlewares/requestIdExtractor');
 
 const { logger } = global;
 const routes = require('./routes');
@@ -52,6 +53,7 @@ const routeErrorHandler = async (ctx, next) => {
 };
 
 module.exports = (app) => {
+  app.use(requestIdExtractor);
   app.use(cors());
   app.use(helmet());
   app.use(bodyParser({ enableTypes: ['json', 'form', 'text'] }));

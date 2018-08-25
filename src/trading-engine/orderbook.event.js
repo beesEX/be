@@ -1,8 +1,4 @@
-const {createConsoleLogger} = require('@paralect/common-logger');
-const config = require('../config');
-
-global.logger = createConsoleLogger({isDev: config.isDev});
-const {logger} = global;
+const logger = require('../logger');
 
 const {OrderEvent} = require('../resources/order/order.models');
 

@@ -1,13 +1,9 @@
-const config = require('../config');
-const {createConsoleLogger} = require('@paralect/common-logger');
-
-global.logger = createConsoleLogger({isDev: config.isDev});
-const {logger} = global;
-
 const OrderMap = require('./ordermap');
 const OrderBookEvent = require('./orderbook.event');
 
 const ZERO = 0.0000000000001;
+
+const logger = require('../logger');
 
 /**
  * One side of the order book: ASK or BID, contains data structure to hold the orders of the side.

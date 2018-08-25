@@ -1,4 +1,4 @@
-const { fork } = require('child_process');
+const {fork} = require('child_process');
 const uuid = require('uuid/v4');
 const {
   ORDER_BOOK_READY_EVENT,
@@ -7,7 +7,8 @@ const {
   ORDER_BOOK_EVENT
 } = require('./orderbook.event');
 
-const { logger } = global;
+const {logger} = global;
+const requestNamespace = require('../config/requestNamespace');
 
 //const config = require('../config');
 
@@ -24,7 +25,7 @@ async function zmqPublish(message, topic) {
  * The trading engine of the beesEX platform.
  * Each order book instance will be run by a child process.
  */
-class BeesV8 {
+class BeesV8{
   constructor() {
     this.symbol = 'BTC_USDT'; // hardcode
     this.mapOfIdAndResolveFunction = {};
@@ -39,7 +40,15 @@ class BeesV8 {
 
     this.orderbookChildProcess = fork('src/trading-engine/orderbook.js');
 
-    this.orderbookChildProcess.on('message', (message) => {
+    const originalSendFn = this.orderbookChildProcess.send;
+
+    this.orderbookChildProcess.send = (message) => {
+      message.requestId = requestNamespace.get('requestId');
+      originalSendFn.call(this.orderbookChildProcess, message);
+    };
+
+    const handleMessage = (message) => {
+      requestNamespace.set('requestId', message.requestId);
       logger.info(`beesV8.js: receives message from orderboook-childprocess: ${JSON.stringify(message)}`);
 
       if (message.type === ORDER_BOOK_READY_EVENT) {
@@ -62,15 +71,18 @@ class BeesV8 {
       }
       else if (message.type === GET_ORDERBOOK_STATE_EVENT || message.type === GET_AGGREGATED_STATE_EVENT) {
         const resolveFunction = this.mapOfIdAndResolveFunction[message.id];
-        if (resolveFunction) {
+        if(resolveFunction) {
           resolveFunction(message.state);
           delete this.mapOfIdAndResolveFunction[message.id];
         }
       }
-      else {
+      else{
         logger.error(`beesV8.js: unknown message type ${JSON.stringify(message.type)}`);
       }
-    });
+    };
+    
+    // bind on-message event handler to CLS namespace
+    this.orderbookChildProcess.on('message', requestNamespace.bind(handleMessage));
 
     return new Promise((resolve, rejection) => {
       this._starterCallback = resolve;
@@ -102,7 +114,7 @@ class BeesV8 {
    * @returns {Promise<Object>} Promise of object representing the current volume-aggregated state of the order book
    */
   async getAggregatedStateOfOrderBook(symbol) {
-    if (symbol !== this.symbol) {
+    if(symbol !== this.symbol) {
       logger.warn('beesV8.js getAggregatedStateOfOrderBook(): receives unknown currency pair symbol=', symbol);
       return null;
     }
@@ -116,7 +128,7 @@ class BeesV8 {
     logger.info(`beesV8.js getAggregatedStateOfOrderBook(): sends request to child process of order book ${symbol}`);
     this.orderbookChildProcess.send(message);
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       this.mapOfIdAndResolveFunction[messageId] = resolve;
     });
   }
@@ -128,7 +140,7 @@ class BeesV8 {
    * @returns {Promise<{Object}>} Promise of object representing the current state of the order book
    */
   async getCurrentStateOfOrderBook(symbol) {
-    if (symbol !== this.symbol) {
+    if(symbol !== this.symbol) {
       logger.warn('beesV8.js getCurrentStateOfOrderBook(): receives unknown currency pair symbol=', symbol);
       return null;
     }
@@ -142,7 +154,7 @@ class BeesV8 {
     logger.info(`beesV8.js getCurrentStateOfOrderBook(): sends request to child process of order book ${symbol}`);
     this.orderbookChildProcess.send(message);
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       this.mapOfIdAndResolveFunction[messageId] = resolve;
     });
   }

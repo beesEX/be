@@ -7,7 +7,8 @@ const {Order, OrderEvent, OrderPlacedEvent, MarketOrderPlacedEvent, OrderQuantit
 
 const TradeExecutionService = require('../settlement/tradeexecution.service');
 
-const {logger} = global;
+const logger = require('../logger');
+const requestNamespace = require('../config/requestNamespace');
 
 const ZERO = 0.0000000000001;
 
@@ -15,7 +16,7 @@ const ZERO = 0.0000000000001;
  * Limit Order Book performs order matching after principals of price/time priority
  * matching algorithm.
  */
-class OrderBook {
+class OrderBook{
   constructor(symbol, askSide, bidSide) {
     this.symbol = symbol; // e.g 'BTC_USDT'
     this.asks = askSide; // BookSide containing SELL orders
@@ -26,16 +27,18 @@ class OrderBook {
 
   /**
    * checks the order event and dispatches it to appropriate function which processes it.
-   * @param {Object} event: serialized object with same structure of original OrderEvent-object sent by beesV8 in parent process
+   * @param {Object} event: serialized object with same structure of original OrderEvent-object sent by beesV8 in
+   *         parent process
    */
   processOrderEvent(event) {
     logger.info(`orderbook.js processOrderEvent(): receices order event: ${JSON.stringify(event)}`);
     const order = new Order(event._order);
     const orderSymbol = `${event._order.currency}_${event._order.baseCurrency}`;
-    if (orderSymbol !== this.symbol) {
+    if(orderSymbol !== this.symbol) {
       logger.warn(`orderbook.js processOrderEvent(): currency pair of order event ${orderSymbol} not matches that of order book ${this.symbol}`);
       return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
     }
+
     let orderbookEvent = null;
     if (event._type === OrderEvent.LIMIT_PLACED_EVENT) orderbookEvent = this.placeLimit(new OrderPlacedEvent(order));
     else if (event._type === OrderEvent.MARKET_PLACED_EVENT) orderbookEvent = this.placeMarket(new MarketOrderPlacedEvent(order));
@@ -59,17 +62,17 @@ class OrderBook {
 
     let matchingEventList = [];
 
-    if (order.side === 'BUY') {
+    if(order.side === 'BUY') {
       matchingEventList = this.asks.tryToMatch(order);
     }
-    else { // SELL
+    else{ // SELL
       matchingEventList = this.bids.tryToMatch(order);
     }
 
     // if the order could not be filled completely, put the remaining qty on book
-    if (order.remainingQuantity() > ZERO) {
+    if(order.remainingQuantity() > ZERO) {
       logger.info(`orderbook.js placeLimit(): ${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
-
+      
       if (order.side === 'BUY') {
         if (!this.bids.putOrderOnBook(order)) return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
       }
@@ -89,22 +92,22 @@ class OrderBook {
     const {order} = orderPlacedEvent;
     const reasonObject = OrderBookEvent.createNewReasonObject(orderPlacedEvent);
 
-    if (order.type !== 'MARKET') {
+    if(order.type !== 'MARKET') {
       logger.info(`orderbook.js placeMarket(): received order ${order} is not a MARKET order and will be rejected`);
       return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
     }
     logger.info(`orderbook.js placeMarket(): processing new MARKET order placed: ${JSON.stringify(order)}`);
 
     let matchingEventList = [];
-    if (order.side === 'BUY') {
+    if(order.side === 'BUY') {
       matchingEventList = this.asks.tryToMatch(order);
     }
-    else { // SELL
+    else{ // SELL
       matchingEventList = this.bids.tryToMatch(order);
     }
 
     // remaining units of market order will not be put on book, gets just rejected.
-    if (order.remainingQuantity() > ZERO) {
+    if(order.remainingQuantity() > ZERO) {
       logger.info(`orderbook.js placeMarket(): ${order.remainingQuantity()} remaining units of MARKET order will be rejected`);
     }
     return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO);
@@ -122,10 +125,10 @@ class OrderBook {
 
     let isSuccessfullyUpdated = false;
 
-    if (order.side === 'BUY') {
+    if(order.side === 'BUY') {
       isSuccessfullyUpdated = this.bids.updateQuantity(order);
     }
-    else { // SELL
+    else{ // SELL
       isSuccessfullyUpdated = this.asks.updateQuantity(order);
     }
 
@@ -162,15 +165,15 @@ class OrderBook {
 
     let matchingEventList = [];
     // process updated order like new placed order
-    if (order.side === 'BUY') {
+    if(order.side === 'BUY') {
       matchingEventList = this.asks.tryToMatch(order);
     }
-    else { // SELL
+    else{ // SELL
       matchingEventList = this.bids.tryToMatch(order);
     }
 
     // if the order could not be filled completely, put the remaining qty on book
-    if (order.remainingQuantity() > ZERO) {
+    if(order.remainingQuantity() > ZERO) {
       logger.info(`orderbook.js updateLimit(): ${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
 
       let isPut = false;
@@ -254,10 +257,11 @@ const readyEvent = {
 process.send(readyEvent);
 
 // Order Book event handling logic for events received from parent process, sent by beesV8.js
-process.on('message', (event) => {
-  switch (event.type) {
-    case OrderBookEvent.GET_AGGREGATED_STATE_EVENT: {
-      logger.debug(`orderbook.js: received a message from parent process of type ${OrderBookEvent.GET_AGGREGATED_STATE_EVENT}`);
+const handleMessage = (event) => {
+  requestNamespace.set('requestId', event.requestId);
+  switch(event.type){
+    case OrderBookEvent.GET_AGGREGATED_STATE_EVENT:{
+      logger.debug(`orderbook.js: received a message from parent process of type ${OrderBookEvent.EVENT_GET_AGGREGATED_STATE}`);
 
       const state = orderbook.getAggregatedState();
       process.send({
@@ -268,7 +272,7 @@ process.on('message', (event) => {
 
       break;
     }
-    case OrderBookEvent.GET_ORDERBOOK_STATE_EVENT: {
+    case OrderBookEvent.GET_ORDERBOOK_STATE_EVENT:{
       logger.debug(`orderbook.js: received a message from parent process of type ${OrderBookEvent.GET_ORDERBOOK_STATE_EVENT}`);
 
       const state = orderbook.getOrderBookState();
@@ -291,4 +295,21 @@ process.on('message', (event) => {
       process.send(orderbookEvent);
     }
   }
+};
+process.on('message', (event) => {
+
+  const handle = requestNamespace.bind(handleMessage);
+
+  handle(event);
+
 });
+
+const originalProcessSendFn = process.send;
+
+process.send = (message) => {
+
+  message.requestId = requestNamespace.get('requestId');
+
+  originalProcessSendFn.call(process, message);
+
+};
