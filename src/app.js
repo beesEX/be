@@ -21,33 +21,13 @@ const app = new Koa();
 require('./config/koa')(app);
 
 app.listen(config.port, () => {
-  beesV8.start();
-  if (!config.isTest) zeroMQ.open();
+  beesV8.start().then(() => {
+    logger.info('beesV8 trading engine is up and ready to accept order');
+  });
+
+  zeroMQ.open();
+
   logger.warn(`Api server listening on ${config.port}, in ${process.env.NODE_ENV} mode`);
 });
-
-//test zeroMQ publisher
-/*
-const {publish, close} = require('./util/zeroMQpublisher');
-
-async function sendMessage(index) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      publish(`Hello World ${index}`, 'world');
-      resolve();
-    }, 1000);
-  });
-}
-
-async function sendMessages() {
-  for (let i = 0; i < 10; i++) {
-    await sendMessage(i);
-  }
-}
-
-sendMessages().then(() => {
-  close();
-});
-*/
 
 module.exports = app;

@@ -1,5 +1,5 @@
 const Joi = require('joi');
-const { CURRENCY_SYMBOLS } = require('app.constants');
+const { CURRENCY_SYMBOLS } = require('../app.constants');
 
 const TRANSACTION_TYPE = {
   DEPOSIT: 'DEPOSIT',

@@ -28,7 +28,9 @@ module.exports = class OrderBookSide {
   putOrderOnBook(order) {
     if (!this.orderMap.addOrder(order)) {
       logger.error('orderbookside.js putOrderOnBook(): ERROR when put order on book');
+      return false;
     }
+    return true;
   }
 
   /*
@@ -37,7 +39,9 @@ module.exports = class OrderBookSide {
   removeOrder(order) {
     if (!this.orderMap.removeOrder(order)) {
       logger.error('orderbookside.js removeOrder(): ERROR when remove order from book');
+      return false;
     }
+    return true;
   }
 
   /*
@@ -102,30 +106,26 @@ module.exports = class OrderBookSide {
       const tmpLLOE = this.orderMap.getFirstElementOfPriceLevel(priceLevel);
       if (!tmpLLOE) break; // all orders at this price level are matched
 
-
+      let tradedQuantity;
       if (order.remainingQuantity() < tmpLLOE.order.remainingQuantity()) {
         // order will be fulfilled right now
-        logger.info(`orderbookside.js: match(): Match id ${tmpLLOE.order._id} with trade quantity ${order.remainingQuantity()}`);
+        logger.info(`orderbookside.js: match(): matches counter order id=${tmpLLOE.order._id} with trade quantity ${order.remainingQuantity()}`);
 
-        const tradedQuantity = order.remainingQuantity();
+        tradedQuantity = order.remainingQuantity();
         tmpLLOE.order.filledQuantity += tradedQuantity;
         order.filledQuantity = order.quantity;
-
-        matchingEventList.push(OrderBookEvent.createNewMatchObject(tmpLLOE.order, tradedQuantity, tmpLLOE.order.remainingQuantity() <= ZERO));
       }
       else {
-        logger.info(`orderbookside.js: match(): Match id ${tmpLLOE.order._id} with trade quantity ${tmpLLOE.order.remainingQuantity()}`);
+        logger.info(`orderbookside.js: match(): matches counter order id=${tmpLLOE.order._id} with trade quantity ${tmpLLOE.order.remainingQuantity()}`);
 
-        const tradedQuantity = tmpLLOE.order.remainingQuantity();
+        tradedQuantity = tmpLLOE.order.remainingQuantity();
         order.filledQuantity += tradedQuantity;
         tmpLLOE.order.filledQuantity = tmpLLOE.order.quantity;
 
-        matchingEventList.push(OrderBookEvent.createNewMatchObject(tmpLLOE.order, tradedQuantity, tmpLLOE.order.remainingQuantity() <= ZERO));
-      }
-
-      if (tmpLLOE.order.remainingQuantity() <= ZERO) {
         this.orderMap.removeOrder(tmpLLOE.order);
       }
+
+      matchingEventList.push(OrderBookEvent.createNewMatchObject(tmpLLOE.order, tradedQuantity, tmpLLOE.order.remainingQuantity() <= ZERO));
 
       if (order.remainingQuantity() <= ZERO) break;
     }

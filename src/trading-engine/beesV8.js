@@ -1,6 +1,11 @@
 const {fork} = require('child_process');
 const uuid = require('uuid/v4');
-const {EVENT_GET_AGGREGATED_STATE, EVENT_GET_ORDERBOOK_STATE, ORDER_BOOK_EVENT} = require('./orderbook.event');
+const {
+  ORDER_BOOK_READY_EVENT,
+  GET_AGGREGATED_STATE_EVENT,
+  GET_ORDERBOOK_STATE_EVENT,
+  ORDER_BOOK_EVENT
+} = require('./orderbook.event');
 
 const {logger} = global;
 const requestNamespace = require('../config/requestNamespace');
@@ -24,16 +29,14 @@ class BeesV8{
   constructor() {
     this.symbol = 'BTC_USDT'; // hardcode
     this.mapOfIdAndResolveFunction = {};
+    this._starterCallback = undefined;
   }
 
   /**
    * start the engine
    */
   start() {
-    logger.info(`BeesV8 for ${this.symbol} starts`);
-
-    // start zero MQ
-    //if (!config.isTest) open();
+    logger.info(`beesV8.js: start(): beesV8 trading engine for ${this.symbol} starts...`);
 
     this.orderbookChildProcess = fork('src/trading-engine/orderbook.js');
 
@@ -41,19 +44,32 @@ class BeesV8{
 
     this.orderbookChildProcess.send = (message) => {
       message.requestId = requestNamespace.get('requestId');
-      originalSendFn.call(this.orderbookChildProcess,message);
+      originalSendFn.call(this.orderbookChildProcess, message);
     };
 
     const handleMessage = (message) => {
       requestNamespace.set('requestId', message.requestId);
       logger.info(`beesV8.js: receives message from orderboook-childprocess: ${JSON.stringify(message)}`);
 
-      if(message.type === ORDER_BOOK_EVENT) {
-        zmqPublish(JSON.stringify(message), `Orderbook-${this.symbol}`).then(() => {
-          logger.info(`beesV8.js: publishes orderbook event per zeroMQ to UI server: \n ${JSON.stringify(message, null, 2)}`);
-        });
+      if (message.type === ORDER_BOOK_READY_EVENT) {
+        logger.info(`beesV8.js: start(): beesV8 trading engine for ${message.symbol} started successfully`);
+        this._starterCallback();
       }
-      else if(message.type === EVENT_GET_ORDERBOOK_STATE || message.type === EVENT_GET_AGGREGATED_STATE) {
+      else if (message.type === ORDER_BOOK_EVENT) {
+        const resolveFunction = this.mapOfIdAndResolveFunction[message.id];
+        if (resolveFunction) {
+          resolveFunction(message);
+          delete this.mapOfIdAndResolveFunction[message.id];
+        }
+
+        // publishes orderbook event to UI per zeroMQ if success
+        if (message.reason) {
+          zmqPublish(JSON.stringify(message), `Orderbook-${this.symbol}`).then(() => {
+            logger.info(`beesV8.js: publishes orderbook event per zeroMQ to UI server: \n ${JSON.stringify(message, null, 2)}`);
+          });
+        }
+      }
+      else if (message.type === GET_ORDERBOOK_STATE_EVENT || message.type === GET_AGGREGATED_STATE_EVENT) {
         const resolveFunction = this.mapOfIdAndResolveFunction[message.id];
         if(resolveFunction) {
           resolveFunction(message.state);
@@ -64,7 +80,13 @@ class BeesV8{
         logger.error(`beesV8.js: unknown message type ${JSON.stringify(message.type)}`);
       }
     };
+    
+    // bind on-message event handler to CLS namespace
     this.orderbookChildProcess.on('message', requestNamespace.bind(handleMessage));
+
+    return new Promise((resolve, rejection) => {
+      this._starterCallback = resolve;
+    });
   }
 
   /**
@@ -75,7 +97,14 @@ class BeesV8{
    */
   processOrderEvent(event) {
     logger.info('beesV8.js processOrderEvent(): sends to order book child process order event = ', JSON.stringify(event));
+
+    const messageId = uuid();
+    event.id = messageId;
     this.orderbookChildProcess.send(event);
+
+    return new Promise((resolve, reject) => {
+      this.mapOfIdAndResolveFunction[messageId] = resolve;
+    });
   }
 
   /**
@@ -92,7 +121,7 @@ class BeesV8{
 
     const messageId = uuid();
     const message = {
-      type: EVENT_GET_AGGREGATED_STATE,
+      type: GET_AGGREGATED_STATE_EVENT,
       id: messageId
     };
 
@@ -118,7 +147,7 @@ class BeesV8{
 
     const messageId = uuid();
     const message = {
-      type: EVENT_GET_ORDERBOOK_STATE,
+      type: GET_ORDERBOOK_STATE_EVENT,
       id: messageId
     };
 
@@ -135,13 +164,11 @@ class BeesV8{
    */
   stop() {
     this.orderbookChildProcess.kill();
-    //if (!config.isTest) close();
+    logger.info(`beesV8.js: start(): beesV8 trading engine for ${this.symbol} has been stopped`);
   }
 
 }
 
-logger.info('starting the trading engine');
 const beesV8 = new BeesV8();
-logger.info('beesEX trading engine is up and ready');
 
 module.exports = beesV8;

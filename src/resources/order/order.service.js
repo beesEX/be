@@ -1,15 +1,16 @@
 const {logger} = global;
 
 const orderSchema = require('./order.schema');
-const constants = require('app.constants');
-const db = require('db');
+const constants = require('../../app.constants');
+const db = require('../../db');
 
-// usage: https://github.com/paralect/node-mongo/blob/master/API.md#mongo-service
 const service = db.createService(constants.DATABASE_DOCUMENTS.ORDERS, orderSchema.schema);
-const ON_BOOK_STATUS = [orderSchema.ORDER_STATUS.PLACED, orderSchema.ORDER_STATUS.PARTIALLY_FILLED];
+// usage: https://github.com/paralect/node-mongo/blob/master/API.md#mongo-service
 
-const beesV8 = require('trading-engine/beesV8');
+const beesV8 = require('../../trading-engine/beesV8');
 const { Order, OrderPlacedEvent, OrderQuantityUpdatedEvent, OrderLimitUpdatedEvent, OrderCanceledEvent, } = require('./order.models');
+
+const ON_BOOK_STATUS = [orderSchema.ORDER_STATUS.PLACED, orderSchema.ORDER_STATUS.PARTIALLY_FILLED];
 
 const { idGenerator } = require('@paralect/node-mongo');
 const txService = require('../../wealth-management/transaction.service');
@@ -23,6 +24,7 @@ module.exports = {
    * @param {Object} newOrderObject: an order object with full properties of an order <- should consider to fill needed features in order.controller or here
    * @returns {Promise<{Object}>} Promise of the newly placed order record object
    */
+
   placeOrder: async (newOrderObject) => {
     let fundCheckSuccessful = false;
     if (newOrderObject.type === 'LIMIT') {
@@ -43,6 +45,7 @@ module.exports = {
       throw new Error('not enought fund available');
     }
 
+    newOrderObject.status = orderSchema.ORDER_STATUS.PLACED;
     const createdOrder = await service.create(newOrderObject);
     logger.info('order.service.js: placedOrder(): createdOrder =', JSON.stringify(createdOrder, null, 2));
 
@@ -57,59 +60,146 @@ module.exports = {
    * Only on book orders are allowed to be updated.
    * @param {Object} orderObject: an object contains _id, limitPrice and quantity. New quantity must be greater than quantity already filled.
    * @param {string} userId: userId of the owner of the order to be updated
-   * @returns {Promise<{Object}>} Promise of the updated order record object
+   * @returns {Promise<{Object}>} Promise of the updated order record object if updating was successful
    */
   updateOrderByUser: async (orderObject, userId) => {
-    orderObject = new Order(orderObject);
+    logger.info(`order.service.js: updateOrderByUser(): received order object ${JSON.stringify(orderObject)}`);
 
-    let oldQuantity = 0.0;
-    let oldPrice = 0.0;
+    const orderToUpdateQuery = await service.find({
+      userId,
+      _id: orderObject._id,
+      status: {$in: ON_BOOK_STATUS}
+    });
+    logger.info(`order.service.js: updateOrderByUser(): get result ${JSON.stringify(orderToUpdateQuery)} from DB`);
+    if (!orderToUpdateQuery || !orderToUpdateQuery.results || orderToUpdateQuery.results.length === 0) {
+      logger.error(`order.service.js: updateOrderByUser(): ERROR: not found order with id=${orderObject._id} of userId=${userId} with on book status`);
+      throw new Error(`Not found order with id=${orderObject._id} of userId=${userId} with on book status`);
+    }
+    if (orderToUpdateQuery.results.length !== 1) {
+      logger.error(`order.service.js: updateOrderByUser(): ERROR: there are more than one orders found for userId=${userId} and orderId=${orderObject._id} with on book status`);
+      throw new Error(`There are more than one orders found for userId=${userId} and orderId=${orderObject._id} with on book status`);
+    }
+
+    const toBeUpdatedOrder = new Order(orderToUpdateQuery.results[0]);
+    const oldQuantity = toBeUpdatedOrder.quantity;
+    const oldPrice = toBeUpdatedOrder.limitPrice;
+
+    toBeUpdatedOrder.quantity = orderObject.quantity;
+    toBeUpdatedOrder.limitPrice = orderObject.limitPrice;
+
+    logger.info(`order.service.js: updateOrderByUser(): oldQuantity = ${oldQuantity} and newQuantity = ${toBeUpdatedOrder.quantity}`);
+    logger.info(`order.service.js: updateOrderByUser(): oldPrice = ${oldPrice} and newPrice = ${toBeUpdatedOrder.limitPrice}`);
+
+    // locking the new required fund amount as precondition of order update
+    let fundLocked = false;
+    if (toBeUpdatedOrder.side === 'BUY') {
+      const newRequiredAmount = (toBeUpdatedOrder.quantity - toBeUpdatedOrder.filledQuantity) * toBeUpdatedOrder.limitPrice;
+      fundLocked = await txService.releaseLockedFundAndLockNewAmount(userId, toBeUpdatedOrder.baseCurrency, newRequiredAmount, toBeUpdatedOrder._id.toString());
+    } else { // toBeUpdatedOrder.side === 'SELL'
+      const newRequiredAmount = toBeUpdatedOrder.quantity - toBeUpdatedOrder.filledQuantity;
+      fundLocked = await txService.releaseLockedFundAndLockNewAmount(userId, toBeUpdatedOrder.currency, newRequiredAmount, toBeUpdatedOrder._id.toString());
+    }
+    if (!fundLocked) {
+      logger.error('order.service.js: updateOrderByUser(): failed to update order; new required fund amount could not be locked');
+      throw new Error('new required fund amount could not be locked prior to update order');
+    }
+
+    let orderbookEvent = null;
+
+    if (oldPrice !== orderObject.limitPrice) {
+      const orderLimitUpdatedEvent = new OrderLimitUpdatedEvent(toBeUpdatedOrder, oldQuantity, oldPrice);
+      orderbookEvent = await beesV8.processOrderEvent(orderLimitUpdatedEvent);
+    }
+    else if (oldPrice === orderObject.limitPrice && oldQuantity !== orderObject.quantity) {
+      const orderQuantityUpdatedEvent = new OrderQuantityUpdatedEvent(toBeUpdatedOrder, oldQuantity, oldPrice);
+      orderbookEvent = await beesV8.processOrderEvent(orderQuantityUpdatedEvent);
+    }
+    logger.info(`order.service.js: updateOrderByUser(): received ${JSON.stringify(orderbookEvent)} from beesV8`);
+
+    if (!orderbookEvent || !orderbookEvent.reason) {
+      logger.info('order.service.js: updateOrderByUser(): failed to update order in order book');
+      throw new Error('Failed to update order in order book');
+    }
 
     const updatedOrder = await service.update({
       _id: orderObject._id,
       userId,
       status: {$in: ON_BOOK_STATUS}
     }, (doc) => {
-      if (orderObject.quantity > doc.filledQuantity) {
-        oldQuantity = doc.quantity;
-        oldPrice = doc.limitPrice;
-
-        doc.limitPrice = orderObject.limitPrice;
-        doc.quantity = orderObject.quantity;
+      if (orderbookEvent.reason.quantity >= doc.filledQuantity) {
+        doc.limitPrice = orderbookEvent.reason.price;
+        doc.quantity = orderbookEvent.reason.quantity;
+        if (doc.filledQuantity === orderbookEvent.reason.quantity) doc.status = orderSchema.ORDER_STATUS.FILLED;
         doc.lastUpdatedAt = new Date();
       }
     });
-    logger.info('order.service.js: updateOrderByUser(): updatedOrder =', JSON.stringify(updatedOrder, null, 2));
 
-    if (updatedOrder && oldPrice !== orderObject.limitPrice) {
-      const orderLimitUpdatedEvent = new OrderLimitUpdatedEvent(new Order(updatedOrder), oldQuantity, oldPrice);
-      beesV8.processOrderEvent(orderLimitUpdatedEvent);
-    }
-    else if (updatedOrder && oldPrice === orderObject.limitPrice && oldQuantity !== orderObject.quantity) {
-      const orderQuantityUpdatedEvent = new OrderQuantityUpdatedEvent(new Order(updatedOrder), oldQuantity, oldPrice);
-      beesV8.processOrderEvent(orderQuantityUpdatedEvent);
+    if (updatedOrder) {
+      logger.info('order.service.js: updateOrderByUser(): order update was successful; updatedOrder =', JSON.stringify(updatedOrder, null, 2));
+      return updatedOrder;
     }
 
-    return updatedOrder;
+    logger.info('order.service.js: updateOrderByUser(): failed to update order in DB');
+    throw new Error('Failed to update order in DB');
   },
 
   /**
-   * Cancel order of given user. Only on book order are allowed to canceled.
+   * Cancel order of given user. Only on book order are allowed to be canceled.
    * @param {string} orderId: ID of order to be canceled
    * @param {string} userId: userId of the owner of the order to be canceled
-   * @returns {undefined}
+   * @returns {Promise<boolean>} Promise of true if canceling of the order was successful, otherwise false
    */
   cancelOrder: async (orderId, userId) => {
-    const canceledOrder = await service.update({_id: orderId, userId, status: {$in: ON_BOOK_STATUS}}, (doc) => {
+    // get the order with given Id in DB
+    const orderToCancelQuery = await service.find({
+      userId,
+      _id: orderId,
+      status: {$in: ON_BOOK_STATUS}
+    });
+    logger.info(`order.service.js: cancelOrder(): get result ${JSON.stringify(orderToCancelQuery)} from DB`);
+
+    if (!orderToCancelQuery || !orderToCancelQuery.results || orderToCancelQuery.results.length === 0) {
+      logger.error(`order.service.js: cancelOrder(): ERROR: not found order with id=${orderId} of userId=${userId} with on book status`);
+      throw new Error(`Not found order with id=${orderId} of userId=${userId} with on book status`);
+    }
+    if (orderToCancelQuery.results.length !== 1) {
+      logger.error(`order.service.js: cancelOrder(): ERROR: there are more than one orders found for userId=${userId} and orderId=${orderId} with on book status`);
+      throw new Error(`There are more than one orders found for userId=${userId} and orderId=${orderId} with on book status`);
+    }
+
+    // found it
+    const orderCanceledOrderEvent = new OrderCanceledEvent(new Order(orderToCancelQuery.results[0]));
+    const orderbookEvent = await beesV8.processOrderEvent(orderCanceledOrderEvent);
+    logger.info(`order.service.js: cancelOrder(): received ${JSON.stringify(orderbookEvent)} from beesV8`);
+
+    if (!orderbookEvent || !orderbookEvent.reason) {
+      logger.error('order.service.js: cancelOrder(): ERROR: failed to cancel order in order book');
+      return false;
+    }
+
+    const canceledOrder = await service.update({
+      _id: orderId,
+      userId,
+      status: {$in: ON_BOOK_STATUS}
+    }, (doc) => {
       doc.status = orderSchema.ORDER_STATUS.CANCELED;
       doc.lastUpdatedAt = new Date();
     });
-    logger.info('order.service.js: cancelOrder(): canceledOrder =', JSON.stringify(canceledOrder, null, 2));
 
     if (canceledOrder) {
-      const orderCanceledOrderEvent = new OrderCanceledEvent(new Order(canceledOrder));
-      beesV8.processOrderEvent(orderCanceledOrderEvent);
+      // release remaining locked fund of the canceled order if any exists
+      if (canceledOrder.side === 'BUY') {
+        txService.releaseLockedFund(userId, canceledOrder.baseCurrency, canceledOrder._id.toString());
+      } else { // canceledOrder.side === 'SELL'
+        txService.releaseLockedFund(userId, canceledOrder.currency, canceledOrder._id.toString());
+      }
+
+      logger.info('order.service.js: cancelOrder(): canceledOrder =', JSON.stringify(canceledOrder, null, 2));
+      return true;
     }
+
+    logger.info('order.service.js: cancelOrder(): failed to cancel order in DB');
+    return false;
   },
 
   /**
@@ -166,12 +256,12 @@ module.exports = {
   /**
    * Update pair of matched orders
    *
-   * @param {Object} reasonObj
-   * @param {Object} matchObj
-   * @returns true if success, false if failed
+   * @param {Object} reasonObj: 'reason'-field of OrderbookEvent, represents order under processing of the match.
+   * @param {Object} matchObj: one of elements of the 'matches'-Array field of OrderbookEvent, represent the counter order of the match.
+   * @returns {Promise<boolean>} Promise of boolean, true if success, false if failed
    */
-  updateOrdersbyMatch: async (reasonObj, matchObj) => {
-    logger.info(`order.service.js: updatedMatchOrder(): received reason object = ${JSON.stringify(reasonObj)} and match object = ${JSON.stringify(matchObj)}`);
+  updateOrdersByMatch: async (reasonObj, matchObj) => {
+    logger.info(`order.service.js: updateOrdersByMatch(): received reason object = ${JSON.stringify(reasonObj)} and match object = ${JSON.stringify(matchObj)}`);
 
     // update reason order
     const updatedReasonOrder = await service.update({
@@ -179,7 +269,6 @@ module.exports = {
       status: {$in: ON_BOOK_STATUS}
     }, (doc) => {
       doc.filledQuantity += matchObj.tradedQuantity;
-      //[Viet Anh] I need filledCompletely of order book event for sure
       doc.status = (doc.filledQuantity === doc.quantity) ? orderSchema.ORDER_STATUS.FILLED : orderSchema.ORDER_STATUS.PARTIALLY_FILLED;
       doc.lastUpdatedAt = new Date();
     });
@@ -190,17 +279,38 @@ module.exports = {
       status: {$in: ON_BOOK_STATUS}
     }, (doc) => {
       doc.filledQuantity += matchObj.tradedQuantity;
-      doc.status = (matchObj.filledCompletely) ? orderSchema.ORDER_STATUS.FILLED : orderSchema.ORDER_STATUS.PARTIALLY_FILLED;
+      doc.status = (doc.filledQuantity === doc.quantity) ? orderSchema.ORDER_STATUS.FILLED : orderSchema.ORDER_STATUS.PARTIALLY_FILLED;
       doc.lastUpdatedAt = new Date();
     });
 
-    if (updatedMatchOrder && updatedReasonOrder) {
-      logger.info(`order.service.js: updatedMatchOrder(): updated reason order = ${JSON.stringify(updatedReasonOrder)} and match order = ${JSON.stringify(updatedMatchOrder)}`);
+    if (updatedReasonOrder && updatedMatchOrder) {
+      logger.info(`order.service.js: updateOrdersByMatch(): updated successful; order under processing = ${JSON.stringify(updatedReasonOrder)} and matched counter order = ${JSON.stringify(updatedMatchOrder)}`);
+
+      // release remaining locked fund if any exists after the reason order under processing has been filled completely
+      if (updatedReasonOrder.status === orderSchema.ORDER_STATUS.FILLED) {
+        if (updatedReasonOrder.side === 'BUY') {
+          txService.releaseLockedFund(updatedReasonOrder.userId, updatedReasonOrder.baseCurrency, updatedReasonOrder._id.toString());
+        }
+        else { // updatedReasonOrder.side === 'SELL'
+          txService.releaseLockedFund(updatedReasonOrder.userId, updatedReasonOrder.currency, updatedReasonOrder._id.toString());
+        }
+      }
+
+      // release remaining locked fund if any exists after the matched counter order has been filled completely
+      if (updatedMatchOrder.status === orderSchema.ORDER_STATUS.FILLED) {
+        if (updatedMatchOrder.side === 'BUY') {
+          txService.releaseLockedFund(updatedMatchOrder.userId, updatedMatchOrder.baseCurrency, updatedMatchOrder._id.toString());
+        }
+        else { // updatedReasonOrder.side === 'SELL'
+          txService.releaseLockedFund(updatedMatchOrder.userId, updatedMatchOrder.currency, updatedMatchOrder._id.toString());
+        }
+      }
+
       return true;
     }
 
-    // [Viet Anh] should I redo work to let both orders not be updated?
-    logger.error('order.service.js: updatedMatchOrder(): ERROR: failed to update');
+    if (!updatedReasonOrder) logger.error('order.service.js: updateOrdersByMatch(): ERROR: failed to update reason object');
+    if (!updatedMatchOrder) logger.error('order.service.js: updateOrdersByMatch(): ERROR: failed to update match object');
     return false;
   },
 };

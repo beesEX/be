@@ -10,7 +10,19 @@
 const logger = require('../logger');
 
 const SortedSet = require('collections/sorted-set');
-// src: http://www.collectionsjs.com/sorted-set
+
+// TODO: need to rebuild order map or a part of order map base on error status
+const STATUS = {
+  SUCCESS: 'SUCCESS',
+  ORDER_ID_EXISTED: 'ORDER_ID_EXISTED',
+  NOT_FOUND_ORDER_ID: 'NOT_FOUND_ORDER_ID',
+  NOT_FOUND_HEAD: 'NOT_FOUND_HEAD',
+  NOT_FOUND_TAIL: 'NOT_FOUND_TAIL',
+  NOT_FOUND_NEXT: 'NOT_FOUND_NEXT',
+  NOT_FOUND_PREVIOUS: 'NOT_FOUND_PREVIOUS',
+  UNEXPECTED_NULL: 'UNEXPECTED_NULL',
+  UNEXPECTED_TYPE: 'UNEXPECTED_TYPE',
+};
 
 class OrderLinkedListElement {
   constructor(order) {
@@ -34,20 +46,37 @@ class OrderLinkedListElement {
 
 class OrderLinkedList {
   constructor(element) {
-    this.head = element;
-    this.tail = this.head;
-    // save linkedListOrderElement via matching id
+    this.head = null;
+    this.tail = null;
     this.mapOfOrderIdAndOrderLinkedListElement = {};
-    this.mapOfOrderIdAndOrderLinkedListElement[element.order._id] = element;
+
+    const status = this.isLinkedListElement(element);
+    if (status === STATUS.SUCCESS) {
+      this.head = element;
+      this.tail = this.head;
+      // save linkedListOrderElement via matching id
+      this.mapOfOrderIdAndOrderLinkedListElement[element.order._id] = element;
+    }
+  }
+
+  isLinkedListElement(element) {
+    if (!(element instanceof OrderLinkedListElement)) return STATUS.UNEXPECTED_TYPE;
+    if (!element || !element.order || typeof element.order._id === 'undefined' || element.order._id === null) return STATUS.UNEXPECTED_NULL;
+    return STATUS.SUCCESS;
   }
 
   appendElement(element) {
+    const status = this.isLinkedListElement(element);
+    if (status !== STATUS.SUCCESS) return status;
+
     // check if this element already exists
-    if (this.mapOfOrderIdAndOrderLinkedListElement[element.order._id]) return false;
+    if (this.mapOfOrderIdAndOrderLinkedListElement[element.order._id]) return STATUS.ORDER_ID_EXISTED;
 
     // link this new element to the end of linked list
     // set next order to the current last element in list
     const lastOrderElement = this.tail;
+    if (!lastOrderElement) return STATUS.NOT_FOUND_TAIL;
+
     element.setPrevious(lastOrderElement);
     lastOrderElement.setNext(element);
     this.tail = element;
@@ -55,29 +84,38 @@ class OrderLinkedList {
     // save this new element
     this.mapOfOrderIdAndOrderLinkedListElement[element.order._id] = element;
 
-    return true;
+    return STATUS.SUCCESS;
   }
 
   removeElement(element) {
+    const status = this.isLinkedListElement(element);
+    if (status !== STATUS.SUCCESS) return status;
+
+    if (!this.mapOfOrderIdAndOrderLinkedListElement[element.order._id]) return STATUS.NOT_FOUND_ORDER_ID;
+
     if (this.isHead(element)) {
       // this order is head -> let its next be head
-      //logger.info(`ordermap.js: removeOrder(): this is head`);
-      const nextLinkedListElement = element.next;
-      nextLinkedListElement.setPrevious(null);
-      this.head = nextLinkedListElement;
+      const nextElement = element.next;
+      if (!nextElement) return STATUS.NOT_FOUND_NEXT;
+
+      nextElement.setPrevious(null);
+      this.head = nextElement;
     }
     else if (this.isTail(element)) {
       // this order is tail -> let its previous be tail
-      //logger.info(`ordermap.js: removeOrder(): this is tail`);
-      const previousOrderLinkedListElement = element.previous;
-      previousOrderLinkedListElement.setNext(null);
-      this.tail = previousOrderLinkedListElement;
+      const previousElement = element.previous;
+      if (!previousElement) return STATUS.NOT_FOUND_PREVIOUS;
+
+      previousElement.setNext(null);
+      this.tail = previousElement;
     }
     else {
       // this order in the middle -> connect previous to next
-      //logger.info(`ordermap.js: removeOrder(): this is middle`);
       const previousElement = element.previous;
+      if (!previousElement) return STATUS.NOT_FOUND_PREVIOUS;
+
       const nextElement = element.next;
+      if (!nextElement) return STATUS.NOT_FOUND_NEXT;
 
       previousElement.setNext(nextElement);
       nextElement.setPrevious(previousElement);
@@ -85,7 +123,7 @@ class OrderLinkedList {
 
     // remove this linkedListOrderElement
     delete this.mapOfOrderIdAndOrderLinkedListElement[element.order._id];
-    return true;
+    return STATUS.SUCCESS;
   }
 
   getElementByOrderId(orderId) {
@@ -151,9 +189,11 @@ module.exports = class OrderMap {
 
     const orderLinkedList = this.mapOfPriceAndOrderLinkedList[priceLevel];
     if (orderLinkedList) {
-      if (orderLinkedList.appendElement(newLinkedListOrderElement)) return true;
-      logger.error(`ordermap.js: addOrder(): ERROR: this order._id ${order._id} already exists`);
-      return false;
+      const status = orderLinkedList.appendElement(newLinkedListOrderElement);
+      if (status !== STATUS.SUCCESS) {
+        logger.error(`ordermap.js: addOrder(): ERROR: ${status}`);
+        return false;
+      }
     }
     else {
       // new OrderLinkedList
@@ -228,7 +268,11 @@ module.exports = class OrderMap {
       this.priceLevelSet.delete(orderToRemove.limitPrice);
     }
     else {
-      orderLinkedList.removeElement(orderLinkedListElementToRemove);
+      const status = orderLinkedList.removeElement(orderLinkedListElementToRemove);
+      if (status !== STATUS.SUCCESS) {
+        logger.error(`ordermap.js: removeOrder(): ERROR: ${status}`);
+        return false;
+      }
     }
 
     return true;
@@ -249,7 +293,25 @@ module.exports = class OrderMap {
       return false; // not found
     }
 
+    // update new quantity
     orderLinkedListElement.order.quantity = order.quantity;
+
+    // check remaining quantity: if remaining quantity = 0 -> remove this order on book
+    if (orderLinkedListElement.order.quantity === orderLinkedListElement.order.filledQuantity) {
+      if (orderLinkedList.hasOnlyOneElement()) {
+        // only this order at this price level -> delete this price level
+        this.priceLevelSet.delete(orderLinkedListElement.order.limitPrice);
+        delete this.mapOfPriceAndOrderLinkedList[orderLinkedListElement.order.limitPrice];
+      }
+      else {
+        const status = orderLinkedList.removeElement(orderLinkedListElement);
+        if (status !== STATUS.SUCCESS) {
+          logger.error(`ordermap.js: removeOrder(): ERROR: ${status}`);
+          return false;
+        }
+      }
+    }
+
     return true;
   }
 };

@@ -15,7 +15,7 @@ exports.updateCurrent = async (ctx, next) => {
   ctx.assert(!result.errors, 400);
 
   const { value: userData } = result;
-  const user = await userService.updateInfo(ctx.state.user._id, userData);
+  const user = await userService.updateInfo(ctx.state.user._id.toString(), userData);
 
   ctx.body = _.omit(user, userOmitFelds);
 };

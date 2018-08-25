@@ -1,10 +1,10 @@
-const db = require('db');
+const db = require('../../db');
 const schema = require('./user.schema');
 
-const constants = require('app.constants');
+const constants = require('../../app.constants');
 
 const service = db.createService(constants.DATABASE_DOCUMENTS.USERS, schema);
-const securityUtil = require('security.util');
+const securityUtil = require('../../security.util');
 
 // enable id auto casting
 service._collection.options.castIds = true;
@@ -31,6 +31,7 @@ service.updateInfo = (_id, { email, name }) => {
     },
     (doc) => {
       const userDoc = doc;
+      userDoc._id = _id;
       userDoc.email = email;
       userDoc.name = name;
     },

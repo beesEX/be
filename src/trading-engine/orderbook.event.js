@@ -2,8 +2,9 @@ const logger = require('../logger');
 
 const {OrderEvent} = require('../resources/order/order.models');
 
-const EVENT_GET_AGGREGATED_STATE = 'GET_AGGREGATED_STATE';
-const EVENT_GET_ORDERBOOK_STATE = 'GET_ORDERBOOK_STATE';
+const ORDER_BOOK_READY_EVENT = 'ORDER_BOOK_READY_EVENT';
+const GET_AGGREGATED_STATE_EVENT = 'GET_AGGREGATED_STATE';
+const GET_ORDERBOOK_STATE_EVENT = 'GET_ORDERBOOK_STATE';
 const ORDER_BOOK_EVENT = 'ORDER_BOOK_EVENT';
 
 const REASON_OBJECT_TYPE = {
@@ -14,8 +15,9 @@ const REASON_OBJECT_TYPE = {
 
 module.exports = {
 
-  EVENT_GET_AGGREGATED_STATE,
-  EVENT_GET_ORDERBOOK_STATE,
+  ORDER_BOOK_READY_EVENT,
+  GET_AGGREGATED_STATE_EVENT,
+  GET_ORDERBOOK_STATE_EVENT,
   ORDER_BOOK_EVENT,
 
   REASON_OBJECT_TYPE,
@@ -23,6 +25,7 @@ module.exports = {
   createNewMatchObject: (order, tradedQuantity, isFilledCompletely) => {
     return {
       orderId: order._id,
+      userId: order.userId,
       price: order.limitPrice,
       quantity: order.quantity,
       tradedQuantity,
@@ -37,7 +40,10 @@ module.exports = {
       return {
         type: REASON_OBJECT_TYPE.PLACED,
         orderId: orderEvent._order._id,
+        userId: orderEvent._order.userId,
         side: orderEvent._order.side,
+        currency: orderEvent._order.currency,
+        baseCurrency: orderEvent._order.baseCurrency,
         price: (orderEvent._type === OrderEvent.MARKET_PLACED_EVENT) ? null : orderEvent._order.limitPrice,
         quantity: orderEvent._order.quantity
       };
@@ -46,7 +52,10 @@ module.exports = {
       return {
         type: REASON_OBJECT_TYPE.CANCELED,
         orderId: orderEvent._order._id,
+        userId: orderEvent._order.userId,
         side: orderEvent._order.side,
+        currency: orderEvent._order.currency,
+        baseCurrency: orderEvent._order.baseCurrency,
         price: orderEvent._order.limitPrice,
         quantity: orderEvent._order.quantity,
         filledQuantity: orderEvent._order.filledQuantity
@@ -56,7 +65,10 @@ module.exports = {
       return {
         type: REASON_OBJECT_TYPE.UPDATED,
         orderId: orderEvent._order._id,
+        userId: orderEvent._order.userId,
         side: orderEvent._order.side,
+        currency: orderEvent._order.currency,
+        baseCurrency: orderEvent._order.baseCurrency,
         price: orderEvent._order.limitPrice,
         oldPrice: orderEvent.oldPrice,
         quantity: orderEvent._order.quantity,

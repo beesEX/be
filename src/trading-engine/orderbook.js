@@ -1,10 +1,11 @@
 const OrderBookSide = require('./orderbookside');
 const OrderBookEvent = require('./orderbook.event');
 
+const config = require('../config');
+
 const {Order, OrderEvent, OrderPlacedEvent, MarketOrderPlacedEvent, OrderQuantityUpdatedEvent, OrderLimitUpdatedEvent, OrderCanceledEvent} = require('../resources/order/order.models');
 
-// using later
-const config = require('../config');
+const TradeExecutionService = require('../settlement/tradeexecution.service');
 
 const logger = require('../logger');
 const requestNamespace = require('../config/requestNamespace');
@@ -21,7 +22,7 @@ class OrderBook{
     this.asks = askSide; // BookSide containing SELL orders
     this.bids = bidSide; // BookSide containing BUY orders
 
-    // TODO: load all orders in DB of this symbol and save in to order book side
+    // TODO: load all orders in DB of this symbol and save into order book side
   }
 
   /**
@@ -35,14 +36,18 @@ class OrderBook{
     const orderSymbol = `${event._order.currency}_${event._order.baseCurrency}`;
     if(orderSymbol !== this.symbol) {
       logger.warn(`orderbook.js processOrderEvent(): currency pair of order event ${orderSymbol} not matches that of order book ${this.symbol}`);
-      return;
+      return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
     }
-    if(event._type === OrderEvent.LIMIT_PLACED_EVENT) this.placeLimit(new OrderPlacedEvent(order));
-    else if(event._type === OrderEvent.MARKET_PLACED_EVENT) this.placeMarket(new MarketOrderPlacedEvent(order));
-    else if(event._type === OrderEvent.LIMIT_UPDATED_EVENT) this.updateLimit(new OrderLimitUpdatedEvent(order, event.oldQuantity, event.oldPrice));
-    else if(event._type === OrderEvent.QUANTITY_UPDATED_EVENT) this.updateQuantity(new OrderQuantityUpdatedEvent(order, event.oldQuantity, event.oldPrice));
-    else if(event._type === OrderEvent.CANCELED_EVENT) this.cancel(new OrderCanceledEvent(order));
+
+    let orderbookEvent = null;
+    if (event._type === OrderEvent.LIMIT_PLACED_EVENT) orderbookEvent = this.placeLimit(new OrderPlacedEvent(order));
+    else if (event._type === OrderEvent.MARKET_PLACED_EVENT) orderbookEvent = this.placeMarket(new MarketOrderPlacedEvent(order));
+    else if (event._type === OrderEvent.LIMIT_UPDATED_EVENT) orderbookEvent = this.updateLimit(new OrderLimitUpdatedEvent(order, event.oldQuantity, event.oldPrice));
+    else if (event._type === OrderEvent.QUANTITY_UPDATED_EVENT) orderbookEvent = this.updateQuantity(new OrderQuantityUpdatedEvent(order, event.oldQuantity, event.oldPrice));
+    else if (event._type === OrderEvent.CANCELED_EVENT) orderbookEvent = this.cancel(new OrderCanceledEvent(order));
     else logger.warn(`orderbook.js processOrderEvent(): unknown event type ${event._type} will be rejected`);
+    if (!orderbookEvent) return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
+    return orderbookEvent;
   }
 
   /**
@@ -67,17 +72,16 @@ class OrderBook{
     // if the order could not be filled completely, put the remaining qty on book
     if(order.remainingQuantity() > ZERO) {
       logger.info(`orderbook.js placeLimit(): ${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
-
-      if(order.side === 'BUY') {
-        this.bids.putOrderOnBook(order);
+      
+      if (order.side === 'BUY') {
+        if (!this.bids.putOrderOnBook(order)) return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
       }
-      else{ // SELL
-        this.asks.putOrderOnBook(order);
+      else { // SELL
+        if (!this.asks.putOrderOnBook(order)) return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
       }
     }
 
-    // send order book event back to parent process
-    process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO));
+    return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO);
   }
 
   /**
@@ -90,7 +94,7 @@ class OrderBook{
 
     if(order.type !== 'MARKET') {
       logger.info(`orderbook.js placeMarket(): received order ${order} is not a MARKET order and will be rejected`);
-      return;
+      return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
     }
     logger.info(`orderbook.js placeMarket(): processing new MARKET order placed: ${JSON.stringify(order)}`);
 
@@ -106,9 +110,7 @@ class OrderBook{
     if(order.remainingQuantity() > ZERO) {
       logger.info(`orderbook.js placeMarket(): ${order.remainingQuantity()} remaining units of MARKET order will be rejected`);
     }
-
-    // send order book event back to parent process
-    process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO));
+    return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO);
   }
 
   /**
@@ -121,20 +123,18 @@ class OrderBook{
 
     logger.info(`orderbook.js updateQuantity(): processing updated LIMIT order : ${JSON.stringify(order)}`);
 
-    let isSuccessfullyUpdated;
+    let isSuccessfullyUpdated = false;
 
     if(order.side === 'BUY') {
       isSuccessfullyUpdated = this.bids.updateQuantity(order);
-      if(isSuccessfullyUpdated && order.remainingQuantity() <= ZERO) this.bids.removeOrder(order);
     }
     else{ // SELL
       isSuccessfullyUpdated = this.asks.updateQuantity(order);
-      if(isSuccessfullyUpdated && order.remainingQuantity() <= ZERO) this.asks.removeOrder(order);
     }
 
-    // send order book event back to parent process
-    if(isSuccessfullyUpdated) process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO));
-    else logger.error(`orderbook.js updateQuantity(): failed to update event ${JSON.stringify(orderUpdatedEvent)}`);
+    if (isSuccessfullyUpdated) return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO); // [Tung]: filledQuantity of input order is not updated while processing, so it may differs from the order on book, so checking remainingQuantity like that is not precise to race condition.
+    logger.error(`orderbook.js updateQuantity(): failed to update event ${JSON.stringify(orderUpdatedEvent)}`);
+    return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
   }
 
   /**
@@ -147,15 +147,20 @@ class OrderBook{
 
     logger.info(`orderbook.js updateLimit(): processing updated LIMIT order with limit price change: ${JSON.stringify(order)}`);
 
-    const oldOrder = new Order(JSON.parse(JSON.stringify(order)));
+    const oldOrder = new Order(order);
     oldOrder.limitPrice = orderUpdatedEvent.oldPrice;
 
     // remove existing order with old price from book
-    if(order.side === 'BUY') {
-      this.bids.removeOrder(oldOrder);
+    let isRemoved = false;
+    if (order.side === 'BUY') {
+      isRemoved = this.bids.removeOrder(oldOrder);
     }
-    else{ // SELL
-      this.asks.removeOrder(oldOrder);
+    else { // SELL
+      isRemoved = this.asks.removeOrder(oldOrder);
+    }
+    if (!isRemoved) {
+      logger.error('orderbook.js updateLimit(): ERROR: unable to remove order before updating limit price');
+      return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
     }
 
     let matchingEventList = [];
@@ -171,16 +176,21 @@ class OrderBook{
     if(order.remainingQuantity() > ZERO) {
       logger.info(`orderbook.js updateLimit(): ${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
 
-      if(order.side === 'BUY') {
-        this.bids.putOrderOnBook(order);
+      let isPut = false;
+      if (order.side === 'BUY') {
+        isPut = this.bids.putOrderOnBook(order);
       }
-      else{ // SELL
-        this.asks.putOrderOnBook(order);
+      else { // SELL
+        isPut = this.asks.putOrderOnBook(order);
+      }
+      if (!isPut) {
+        logger.error('orderbook.js updateLimit(): ERROR: unable to put on order book side');
+        return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
       }
     }
 
-    // send order book event back to parent process
-    process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO));
+    return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO);
+
   }
 
   /**
@@ -193,15 +203,18 @@ class OrderBook{
 
     logger.info(`orderbook.js cancel(): processing LIMIT order canceled: ${JSON.stringify(order)}`);
 
-    if(order.side === 'BUY') {
-      this.bids.removeOrder(order);
+    let isCanceled = false;
+    if (order.side === 'BUY') {
+      isCanceled = this.bids.removeOrder(order);
     }
-    else{ // SELL
-      this.asks.removeOrder(order);
+    else { // SELL
+      isCanceled = this.asks.removeOrder(order);
     }
 
-    // send order book event back to parent process
-    process.send(OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO));
+    if (isCanceled) return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO);
+
+    logger.error('orderbook.js cancel(): unable to cancel order');
+    return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
   }
 
   /**
@@ -236,42 +249,52 @@ class OrderBook{
 const askSide = new OrderBookSide('ASK');
 const bidSide = new OrderBookSide('BID');
 const orderbook = new OrderBook('BTC_USDT', askSide, bidSide);
-logger.info(`orderbook.js: ${orderbook.symbol} orderbook is ready to accept events`);
+
+const readyEvent = {
+  type: OrderBookEvent.ORDER_BOOK_READY_EVENT,
+  symbol: 'BTC_USDT'
+};
+process.send(readyEvent);
 
 // Order Book event handling logic for events received from parent process, sent by beesV8.js
-
 const handleMessage = (event) => {
   requestNamespace.set('requestId', event.requestId);
   switch(event.type){
-    case OrderBookEvent.EVENT_GET_AGGREGATED_STATE:{
+    case OrderBookEvent.GET_AGGREGATED_STATE_EVENT:{
       logger.debug(`orderbook.js: received a message from parent process of type ${OrderBookEvent.EVENT_GET_AGGREGATED_STATE}`);
 
       const state = orderbook.getAggregatedState();
       process.send({
         id: event.id,
-        type: OrderBookEvent.EVENT_GET_AGGREGATED_STATE,
+        type: OrderBookEvent.GET_AGGREGATED_STATE_EVENT,
         state
       });
 
       break;
     }
-    case OrderBookEvent.EVENT_GET_ORDERBOOK_STATE:{
-      logger.debug(`orderbook.js: received a message from parent process of type ${OrderBookEvent.EVENT_GET_ORDERBOOK_STATE}`);
+    case OrderBookEvent.GET_ORDERBOOK_STATE_EVENT:{
+      logger.debug(`orderbook.js: received a message from parent process of type ${OrderBookEvent.GET_ORDERBOOK_STATE_EVENT}`);
 
       const state = orderbook.getOrderBookState();
       process.send({
         id: event.id,
-        type: OrderBookEvent.EVENT_GET_ORDERBOOK_STATE,
+        type: OrderBookEvent.GET_ORDERBOOK_STATE_EVENT,
         state
       });
 
       break;
     }
-    default:{
-      orderbook.processOrderEvent(event);
+    default: {
+      const orderbookEvent = orderbook.processOrderEvent(event);
+
+      // send order book event to settlement module
+      if (orderbookEvent && orderbookEvent.reason) TradeExecutionService.executeTrades(orderbookEvent);
+
+      // send order book event back to parent process
+      orderbookEvent.id = event.id;
+      process.send(orderbookEvent);
     }
   }
-
 };
 process.on('message', (event) => {
 
