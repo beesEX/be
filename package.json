@@ -36,8 +36,7 @@
     "lodash": "4.17.10",
     "nodemon": "1.17.3",
     "uuid": "^3.3.2",
-    "zeromq": "^4.6.0",
-    "cls-hooked": "^4.2.2"
+    "zeromq": "^4.6.0"
   },
   "devDependencies": {
     "@paralect/eslint-config": "0.1.5",
