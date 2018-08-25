@@ -1,4 +1,4 @@
-const {logger} = global;
+const logger = require('../logger');
 
 const {ORDER_BOOK_EVENT} = require('../trading-engine/orderbook.event');
 

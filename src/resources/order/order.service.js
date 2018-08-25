@@ -1,4 +1,4 @@
-const {logger} = global;
+const logger = require('../../logger');
 
 const orderSchema = require('./order.schema');
 const constants = require('../../app.constants');

@@ -1,4 +1,4 @@
-const {logger} = global;
+const logger = require('../logger');
 
 const { schema, TRANSACTION_TYPE } = require('./transaction.schema');
 const constants = require('../app.constants');
