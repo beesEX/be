@@ -241,16 +241,18 @@ class TXService {
   }
 
   /**
-   * Releases the remaining locked fund amount of an order and locks new amount immediately
-   * This function is intended to be called when order gets updated.
+   * Checks whether remaining locked fund amount of an order can cover the new required amount, if not, locks
+   * the additional amount.
    *
-   * @param userId
-   * @param currency
-   * @param amount
-   * @param orderId
-   * @returns {Promise<{boolean}>} Promise of boolean value, true if new amount of fund was locked successful, otherwise false
+   * This function is intended to be called before order gets updated as precondition
+   *
+   * @param {string} userId
+   * @param {string} currency
+   * @param {number} amount: fund amount required by the to be updated order
+   * @param orderId: id of order which should be updated
+   * @returns {Promise<{boolean}>} Promise of boolean value, true if fund locking check was successful
    */
-  async releaseLockedFundAndLockNewAmount(userId, currency, amount, orderId) {
+  async checkAndLockAdditionalFund(userId, currency, amount, orderId) {
     const fundLockQueryPromise = service.find({ userId, currency, type: TRANSACTION_TYPE.LOCKED, orderId });
     const fundReleaseQueryPromise = service.find({ userId, currency, type: TRANSACTION_TYPE.RELEASED, orderId });
 
@@ -271,19 +273,61 @@ class TXService {
       throw new Error(`system has released more fund than locked amount for orderId=${orderId}!!!`);
     }
 
-    const createdAt = new Date();
-    const releaseRemainingTX = { currency, type: TRANSACTION_TYPE.RELEASED, amount: remainingLockedAmount, createdAt, userId, orderId };
-    const fundLockTX = { currency, type: TRANSACTION_TYPE.LOCKED, amount, createdAt, userId, orderId };
-    const txArray = await service.create([releaseRemainingTX, fundLockTX]);
+    if (remainingLockedAmount >= 0 && amount > remainingLockedAmount) {
+      const additionalAmount = amount - remainingLockedAmount;
+      const available = await this.getAvailableBalance(userId, currency);
+      if (available < additionalAmount) {
+        throw new Error('not enough fund covering needed to lock the additional required amount');
+      }
 
-    if (txArray && txArray.length === 2) {
-      this._updateBalances(txArray[0]);
-      this._updateBalances(txArray[1]);
-      logger.info(`transaction.service.js: releaseLockedFundAndLockNewAmount(): release remaining locked fund tx = ${JSON.stringify(txArray[0])}, lock new fund amount tx = ${JSON.stringify(txArray[1])}`);
-      return true;
+      const tx = { currency, type: TRANSACTION_TYPE.LOCKED, amount: additionalAmount, createdAt: new Date(), userId, orderId };
+      const fundLockTX = service.create(tx);
+      this._updateBalances(fundLockTX);
+      logger.info(`transaction.service.js: checkAndLockAdditionalFund(): locks additional fund amount required by order update tx=${JSON.stringify(fundLockTX)}`);
     }
 
-    return false;
+    logger.info('transaction.service.js: checkAndLockAdditionalFund(): remaining locked fund covers the new required amount, no need to lock additional fund');
+    return true;
+  }
+
+
+  /**
+   * Releases over locked amount of the remaining locked fund of the order, if any.
+   *
+   * @param {string} userId
+   * @param {string} currency
+   * @param {number} amount: the actual required fund amount of the order
+   * @param {string} orderId
+   * @returns {Promise<{undefined}>} Promise of nothing
+   */
+  async releaseOverlockedFund(userId, currency, amount, orderId) {
+    const fundLockQueryPromise = service.find({ userId, currency, type: TRANSACTION_TYPE.LOCKED, orderId });
+    const fundReleaseQueryPromise = service.find({ userId, currency, type: TRANSACTION_TYPE.RELEASED, orderId });
+
+    const [fundLockQuery, fundReleaseQuery] = await Promise.all([fundLockQueryPromise, fundReleaseQueryPromise]);
+
+    let totalLockedAmount = 0;
+    for (let i = 0; i < fundLockQuery.results.length; i += 1) {
+      totalLockedAmount += fundLockQuery.results[i].amount;
+    }
+
+    let totalReleasedAmount = 0;
+    for (let i = 0; i < fundReleaseQuery.results.length; i += 1) {
+      totalReleasedAmount += fundReleaseQuery.results[i].amount;
+    }
+
+    const remainingLockedAmount = totalLockedAmount - totalReleasedAmount;
+    if (remainingLockedAmount < 0) {
+      throw new Error(`system has released more fund than locked amount for orderId=${orderId}!!!`);
+    }
+
+    if (remainingLockedAmount > amount) {
+      const overlockedAmount = remainingLockedAmount - amount;
+      const tx = { currency, type: TRANSACTION_TYPE.RELEASED, amount: overlockedAmount, createdAt: new Date(), userId, orderId };
+      const fundReleasedTX = await service.create(tx);
+      this._updateBalances(fundReleasedTX);
+      logger.info(`transaction.service.js: releaseOverlockedFund(): release overlocked fund tx = ${JSON.stringify(fundReleasedTX)}`);
+    }
   }
 
   /**

@@ -47,7 +47,7 @@ module.exports = {
 
     newOrderObject.status = orderSchema.ORDER_STATUS.PLACED;
     const createdOrder = await service.create(newOrderObject);
-    logger.info('order.service.js: placedOrder(): createdOrder =', JSON.stringify(createdOrder, null, 2));
+    logger.info(`order.service.js: placedOrder(): createdOrder = ${JSON.stringify(createdOrder, null, 2)}`);
 
     const orderPlacedEvent = new OrderPlacedEvent(new Order(createdOrder));
     beesV8.processOrderEvent(orderPlacedEvent);
@@ -90,18 +90,18 @@ module.exports = {
     logger.info(`order.service.js: updateOrderByUser(): oldQuantity = ${oldQuantity} and newQuantity = ${toBeUpdatedOrder.quantity}`);
     logger.info(`order.service.js: updateOrderByUser(): oldPrice = ${oldPrice} and newPrice = ${toBeUpdatedOrder.limitPrice}`);
 
-    // locking the new required fund amount as precondition of order update
-    let fundLocked = false;
+    // precondition of order update: checks and locks additional fund amount if the new required fund amount is greater than the current one
+    let fundChecked = false;
     if (toBeUpdatedOrder.side === 'BUY') {
       const newRequiredAmount = (toBeUpdatedOrder.quantity - toBeUpdatedOrder.filledQuantity) * toBeUpdatedOrder.limitPrice;
-      fundLocked = await txService.releaseLockedFundAndLockNewAmount(userId, toBeUpdatedOrder.baseCurrency, newRequiredAmount, toBeUpdatedOrder._id.toString());
+      fundChecked = await txService.checkAndLockAdditionalFund(userId, toBeUpdatedOrder.baseCurrency, newRequiredAmount, toBeUpdatedOrder._id.toString());
     } else { // toBeUpdatedOrder.side === 'SELL'
       const newRequiredAmount = toBeUpdatedOrder.quantity - toBeUpdatedOrder.filledQuantity;
-      fundLocked = await txService.releaseLockedFundAndLockNewAmount(userId, toBeUpdatedOrder.currency, newRequiredAmount, toBeUpdatedOrder._id.toString());
+      fundChecked = await txService.checkAndLockAdditionalFund(userId, toBeUpdatedOrder.currency, newRequiredAmount, toBeUpdatedOrder._id.toString());
     }
-    if (!fundLocked) {
-      logger.error('order.service.js: updateOrderByUser(): failed to update order; new required fund amount could not be locked');
-      throw new Error('new required fund amount could not be locked prior to update order');
+    if (!fundChecked) {
+      logger.error('order.service.js: updateOrderByUser(): failed to update order; additional fund amount could not be locked');
+      throw new Error('additional fund amount could not be locked prior to update order');
     }
 
     let orderbookEvent = null;
@@ -117,6 +117,21 @@ module.exports = {
     logger.info(`order.service.js: updateOrderByUser(): received ${JSON.stringify(orderbookEvent)} from beesV8`);
 
     if (!orderbookEvent || !orderbookEvent.reason) {
+      // releases over locked fund amount if any before throwing error due to failure of update action in trading engine
+      const orderQuery = await service.find({
+        userId,
+        _id: orderObject._id,
+      });
+      const [updateFailedOrder] = orderQuery.results;
+
+      if (updateFailedOrder.side === 'BUY') {
+        const requiredAmount = (updateFailedOrder.quantity - updateFailedOrder.filledQuantity) * updateFailedOrder.limitPrice;
+        txService.releaseOverlockedFund(userId, updateFailedOrder.baseCurrency, requiredAmount, updateFailedOrder._id.toString());
+      } else { // updateFailedOrder.side === 'SELL'
+        const requiredAmount = updateFailedOrder.quantity - updateFailedOrder.filledQuantity;
+        txService.releaseOverlockedFund(userId, updateFailedOrder.currency, requiredAmount, updateFailedOrder._id.toString());
+      }
+
       logger.info('order.service.js: updateOrderByUser(): failed to update order in order book');
       throw new Error('Failed to update order in order book');
     }
@@ -131,11 +146,20 @@ module.exports = {
         doc.quantity = orderbookEvent.reason.quantity;
         if (doc.filledQuantity === orderbookEvent.reason.quantity) doc.status = orderSchema.ORDER_STATUS.FILLED;
         doc.lastUpdatedAt = new Date();
+
+        // releases over locked fund amount if any before updating the order record in DB
+        if (doc.side === 'BUY') {
+          const requiredAmount = (doc.quantity - doc.filledQuantity) * doc.limitPrice;
+          txService.releaseOverlockedFund(userId, doc.baseCurrency, requiredAmount, doc._id.toString());
+        } else { // doc.side === 'SELL'
+          const requiredAmount = doc.quantity - doc.filledQuantity;
+          txService.releaseOverlockedFund(userId, doc.currency, requiredAmount, doc._id.toString());
+        }
       }
     });
 
     if (updatedOrder) {
-      logger.info('order.service.js: updateOrderByUser(): order update was successful; updatedOrder =', JSON.stringify(updatedOrder, null, 2));
+      logger.info(`order.service.js: updateOrderByUser(): order update was successful; updatedOrder = ${JSON.stringify(updatedOrder, null, 2)}`);
       return updatedOrder;
     }
 
@@ -194,7 +218,7 @@ module.exports = {
         txService.releaseLockedFund(userId, canceledOrder.currency, canceledOrder._id.toString());
       }
 
-      logger.info('order.service.js: cancelOrder(): canceledOrder =', JSON.stringify(canceledOrder, null, 2));
+      logger.info(`order.service.js: cancelOrder(): canceledOrder = ${JSON.stringify(canceledOrder, null, 2)}`);
       return true;
     }
 

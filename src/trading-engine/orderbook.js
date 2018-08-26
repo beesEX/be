@@ -145,6 +145,8 @@ class OrderBook {
 
     logger.info(`orderbook.js updateLimit(): processing updated LIMIT order with limit price change: ${JSON.stringify(order)}`);
 
+    // [Tung]: check: fillQuantity of orderUpdatedEvent and order on book should be the same before processing can proceed! if not, abort the processing by returning empty order book event
+    // if no check is performed as now, some part of the quantity may be put on book and matched DOUBLE due to race condition
     const oldOrder = new Order(order);
     oldOrder.limitPrice = orderUpdatedEvent.oldPrice;
 
