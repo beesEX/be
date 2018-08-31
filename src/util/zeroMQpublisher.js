@@ -9,7 +9,7 @@ let socket = zeroMQ.socket('pub');
 
 const config = require('../config/index');
 
-const {logger} = global;
+const logger = require('../logger');
 
 
 function open() {
