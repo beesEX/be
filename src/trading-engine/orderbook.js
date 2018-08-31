@@ -1,5 +1,6 @@
 const OrderBookSide = require('./orderbookside');
 const OrderBookEvent = require('./orderbook.event');
+const OrderService = require('../resources/order/order.service');
 
 const {Order, OrderEvent, OrderPlacedEvent, MarketOrderPlacedEvent, OrderQuantityUpdatedEvent, OrderLimitUpdatedEvent, OrderCanceledEvent} = require('../resources/order/order.models');
 
@@ -20,7 +21,22 @@ class OrderBook {
     this.asks = askSide; // BookSide containing SELL orders
     this.bids = bidSide; // BookSide containing BUY orders
 
-    // TODO: load all orders in DB of this symbol and save into order book side
+    const readyEvent = {
+      type: OrderBookEvent.ORDER_BOOK_READY_EVENT,
+      symbol: this.symbol,
+    };
+
+    // load all active orders for this symbol in DB
+    logger.info(`orderbook.js constructor(): initiating order book of symbol=${JSON.stringify(this.symbol)} ...`);
+    OrderService.getActiveOrdersOfSymbol(this.symbol).then((activeOrderLists) => {
+      if (activeOrderLists) {
+        for (let i = 0; i < activeOrderLists.length; i += 1) {
+          logger.info(`orderbook.js constructor(): place order=${JSON.stringify(activeOrderLists[i])}`);
+          this.placeLimit(new OrderPlacedEvent(new Order(activeOrderLists[i])));
+        }
+      }
+      process.send(readyEvent);
+    });
   }
 
   /**
@@ -249,12 +265,6 @@ class OrderBook {
 const askSide = new OrderBookSide('ASK');
 const bidSide = new OrderBookSide('BID');
 const orderbook = new OrderBook('BTC_USDT', askSide, bidSide);
-
-const readyEvent = {
-  type: OrderBookEvent.ORDER_BOOK_READY_EVENT,
-  symbol: 'BTC_USDT'
-};
-process.send(readyEvent);
 
 // Order Book event handling logic for events received from parent process, sent by beesV8.js
 const handleMessage = (event) => {

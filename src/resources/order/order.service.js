@@ -26,6 +26,14 @@ module.exports = {
    */
 
   placeOrder: async (newOrderObject) => {
+    logger.info(`order.service.js: placeOrder(): received order object ${JSON.stringify(newOrderObject)}`);
+
+    const orderSymbol = `${newOrderObject.currency}_${newOrderObject.baseCurrency}`;
+    if (!beesV8.isOrderBookRead(orderSymbol)) {
+      logger.error(`order.service.js placeOrder(): ERROR: the order book of symbol=${orderSymbol} is not ready`);
+      throw new Error('order book is not ready');
+    }
+
     let fundCheckSuccessful = false;
     if (newOrderObject.type === 'LIMIT') {
       const orderId = idGenerator.generate();
@@ -46,6 +54,7 @@ module.exports = {
     }
 
     newOrderObject.status = orderSchema.ORDER_STATUS.PLACED;
+    newOrderObject.orderbookTS = new Date().getTime();
     const createdOrder = await service.create(newOrderObject);
     logger.info(`order.service.js: placedOrder(): createdOrder = ${JSON.stringify(createdOrder, null, 2)}`);
 
@@ -142,6 +151,7 @@ module.exports = {
       status: {$in: ON_BOOK_STATUS}
     }, (doc) => {
       if (orderbookEvent.reason.quantity >= doc.filledQuantity) {
+        if (doc.limitPrice !== orderbookEvent.reason.price) doc.orderbookTS = new Date().getTime();
         doc.limitPrice = orderbookEvent.reason.price;
         doc.quantity = orderbookEvent.reason.quantity;
         if (doc.filledQuantity === orderbookEvent.reason.quantity) doc.status = orderSchema.ORDER_STATUS.FILLED;
@@ -336,5 +346,18 @@ module.exports = {
     if (!updatedReasonOrder) logger.error('order.service.js: updateOrdersByMatch(): ERROR: failed to update reason object');
     if (!updatedMatchOrder) logger.error('order.service.js: updateOrdersByMatch(): ERROR: failed to update match object');
     return false;
+  },
+
+  getActiveOrdersOfSymbol: async (symbol) => {
+    const currency = symbol.split('_')[0];
+    const baseCurrency = symbol.split('_')[1];
+
+    const activeOrderQuery = await service.find({
+      currency,
+      baseCurrency,
+      status: {$in: ON_BOOK_STATUS}
+    },{ sort : {orderbookTS : 1}});
+
+    return activeOrderQuery && activeOrderQuery.results;
   },
 };
