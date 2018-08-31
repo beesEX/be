@@ -20,6 +20,7 @@ exports.orderPlaceHandler = async (ctx) => {
     status: orderSchema.ORDER_STATUS.PLACED,
     createdAt: new Date(),
     lastUpdatedAt: new Date(),
+    orderbookTS: new Date().getTime(),
     userId: ctx.state.user._id.toString(),
   };
 
