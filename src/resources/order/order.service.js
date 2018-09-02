@@ -80,16 +80,26 @@ module.exports = {
       status: {$in: ON_BOOK_STATUS}
     });
     logger.info(`order.service.js: updateOrderByUser(): get result ${JSON.stringify(orderToUpdateQuery)} from DB`);
+    // check if order exists
     if (!orderToUpdateQuery || !orderToUpdateQuery.results || orderToUpdateQuery.results.length === 0) {
       logger.error(`order.service.js: updateOrderByUser(): ERROR: not found order with id=${orderObject._id} of userId=${userId} with on book status`);
       throw new Error(`Not found order with id=${orderObject._id} of userId=${userId} with on book status`);
     }
+    // check if found order is unique
     if (orderToUpdateQuery.results.length !== 1) {
       logger.error(`order.service.js: updateOrderByUser(): ERROR: there are more than one orders found for userId=${userId} and orderId=${orderObject._id} with on book status`);
       throw new Error(`There are more than one orders found for userId=${userId} and orderId=${orderObject._id} with on book status`);
     }
 
     const toBeUpdatedOrder = new Order(orderToUpdateQuery.results[0]);
+
+    // check if order book is ready
+    const orderSymbol = `${toBeUpdatedOrder.currency}_${toBeUpdatedOrder.baseCurrency}`;
+    if (!beesV8.isOrderBookRead(orderSymbol)) {
+      logger.error(`order.service.js placeOrder(): ERROR: the order book of symbol=${orderSymbol} is not ready`);
+      throw new Error('order book is not ready');
+    }
+
     const oldQuantity = toBeUpdatedOrder.quantity;
     const oldPrice = toBeUpdatedOrder.limitPrice;
 
@@ -202,7 +212,16 @@ module.exports = {
     }
 
     // found it
-    const orderCanceledOrderEvent = new OrderCanceledEvent(new Order(orderToCancelQuery.results[0]));
+    const toBeCanceledOrder = new Order(orderToCancelQuery.results[0]);
+
+    // check if order book is ready
+    const orderSymbol = `${toBeCanceledOrder.currency}_${toBeCanceledOrder.baseCurrency}`;
+    if (!beesV8.isOrderBookRead(orderSymbol)) {
+      logger.error(`order.service.js placeOrder(): ERROR: the order book of symbol=${orderSymbol} is not ready`);
+      throw new Error('order book is not ready');
+    }
+
+    const orderCanceledOrderEvent = new OrderCanceledEvent(toBeCanceledOrder);
     const orderbookEvent = await beesV8.processOrderEvent(orderCanceledOrderEvent);
     logger.info(`order.service.js: cancelOrder(): received ${JSON.stringify(orderbookEvent)} from beesV8`);
 

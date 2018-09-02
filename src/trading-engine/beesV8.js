@@ -103,13 +103,7 @@ class BeesV8{
    */
   processOrderEvent(event) {
     logger.info('beesV8.js processOrderEvent(): received order event = ', JSON.stringify(event));
-    const orderSymbol = `${event._order.currency}_${event._order.baseCurrency}`;
-    if (!this.isOrderBookRead(orderSymbol)) {
-      logger.error(`order.service.js placeOrder(): ERROR: the order book of symbol=${orderSymbol} is not ready`);
-      throw new Error('order book is not ready');
-    }
 
-    logger.info(`beesV8.js processOrderEvent(): the order book of symbol=${orderSymbol} is ready -> send order event to child process`);
     const messageId = uuid();
     event.id = messageId;
     this.orderbookChildProcess.send(event);

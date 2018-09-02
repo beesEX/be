@@ -31,8 +31,14 @@ class OrderBook {
     OrderService.getActiveOrdersOfSymbol(this.symbol).then((activeOrderLists) => {
       if (activeOrderLists) {
         for (let i = 0; i < activeOrderLists.length; i += 1) {
-          logger.info(`orderbook.js constructor(): place order=${JSON.stringify(activeOrderLists[i])}`);
-          this.placeLimit(new OrderPlacedEvent(new Order(activeOrderLists[i])));
+          logger.info(`orderbook.js constructor(): loaded order=${JSON.stringify(activeOrderLists[i])}`);
+          const toBeLoadedOrder = new Order(activeOrderLists[i]);
+          if (toBeLoadedOrder.side === 'BUY') {
+            this.bids.putOrderOnBook(toBeLoadedOrder);
+          }
+          else { // SELL
+            this.asks.putOrderOnBook(toBeLoadedOrder);
+          }
         }
       }
       process.send(readyEvent);
