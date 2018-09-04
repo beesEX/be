@@ -15,6 +15,16 @@ const ON_BOOK_STATUS = [orderSchema.ORDER_STATUS.PLACED, orderSchema.ORDER_STATU
 const { idGenerator } = require('@paralect/node-mongo');
 const txService = require('../../wealth-management/transaction.service');
 
+function getUniqueResultFromQueryResult (orderQuery) {
+  if (!orderQuery || !orderQuery.results || orderQuery.results.length === 0) {
+    throw new Error('Order not found');
+  }
+  if (orderQuery.results.length !== 1) {
+    throw new Error('There are more than one order found');
+  }
+  return orderQuery.results[0];
+}
+
 module.exports = {
 
   /**
@@ -80,18 +90,8 @@ module.exports = {
       status: {$in: ON_BOOK_STATUS}
     });
     logger.info(`order.service.js: updateOrderByUser(): get result ${JSON.stringify(orderToUpdateQuery)} from DB`);
-    // check if order exists
-    if (!orderToUpdateQuery || !orderToUpdateQuery.results || orderToUpdateQuery.results.length === 0) {
-      logger.error(`order.service.js: updateOrderByUser(): ERROR: not found order with id=${orderObject._id} of userId=${userId} with on book status`);
-      throw new Error(`Not found order with id=${orderObject._id} of userId=${userId} with on book status`);
-    }
-    // check if found order is unique
-    if (orderToUpdateQuery.results.length !== 1) {
-      logger.error(`order.service.js: updateOrderByUser(): ERROR: there are more than one orders found for userId=${userId} and orderId=${orderObject._id} with on book status`);
-      throw new Error(`There are more than one orders found for userId=${userId} and orderId=${orderObject._id} with on book status`);
-    }
 
-    const toBeUpdatedOrder = new Order(orderToUpdateQuery.results[0]);
+    const toBeUpdatedOrder = new Order(getUniqueResultFromQueryResult(orderToUpdateQuery));
 
     // check if order book is ready
     const orderSymbol = `${toBeUpdatedOrder.currency}_${toBeUpdatedOrder.baseCurrency}`;
@@ -202,17 +202,8 @@ module.exports = {
     });
     logger.info(`order.service.js: cancelOrder(): get result ${JSON.stringify(orderToCancelQuery)} from DB`);
 
-    if (!orderToCancelQuery || !orderToCancelQuery.results || orderToCancelQuery.results.length === 0) {
-      logger.error(`order.service.js: cancelOrder(): ERROR: not found order with id=${orderId} of userId=${userId} with on book status`);
-      throw new Error(`Not found order with id=${orderId} of userId=${userId} with on book status`);
-    }
-    if (orderToCancelQuery.results.length !== 1) {
-      logger.error(`order.service.js: cancelOrder(): ERROR: there are more than one orders found for userId=${userId} and orderId=${orderId} with on book status`);
-      throw new Error(`There are more than one orders found for userId=${userId} and orderId=${orderId} with on book status`);
-    }
-
     // found it
-    const toBeCanceledOrder = new Order(orderToCancelQuery.results[0]);
+    const toBeCanceledOrder = new Order(getUniqueResultFromQueryResult(orderToCancelQuery));
 
     // check if order book is ready
     const orderSymbol = `${toBeCanceledOrder.currency}_${toBeCanceledOrder.baseCurrency}`;

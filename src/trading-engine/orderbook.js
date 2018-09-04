@@ -143,16 +143,16 @@ class OrderBook {
 
     logger.info(`orderbook.js updateQuantity(): processing updated LIMIT order : ${JSON.stringify(order)}`);
 
-    let isSuccessfullyUpdated = false;
+    let updatedOrder = null;
 
     if (order.side === 'BUY') {
-      isSuccessfullyUpdated = this.bids.updateQuantity(order);
+      updatedOrder = this.bids.updateQuantity(order);
     }
     else { // SELL
-      isSuccessfullyUpdated = this.asks.updateQuantity(order);
+      updatedOrder = this.asks.updateQuantity(order);
     }
 
-    if (isSuccessfullyUpdated) return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO); // [Tung]: filledQuantity of input order is not updated while processing, so it may differs from the order on book, so checking remainingQuantity like that is not precise to race condition.
+    if (updatedOrder) return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, updatedOrder.remainingQuantity() <= ZERO);
     logger.error(`orderbook.js updateQuantity(): failed to update event ${JSON.stringify(orderUpdatedEvent)}`);
     return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
   }
@@ -167,10 +167,23 @@ class OrderBook {
 
     logger.info(`orderbook.js updateLimit(): processing updated LIMIT order with limit price change: ${JSON.stringify(order)}`);
 
-    // [Tung]: check: fillQuantity of orderUpdatedEvent and order on book should be the same before processing can proceed! if not, abort the processing by returning empty order book event
-    // if no check is performed as now, some part of the quantity may be put on book and matched DOUBLE due to race condition
-    const oldOrder = new Order(order);
-    oldOrder.limitPrice = orderUpdatedEvent.oldPrice;
+    // check: fillQuantity of orderUpdatedEvent and order on book should be the same before processing can proceed
+    let oldOrder = null;
+    if (order.side === 'BUY') {
+      oldOrder = this.bids.getOrderByLimitPriceAndOrderId(orderUpdatedEvent.oldPrice, order._id);
+    }
+    else { // SELL
+      oldOrder = this.asks.getOrderByLimitPriceAndOrderId(orderUpdatedEvent.oldPrice, order._id);
+    }
+    logger.info(`orderbook.js updateLimit(): old Order on book = ${JSON.stringify(oldOrder)}`);
+    if (!oldOrder) {
+      logger.error('orderbook.js updateLimit(): ERROR: not found this order to update');
+      return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
+    }
+    if (oldOrder.filledQuantity !== order.filledQuantity) {
+      logger.error(`orderbook.js updateLimit(): ERROR: old filled quantity=${oldOrder.filledQuantity} != new filled quantity=${order.filledQuantity}`);
+      return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
+    }
 
     // remove existing order with old price from book
     let isRemoved = false;
