@@ -39,7 +39,7 @@ module.exports = {
     logger.info(`order.service.js: placeOrder(): received order object ${JSON.stringify(newOrderObject)}`);
 
     const orderSymbol = `${newOrderObject.currency}_${newOrderObject.baseCurrency}`;
-    if (!beesV8.isReady(orderSymbol)) {
+    if (!beesV8.isReadyFor(orderSymbol)) {
       logger.error(`order.service.js placeOrder(): ERROR: the order book of symbol=${orderSymbol} is not ready`);
       throw new Error('order book is not ready');
     }
@@ -95,7 +95,7 @@ module.exports = {
 
     // check if order book is ready
     const orderSymbol = `${toBeUpdatedOrder.currency}_${toBeUpdatedOrder.baseCurrency}`;
-    if (!beesV8.isReady(orderSymbol)) {
+    if (!beesV8.isReadyFor(orderSymbol)) {
       logger.error(`order.service.js placeOrder(): ERROR: the order book of symbol=${orderSymbol} is not ready`);
       throw new Error('order book is not ready');
     }
@@ -207,7 +207,7 @@ module.exports = {
 
     // check if order book is ready
     const orderSymbol = `${toBeCanceledOrder.currency}_${toBeCanceledOrder.baseCurrency}`;
-    if (!beesV8.isReady(orderSymbol)) {
+    if (!beesV8.isReadyFor(orderSymbol)) {
       logger.error(`order.service.js placeOrder(): ERROR: the order book of symbol=${orderSymbol} is not ready`);
       throw new Error('order book is not ready');
     }

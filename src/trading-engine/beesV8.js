@@ -91,7 +91,7 @@ class BeesV8{
     });
   }
 
-  isReady(symbol) {
+  isReadyFor(symbol) {
     return this.listOfReadyOrderbook[symbol];
   }
 
