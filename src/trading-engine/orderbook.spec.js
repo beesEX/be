@@ -31,6 +31,7 @@ describe('get the aggregated state of the order book', () => {
     return new Promise(async (resolve) => {
       await db.get(constants.DATABASE_DOCUMENTS.TRANSACTIONS).drop();
       await db.get(constants.DATABASE_DOCUMENTS.ORDERS).drop();
+      await db.get(constants.DATABASE_DOCUMENTS.TRADES).drop();
 
       // open zeroMQ
       open();
@@ -277,6 +278,7 @@ describe('test event process of trading engine', () => {
     return new Promise(async (resolve) => {
       await db.get(constants.DATABASE_DOCUMENTS.TRANSACTIONS).drop();
       await db.get(constants.DATABASE_DOCUMENTS.ORDERS).drop();
+      await db.get(constants.DATABASE_DOCUMENTS.TRADES).drop();
 
       // open zeroMQ
       open();
