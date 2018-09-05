@@ -7,7 +7,7 @@ const {
   ORDER_BOOK_EVENT
 } = require('./orderbook.event');
 
-const {logger} = global;
+const logger = require('../logger');
 const requestNamespace = require('../config/requestNamespace');
 
 //const config = require('../config');
@@ -30,6 +30,7 @@ class BeesV8{
     this.symbol = 'BTC_USDT'; // hardcode
     this.mapOfIdAndResolveFunction = {};
     this._starterCallback = undefined;
+    this.listOfReadyOrderbook = {};
   }
 
   /**
@@ -53,6 +54,7 @@ class BeesV8{
 
       if (message.type === ORDER_BOOK_READY_EVENT) {
         logger.info(`beesV8.js: start(): beesV8 trading engine for ${message.symbol} started successfully`);
+        this.listOfReadyOrderbook[message.symbol] = true;
         this._starterCallback();
       }
       else if (message.type === ORDER_BOOK_EVENT) {
@@ -89,6 +91,10 @@ class BeesV8{
     });
   }
 
+  isReadyFor(symbol) {
+    return this.listOfReadyOrderbook[symbol];
+  }
+
   /**
    * accept order events and send them to appropriate order book child process
    * which then process them. order service calls this function to send order events
@@ -96,7 +102,7 @@ class BeesV8{
    * @param {Object} event: OrderEvent object to be sent to order book child process
    */
   processOrderEvent(event) {
-    logger.info('beesV8.js processOrderEvent(): sends to order book child process order event = ', JSON.stringify(event));
+    logger.info('beesV8.js processOrderEvent(): received order event = ', JSON.stringify(event));
 
     const messageId = uuid();
     event.id = messageId;

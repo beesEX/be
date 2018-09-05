@@ -44,17 +44,21 @@ module.exports = class OrderBookSide {
     return true;
   }
 
+  getOrderByLimitPriceAndOrderId(limitPrice, orderId) {
+    return this.orderMap.getOrderByLimitPriceAndOrderId(limitPrice, orderId);
+  }
+
   /*
   update quantity of existing order on book
   */
   updateQuantity(order) {
     // check if new quantity is valid
-    const oldOrderElement = this.orderMap.getElementByOrder(order);
-    if (oldOrderElement) {
-      if (oldOrderElement.order.filledQuantity <= order.quantity) {
+    const oldOrder = this.getOrderByLimitPriceAndOrderId(order.limitPrice, order._id);
+    if (oldOrder) {
+      if (oldOrder.filledQuantity <= order.quantity) {
         return this.orderMap.updateOrderQuantity(order);
       }
-      logger.error(`orderbookside.js updateQuantity(): ERROR: order id ${order._id} has new quantity ${order.quantity} < filled quantity ${oldOrderElement.order.filledQuantity}`);
+      logger.error(`orderbookside.js updateQuantity(): ERROR: order id ${order._id} has new quantity ${order.quantity} < filled quantity ${oldOrder.filledQuantity}`);
       return null;
     }
     logger.error(`orderbookside.js updateQuantity(): ERROR: not found this order id ${order._id} at price ${order.limitPrice}`);

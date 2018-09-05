@@ -226,22 +226,22 @@ module.exports = class OrderMap {
     return null;
   }
 
-  getElementByOrder(order) {
+  getOrderByLimitPriceAndOrderId(limitPrice, orderId) {
     // get linked list of this price level
-    const orderLinkedList = this.mapOfPriceAndOrderLinkedList[order.limitPrice];
+    const orderLinkedList = this.mapOfPriceAndOrderLinkedList[limitPrice];
     if (!orderLinkedList) {
       // this order is not in this orderMap
-      logger.error(`ordermap.js: getElementByOrder(): ERROR: not found orderLinkedList for this price level ${order.limitPrice}`);
+      logger.error(`ordermap.js: getElementByOrder(): ERROR: not found orderLinkedList for this price level ${limitPrice}`);
       return null;
     }
     // get orderElement of this order
-    const orderLinkedListElement = orderLinkedList.getElementByOrderId(order._id);
+    const orderLinkedListElement = orderLinkedList.getElementByOrderId(orderId);
     if (!orderLinkedListElement) {
       // this order is not in this orderMap
-      logger.error(`ordermap.js: getElementByOrder(): ERROR: not found this order._id ${order._id}`);
+      logger.error(`ordermap.js: getElementByOrder(): ERROR: not found this order._id ${orderId}`);
       return null;
     }
-    return orderLinkedListElement;
+    return orderLinkedListElement.order;
   }
 
   removeOrder(orderToRemove) {
@@ -278,19 +278,23 @@ module.exports = class OrderMap {
     return true;
   }
 
+  /**
+   * @param order: order object containing new quantity
+   * @return: updated order object if succeed, null if failed
+   * */
   updateOrderQuantity(order) {
     // get linked list of this price level
     const orderLinkedList = this.mapOfPriceAndOrderLinkedList[order.limitPrice];
     if (!orderLinkedList) {
       logger.error(`ordermap.js: updateOrderQuantity(): ERROR: not found price level ${order.limitPrice} to update`);
-      return false;
+      return null;
     }
 
     // just update it
     const orderLinkedListElement = orderLinkedList.mapOfOrderIdAndOrderLinkedListElement[order._id];
     if (!orderLinkedListElement) {
       logger.error(`ordermap.js: updateOrderQuantity(): ERROR: not found order ID ${order._id} to update`);
-      return false; // not found
+      return null; // not found
     }
 
     // update new quantity
@@ -307,12 +311,12 @@ module.exports = class OrderMap {
         const status = orderLinkedList.removeElement(orderLinkedListElement);
         if (status !== STATUS.SUCCESS) {
           logger.error(`ordermap.js: removeOrder(): ERROR: ${status}`);
-          return false;
+          return null;
         }
       }
     }
 
-    return true;
+    return orderLinkedListElement.order;
   }
 };
 

@@ -15,6 +15,16 @@ const ON_BOOK_STATUS = [orderSchema.ORDER_STATUS.PLACED, orderSchema.ORDER_STATU
 const { idGenerator } = require('@paralect/node-mongo');
 const txService = require('../../wealth-management/transaction.service');
 
+function getUniqueResultFromQueryResult (orderQuery) {
+  if (!orderQuery || !orderQuery.results || orderQuery.results.length === 0) {
+    throw new Error('Order not found');
+  }
+  if (orderQuery.results.length !== 1) {
+    throw new Error('There are more than one order found');
+  }
+  return orderQuery.results[0];
+}
+
 module.exports = {
 
   /**
@@ -26,6 +36,14 @@ module.exports = {
    */
 
   placeOrder: async (newOrderObject) => {
+    logger.info(`order.service.js: placeOrder(): received order object ${JSON.stringify(newOrderObject)}`);
+
+    const orderSymbol = `${newOrderObject.currency}_${newOrderObject.baseCurrency}`;
+    if (!beesV8.isReadyFor(orderSymbol)) {
+      logger.error(`order.service.js placeOrder(): ERROR: the order book of symbol=${orderSymbol} is not ready`);
+      throw new Error('order book is not ready');
+    }
+
     let fundCheckSuccessful = false;
     if (newOrderObject.type === 'LIMIT') {
       const orderId = idGenerator.generate();
@@ -46,6 +64,7 @@ module.exports = {
     }
 
     newOrderObject.status = orderSchema.ORDER_STATUS.PLACED;
+    newOrderObject.orderbookTS = new Date().getTime();
     const createdOrder = await service.create(newOrderObject);
     logger.info(`order.service.js: placedOrder(): createdOrder = ${JSON.stringify(createdOrder, null, 2)}`);
 
@@ -71,16 +90,16 @@ module.exports = {
       status: {$in: ON_BOOK_STATUS}
     });
     logger.info(`order.service.js: updateOrderByUser(): get result ${JSON.stringify(orderToUpdateQuery)} from DB`);
-    if (!orderToUpdateQuery || !orderToUpdateQuery.results || orderToUpdateQuery.results.length === 0) {
-      logger.error(`order.service.js: updateOrderByUser(): ERROR: not found order with id=${orderObject._id} of userId=${userId} with on book status`);
-      throw new Error(`Not found order with id=${orderObject._id} of userId=${userId} with on book status`);
-    }
-    if (orderToUpdateQuery.results.length !== 1) {
-      logger.error(`order.service.js: updateOrderByUser(): ERROR: there are more than one orders found for userId=${userId} and orderId=${orderObject._id} with on book status`);
-      throw new Error(`There are more than one orders found for userId=${userId} and orderId=${orderObject._id} with on book status`);
+
+    const toBeUpdatedOrder = new Order(getUniqueResultFromQueryResult(orderToUpdateQuery));
+
+    // check if order book is ready
+    const orderSymbol = `${toBeUpdatedOrder.currency}_${toBeUpdatedOrder.baseCurrency}`;
+    if (!beesV8.isReadyFor(orderSymbol)) {
+      logger.error(`order.service.js placeOrder(): ERROR: the order book of symbol=${orderSymbol} is not ready`);
+      throw new Error('order book is not ready');
     }
 
-    const toBeUpdatedOrder = new Order(orderToUpdateQuery.results[0]);
     const oldQuantity = toBeUpdatedOrder.quantity;
     const oldPrice = toBeUpdatedOrder.limitPrice;
 
@@ -142,6 +161,7 @@ module.exports = {
       status: {$in: ON_BOOK_STATUS}
     }, (doc) => {
       if (orderbookEvent.reason.quantity >= doc.filledQuantity) {
+        if (doc.limitPrice !== orderbookEvent.reason.price) doc.orderbookTS = new Date().getTime();
         doc.limitPrice = orderbookEvent.reason.price;
         doc.quantity = orderbookEvent.reason.quantity;
         if (doc.filledQuantity === orderbookEvent.reason.quantity) doc.status = orderSchema.ORDER_STATUS.FILLED;
@@ -182,17 +202,17 @@ module.exports = {
     });
     logger.info(`order.service.js: cancelOrder(): get result ${JSON.stringify(orderToCancelQuery)} from DB`);
 
-    if (!orderToCancelQuery || !orderToCancelQuery.results || orderToCancelQuery.results.length === 0) {
-      logger.error(`order.service.js: cancelOrder(): ERROR: not found order with id=${orderId} of userId=${userId} with on book status`);
-      throw new Error(`Not found order with id=${orderId} of userId=${userId} with on book status`);
-    }
-    if (orderToCancelQuery.results.length !== 1) {
-      logger.error(`order.service.js: cancelOrder(): ERROR: there are more than one orders found for userId=${userId} and orderId=${orderId} with on book status`);
-      throw new Error(`There are more than one orders found for userId=${userId} and orderId=${orderId} with on book status`);
+    // found it
+    const toBeCanceledOrder = new Order(getUniqueResultFromQueryResult(orderToCancelQuery));
+
+    // check if order book is ready
+    const orderSymbol = `${toBeCanceledOrder.currency}_${toBeCanceledOrder.baseCurrency}`;
+    if (!beesV8.isReadyFor(orderSymbol)) {
+      logger.error(`order.service.js placeOrder(): ERROR: the order book of symbol=${orderSymbol} is not ready`);
+      throw new Error('order book is not ready');
     }
 
-    // found it
-    const orderCanceledOrderEvent = new OrderCanceledEvent(new Order(orderToCancelQuery.results[0]));
+    const orderCanceledOrderEvent = new OrderCanceledEvent(toBeCanceledOrder);
     const orderbookEvent = await beesV8.processOrderEvent(orderCanceledOrderEvent);
     logger.info(`order.service.js: cancelOrder(): received ${JSON.stringify(orderbookEvent)} from beesV8`);
 
@@ -336,5 +356,18 @@ module.exports = {
     if (!updatedReasonOrder) logger.error('order.service.js: updateOrdersByMatch(): ERROR: failed to update reason object');
     if (!updatedMatchOrder) logger.error('order.service.js: updateOrdersByMatch(): ERROR: failed to update match object');
     return false;
+  },
+
+  getActiveOrdersOfSymbol: async (symbol) => {
+    const currency = symbol.split('_')[0];
+    const baseCurrency = symbol.split('_')[1];
+
+    const activeOrderQuery = await service.find({
+      currency,
+      baseCurrency,
+      status: {$in: ON_BOOK_STATUS}
+    },{ sort : {orderbookTS : 1}});
+
+    return activeOrderQuery && activeOrderQuery.results;
   },
 };

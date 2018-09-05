@@ -21,6 +21,7 @@ const orderSchema = {
   status: Joi.string().allow(Object.values(ORDER_STATUS)),
   createdAt: Joi.date(),
   lastUpdatedAt: Joi.date(),
+  orderbookTS: Joi.number(),
   userId: Joi.string().required()
 };
 

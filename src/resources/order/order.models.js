@@ -11,6 +11,7 @@ class Order {
     this.status = orderObjFromDB.status;
     this.createdAt = orderObjFromDB.createdAt;
     this.lastUpdatedAt = orderObjFromDB.lastUpdatedAt;
+    this.orderbookTS = orderObjFromDB.orderbookTS;
     this.userId = orderObjFromDB.userId;
   }
 
