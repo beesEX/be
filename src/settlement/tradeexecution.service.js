@@ -92,13 +92,13 @@ const executeTrades = async (orderbookEvent) => {
       baseCurrency: reasonObj.baseCurrency,
       price: matchList[i].price,
       quantity: matchList[i].tradedQuantity,
-      makerSide: reasonObj.side,
+      makerSide: (reasonObj.side === 'BUY') ? 'SELL' : 'BUY',
       buyerFeePercent: 0,
       buyerFeeCharged: 0,
       sellerFeePercent: 0,
       sellerFeeCharged: 0,
       createdAt: new Date(),
-      executedAt: new Date(),
+      executedAt: orderbookEvent.timestamp,
       buyOrderId: (reasonObj.side === 'BUY') ? reasonObj.orderId : matchList[i].orderId,
       sellOrderId: (reasonObj.side === 'BUY') ? matchList[i].orderId : reasonObj.orderId
     };
