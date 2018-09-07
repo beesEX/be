@@ -1,5 +1,13 @@
 const logger = require('../logger');
 
+const tradeSchema = require('./trade.schema');
+const constants = require('../app.constants');
+const db = require('../db');
+
+const service = db.createService(constants.DATABASE_DOCUMENTS.TRADES, tradeSchema.schema);
+
+const { idGenerator } = require('@paralect/node-mongo');
+
 const {ORDER_BOOK_EVENT} = require('../trading-engine/orderbook.event');
 
 const Transaction = require('../wealth-management/transaction.service');
@@ -46,6 +54,23 @@ const settlementTrade = async (reasonObj, matchObj) => {
   return Promise.all(transactionProcesses);
 };
 
+const recordTrade = async (tradeObject) => {
+  const recordedTradeObject = await service.create(tradeObject);
+  logger.info(`tradeexecution.service.js: recordTrade(): recordedTradeObject = ${JSON.stringify(recordedTradeObject)}`);
+};
+
+// only for testing, will be deleted later
+/*
+const showTrades = async () => {
+  const tradeQuery = await service.find({}, {sort : {createdAt : 1}});
+  if(tradeQuery && tradeQuery.results) {
+    for (let i = 0; i < tradeQuery.results.length; i += 1) {
+      logger.info(`tradeexecution.service.js showTrades(): ${JSON.stringify(tradeQuery.results[i])}`);
+    }
+  }
+};
+*/
+
 const executeTrades = async (orderbookEvent) => {
   logger.info(`tradeexecution.service.js executeTrades(): received orderbookEvent = ${JSON.stringify(orderbookEvent)}`);
 
@@ -60,9 +85,31 @@ const executeTrades = async (orderbookEvent) => {
   for (let i = 0; i < matchList.length; i += 1) {
     await settlementTrade(reasonObj, matchList[i]);
     await OrderService.updateOrdersByMatch(reasonObj, matchList[i]);
+    // record trade to DB
+    const tradeObject = {
+      _id: idGenerator.generate(),
+      currency: reasonObj.currency,
+      baseCurrency: reasonObj.baseCurrency,
+      price: matchList[i].price,
+      quantity: matchList[i].tradedQuantity,
+      makerSide: (reasonObj.side === 'BUY') ? 'SELL' : 'BUY',
+      buyerFeePercent: 0,
+      buyerFeeCharged: 0,
+      sellerFeePercent: 0,
+      sellerFeeCharged: 0,
+      createdAt: new Date(),
+      executedAt: orderbookEvent.timestamp,
+      buyOrderId: (reasonObj.side === 'BUY') ? reasonObj.orderId : matchList[i].orderId,
+      sellOrderId: (reasonObj.side === 'BUY') ? matchList[i].orderId : reasonObj.orderId
+    };
+    await recordTrade(tradeObject);
   }
 
   logger.info('tradeexecution.service.js executeTrades(): Successfully traded');
+
+  // only for testing, will be deleted later
+  //await showTrades();
+
   return true;
 };
 
