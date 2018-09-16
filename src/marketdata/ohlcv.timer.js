@@ -7,26 +7,26 @@ const {
 
 
 const getTickTimeOfTimeStamp = (timeStamp) => {
-  return parseInt(timeStamp.getTime() / 1000);
+  return Math.round(timeStamp.getTime());
 };
 
 const getCurrentTickTime = () => {
   // return current tick time in second
-  return parseInt ((new Date()).getTime() / 1000);
+  return (new Date()).getTime();
 };
 
 const getCurrentTickTimeOfTimeResolution = (timeResolutionType) => {
   if (!timeResolutionValueArray[timeResolutionType]) return null;
-  return parseInt ((new Date()).getTime() / timeResolutionValueArray[timeResolutionType]);
+  return Math.round(Math.floor((new Date()).getTime() / timeResolutionValueArray[timeResolutionType]) * timeResolutionValueArray[timeResolutionType]);
 };
 
 const getTickTimeOfTimeResolutionOfTimeStamp = (timeResolutionType, timeStamp) => {
   if (!timeResolutionValueArray[timeResolutionType]) return null;
-  return parseInt (timeStamp.getTime() / timeResolutionValueArray[timeResolutionType]);
+  return Math.round(Math.floor((timeStamp.getTime() / timeResolutionValueArray[timeResolutionType])) * timeResolutionValueArray[timeResolutionType]);
 };
 
 const getNextTickTimeOfResolution = (currentTickTime, timeResolution) => {
-  return currentTickTime + timeResolutionValueArray[timeResolution];
+  return Math.round(currentTickTime + timeResolutionValueArray[timeResolution]);
 };
 
 /*

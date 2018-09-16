@@ -10,8 +10,8 @@ const DATABASE_DOCUMENTS = {
 const timeResolutionTypeArray = [DATABASE_DOCUMENTS.ONE_MINUTE, DATABASE_DOCUMENTS.THIRTY_MINUTES];
 
 const timeResolutionValueArray = {};
-timeResolutionValueArray[DATABASE_DOCUMENTS.ONE_MINUTE] = 1 * 60 * 1000;
-timeResolutionValueArray[DATABASE_DOCUMENTS.THIRTY_MINUTES] = 30 * 60 * 1000;
+timeResolutionValueArray[DATABASE_DOCUMENTS.ONE_MINUTE] = Math.round(1 * 60 * 1000);
+timeResolutionValueArray[DATABASE_DOCUMENTS.THIRTY_MINUTES] = Math.round(30 * 60 * 1000);
 
 module.exports = {
   DATABASE_DOCUMENTS,

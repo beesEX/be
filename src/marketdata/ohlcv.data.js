@@ -17,17 +17,21 @@ class OhlcvData {
     if (!this.data.open) this.data.open = tradeEvent.price;
     this.data.close = tradeEvent.price;
     this.data.high = this.data.high ? Math.max(tradeEvent.price, this.data.high) : tradeEvent.price;
-    this.data.low = this.data.low ? Math.max(tradeEvent.price, this.data.low) : tradeEvent.price;
+    this.data.low = this.data.low ? Math.min(tradeEvent.price, this.data.low) : tradeEvent.price;
     this.data.volume = this.data.volume ? (this.data.volume + tradeEvent.quantity) : tradeEvent.quantity;
   }
 
   nextTick(tickTime) {
     this.dataToRecordInDB = Object.assign({}, this.data);
-    this.dataToRecordInDB.time = parseInt(this.tickTime);
+    this.dataToRecordInDB.time = this.tickTime;
     this.dataToRecordInDB.currency = this.currency;
     this.dataToRecordInDB.baseCurrency = this.baseCurrency;
     this.dataToRecordInDB.createdAt = new Date();
-    this.data = null;
+    this.data.open = this.data.close;
+    this.data.close = this.data.close;
+    this.data.high = this.data.close;
+    this.data.low = this.data.close;
+    this.data.volume = 0;
     this.tickTime = tickTime;
   }
 }
@@ -38,10 +42,21 @@ const getSymbol = (currency, baseCurrency) => {
   return `${currency}_${baseCurrency}`;
 };
 
-const createData = (currency, baseCurrency, timeResolutionType, tickTime) => {
+const createData = (timeResolutionType, tickTime, currency, baseCurrency) => {
   const symbol = getSymbol(currency, baseCurrency);
   if (!data[symbol]) data[symbol] = {};
   data[symbol][timeResolutionType] = new OhlcvData(currency, baseCurrency, tickTime);
+};
+
+const setDataState = (timeResolutionType, tickTime, currency, baseCurrency, dataState) => {
+  const symbol = getSymbol(currency, baseCurrency);
+  if (!data[symbol]) data[symbol] = {};
+  data[symbol][timeResolutionType] = new OhlcvData(currency, baseCurrency, tickTime);
+  data[symbol][timeResolutionType].data.open = dataState.open;
+  data[symbol][timeResolutionType].data.close = dataState.close;
+  data[symbol][timeResolutionType].data.high = dataState.high;
+  data[symbol][timeResolutionType].data.low = dataState.low;
+  data[symbol][timeResolutionType].data.volume = dataState.volume;
 };
 
 const nextTickForCurrencyPair = async (timeResolutionType, tickTime, currency, baseCurrency) => {
@@ -71,6 +86,39 @@ const nextTick = async (timeResolutionType, tickTime) => {
   await Promise.all(dataToRecordPromises);
 };
 
+const addDataForResolution = async (timeResolutionType, tradeObject) => {
+  logger.info(`ohlcv.data.js addDataForCurrencyPairOfResolution(): tradeEvent=${JSON.stringify(tradeObject)}`);
+  const symbol = getSymbol(tradeObject.currency, tradeObject.baseCurrency);
+
+  // add for all time resolution of this symbol
+  if (data[symbol]) {
+    const currentTickTime = data[symbol][timeResolutionType].tickTime;
+    const tradeTickTime = ohlcv_timer.getTickTimeOfTimeResolutionOfTimeStamp(timeResolutionType, tradeObject.executedAt);
+    if (tradeTickTime === currentTickTime || !data[symbol][timeResolutionType].data) {
+      data[symbol][timeResolutionType].addData(tradeObject);
+    }
+    else {
+      const closePrice = data[symbol][timeResolutionType].data.close;
+      let nextTickTime = ohlcv_timer.getNextTickTimeOfResolution(currentTickTime, timeResolutionType);
+      while (nextTickTime < tradeTickTime) {
+        await nextTickForCurrencyPair(timeResolutionType, nextTickTime, tradeObject.currency, tradeObject.baseCurrency);
+        data[symbol][timeResolutionType].addData({
+          currency: tradeObject.currency,
+          baseCurrency: tradeObject.baseCurrency,
+          price: closePrice,
+          quantity: 0,
+        });
+        nextTickTime = ohlcv_timer.getNextTickTimeOfResolution(nextTickTime, timeResolutionType);
+      }
+      await nextTickForCurrencyPair(timeResolutionType, tradeTickTime, tradeObject.currency, tradeObject.baseCurrency);
+      data[symbol][timeResolutionType].addData(tradeObject);
+    }
+  }
+  else {
+    logger.error(`ohlcv.data.js addDataForCurrencyPairOfResolution(): ERROR: undefined symbol=${symbol}`);
+  }
+};
+
 /*
 const tradeEvent = {
       currency: reasonObj.currency,
@@ -81,6 +129,7 @@ const tradeEvent = {
     };
  */
 const addData = async (tradeEvent) => {
+  logger.info(`ohlcv.data.js addData(): tradeEvent=${JSON.stringify(tradeEvent)}`);
   const symbol = getSymbol(tradeEvent.currency, tradeEvent.baseCurrency);
 
   // add for all time resolution of this symbol
@@ -88,15 +137,15 @@ const addData = async (tradeEvent) => {
     const resolutionTypeList = Object.getOwnPropertyNames(data[symbol]);
     for (let i = 0; i < resolutionTypeList.length; i += 1) {
       const currentTickTime = data[symbol][resolutionTypeList[i]].tickTime;
-      const tradeTickTime = ohlcv_timer.getTickTimeOfTimeResolutionOfTimeStamp(resolutionTypeList[i], tradeEvent.createdAt);
-      if (tradeTickTime === currentTickTime) {
+      const tradeTickTime = ohlcv_timer.getTickTimeOfTimeResolutionOfTimeStamp(resolutionTypeList[i], tradeEvent.executedAt);
+      if (tradeTickTime === currentTickTime || !data[symbol][resolutionTypeList[i]].data) {
         data[symbol][resolutionTypeList[i]].addData(tradeEvent);
       }
       else {
-        const closePrice = data[symbol][resolutionTypeList[i]].close;
+        const closePrice = data[symbol][resolutionTypeList[i]].data.close;
         let nextTickTime = ohlcv_timer.getNextTickTimeOfResolution(currentTickTime, resolutionTypeList[i]);
         while (nextTickTime < tradeTickTime) {
-          await nextTickForCurrencyPair(resolutionTypeList[i], tradeTickTime, tradeEvent.currency, tradeEvent.baseCurrency);
+          await nextTickForCurrencyPair(resolutionTypeList[i], nextTickTime, tradeEvent.currency, tradeEvent.baseCurrency);
           data[symbol][resolutionTypeList[i]].addData({
             currency: tradeEvent.currency,
             baseCurrency: tradeEvent.baseCurrency,
@@ -110,11 +159,17 @@ const addData = async (tradeEvent) => {
       }
     }
   }
+  else {
+    logger.error(`ohlcv.data.js addData(): ERROR: undefined symbol=${symbol}`);
+  }
 };
 
 module.exports = {
+  data, // only for testing
   createData,
   nextTickForCurrencyPair,
   nextTick,
   addData,
+  addDataForResolution,
+  setDataState,
 };

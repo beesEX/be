@@ -132,6 +132,7 @@ const executeTrades = async (orderbookEvent) => {
   return true;
 };
 
+/*
 const getAllTradesFromTime = async (currency, baseCurrency, fromTime) => {
   const tradeQuery = await service.find({
     currency,
@@ -158,10 +159,8 @@ const getLastTradeBeginTime = async (currency, baseCurrency, beginTime) => {
   logger.info(`tradeexecution.service.js: getLastTradeBeginTime(): tradeQuery = ${JSON.stringify(tradeQuery)}`);
   return tradeQuery && tradeQuery.results;
 };
+*/
 
 module.exports = {
   executeTrades,
-  getAllTradesFromTime,
-  getLastTradeBeginTime,
-  getAllTrades,
 };
