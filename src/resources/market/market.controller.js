@@ -24,3 +24,7 @@ exports.getAggregatedStateOfOrderBook = async (ctx) => {
     };
   }
 };
+
+exports.getMarketOhlcvData = async (ctx) => {
+  // TODO
+};

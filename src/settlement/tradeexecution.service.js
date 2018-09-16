@@ -13,6 +13,8 @@ const {ORDER_BOOK_EVENT} = require('../trading-engine/orderbook.event');
 const Transaction = require('../wealth-management/transaction.service');
 const OrderService = require('../resources/order/order.service');
 
+const ohlcvAggregator = require('../marketdata/ohlcv.aggregator');
+
 const settlementTrade = async (reasonObj, matchObj) => {
   const { currency, baseCurrency } = reasonObj;
   const { price: tradedPrice, tradedQuantity } = matchObj;
@@ -82,10 +84,10 @@ const executeTrades = async (orderbookEvent) => {
   const reasonObj = orderbookEvent.reason;
   const matchList = orderbookEvent.matches;
 
+  const executeTradePromises = [];
+
   for (let i = 0; i < matchList.length; i += 1) {
-    await settlementTrade(reasonObj, matchList[i]);
-    await OrderService.updateOrdersByMatch(reasonObj, matchList[i]);
-    // record trade to DB
+    // trade object to record to DB
     const tradeObject = {
       _id: idGenerator.generate(),
       currency: reasonObj.currency,
@@ -102,8 +104,25 @@ const executeTrades = async (orderbookEvent) => {
       buyOrderId: (reasonObj.side === 'BUY') ? reasonObj.orderId : matchList[i].orderId,
       sellOrderId: (reasonObj.side === 'BUY') ? matchList[i].orderId : reasonObj.orderId
     };
-    await recordTrade(tradeObject);
+
+    // trade event for market data
+    const tradeEvent = {
+      currency: reasonObj.currency,
+      baseCurrency: reasonObj.baseCurrency,
+      price: matchList[i].price,
+      quantity: matchList[i].tradedQuantity,
+      executedAt: orderbookEvent.timestamp,
+    };
+
+    executeTradePromises.push(Promise.all([
+      settlementTrade(reasonObj, matchList[i]),
+      OrderService.updateOrdersByMatch(reasonObj, matchList[i]),
+      recordTrade(tradeObject),
+      ohlcvAggregator.collectTrade(tradeEvent)
+    ]));
   }
+
+  await Promise.all(executeTradePromises);
 
   logger.info('tradeexecution.service.js executeTrades(): Successfully traded');
 
@@ -113,6 +132,36 @@ const executeTrades = async (orderbookEvent) => {
   return true;
 };
 
+const getAllTradesFromTime = async (currency, baseCurrency, fromTime) => {
+  const tradeQuery = await service.find({
+    currency,
+    baseCurrency,
+  }, {sort: {createdAt : 1}, createdAt: {$gt: fromTime}});
+  logger.info(`tradeexecution.service.js: getAllTradesFromTime(): tradeQuery = ${JSON.stringify(tradeQuery)}`);
+  return tradeQuery && tradeQuery.results;
+};
+
+const getAllTrades = async (currency, baseCurrency) => {
+  const tradeQuery = await service.find({
+    currency,
+    baseCurrency,
+  }, {sort: {createdAt : 1}});
+  logger.info(`tradeexecution.service.js: getAllTrades(): tradeQuery = ${JSON.stringify(tradeQuery)}`);
+  return tradeQuery && tradeQuery.results;
+};
+
+const getLastTradeBeginTime = async (currency, baseCurrency, beginTime) => {
+  const tradeQuery = await service.findOne({
+    currency,
+    baseCurrency,
+  }, {sort: {createdAt : -1}, createdAt: {$lt: beginTime}});
+  logger.info(`tradeexecution.service.js: getLastTradeBeginTime(): tradeQuery = ${JSON.stringify(tradeQuery)}`);
+  return tradeQuery && tradeQuery.results;
+};
+
 module.exports = {
   executeTrades,
+  getAllTradesFromTime,
+  getLastTradeBeginTime,
+  getAllTrades,
 };
