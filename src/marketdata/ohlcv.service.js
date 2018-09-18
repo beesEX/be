@@ -22,14 +22,14 @@ const recordMarketData = async (timeResolutionType, marketData) => {
   return createdMarketData;
 };
 
-const getLastMarketDataTimeTick = async (timeResolutionType, currency, baseCurrency) => {
-  //logger.info(`ohlcv.service.js: getLastMarketDataTimeTick(): currency = ${currency} baseCurrency = ${baseCurrency} timeResolutionType = ${timeResolutionType}`);
+const getLastMarketDataStartTime = async (timeResolutionType, currency, baseCurrency) => {
+  //logger.info(`ohlcv.service.js: getLastMarketDataStartTime(): currency = ${currency} baseCurrency = ${baseCurrency} timeResolutionType = ${timeResolutionType}`);
   const marketDataQuery = await services[timeResolutionType].find({
     currency,
     baseCurrency,
-  }, { sort: {time: -1}, limit: 1});
-  logger.log(`ohlcv.service.js getLastMarketDataTimeTick(): currency = ${currency} baseCurrency = ${baseCurrency} timeResolutionType = ${timeResolutionType} marketDataQuery=${JSON.stringify(marketDataQuery)}`);
-  return marketDataQuery && marketDataQuery.results && marketDataQuery.results[0] && marketDataQuery.results[0].time;
+  }, { sort: {startTime: -1}, limit: 1});
+  logger.log(`ohlcv.service.js getLastMarketDataStartTime(): currency = ${currency} baseCurrency = ${baseCurrency} timeResolutionType = ${timeResolutionType} marketDataQuery=${JSON.stringify(marketDataQuery)}`);
+  return marketDataQuery && marketDataQuery.results && marketDataQuery.results[0] && marketDataQuery.results[0].startTime;
 };
 
 const getMarketData = async (timeResolutionType, startDate, endDate, currency, baseCurrency) => {
@@ -37,49 +37,53 @@ const getMarketData = async (timeResolutionType, startDate, endDate, currency, b
   const marketDataQuery = await services[timeResolutionType].find({
     currency,
     baseCurrency,
-  }, { sort: {time: 1}, time: {$gt: startDate, $lt: endDate }});
-
+    startTime: {$gte: startDate, $lte: endDate }
+  }, { sort: {startTime: 1}});
+  // TODO: if endData >= data set startTime: also return current state of data set
   return marketDataQuery && marketDataQuery.results;
 };
 
-const getAllTradesFromTime = async (currency, baseCurrency, fromTime) => {
-  logger.info(`ohlcv.service.js: getAllTradesFromTime(): currency = ${currency} baseCurrency = ${baseCurrency} fromTime = ${fromTime}`);
+const getAllTradesAfterTime = async (currency, baseCurrency, fromTime) => {
+  logger.info(`ohlcv.service.js: getAllTradesAfterTime(): currency = ${currency} baseCurrency = ${baseCurrency} fromTime = ${JSON.stringify(fromTime)}`);
+  // TODO: $gt not work
   const service = db.createService(constants.DATABASE_DOCUMENTS.TRADES, tradeSchema.schema);
   const tradeQuery = await service.find({
     currency,
     baseCurrency,
-  }, {sort: {executedAt : 1}, executedAt: {$gt: fromTime}});
-  logger.info(`ohlcv.service.js: getAllTradesFromTime(): tradeQuery = ${JSON.stringify(tradeQuery)}`);
+    executedAt: {$gt: fromTime}
+  }, {sort: {executedAt : 1}});
+  logger.info(`ohlcv.service.js: getAllTradesAfterTime(): tradeQuery = ${JSON.stringify(tradeQuery)}`);
   return tradeQuery && tradeQuery.results;
 };
 
-const getAllTrades = async (currency, baseCurrency) => {
-  logger.info(`ohlcv.service.js: getAllTrades(): currency = ${currency} baseCurrency = ${baseCurrency}`);
+const getAllTradesOfCurrencyPair = async (currency, baseCurrency) => {
+  logger.info(`ohlcv.service.js: getAllTradesOfCurrencyPair(): currency = ${currency} baseCurrency = ${baseCurrency}`);
   const service = db.createService(constants.DATABASE_DOCUMENTS.TRADES, tradeSchema.schema);
   const tradeQuery = await service.find({
     currency,
     baseCurrency,
   }, {sort: {executedAt : 1}});
-  logger.info(`ohlcv.service.js: getAllTrades(): tradeQuery = ${JSON.stringify(tradeQuery)}`);
+  logger.info(`ohlcv.service.js: getAllTradesOfCurrencyPair(): tradeQuery = ${JSON.stringify(tradeQuery)}`);
   return tradeQuery && tradeQuery.results;
 };
 
-const getLastTradeBeginTime = async (currency, baseCurrency, beginTime) => {
-  logger.info(`ohlcv.service.js: getLastTradeBeginTime(): currency = ${currency} baseCurrency = ${baseCurrency} beginTime = ${beginTime}`);
+const getFirstTradeBeforeTime = async (currency, baseCurrency, beforeTime) => {
+  logger.info(`ohlcv.service.js: getFirstTradeBeforeTime(): currency = ${currency} baseCurrency = ${baseCurrency} beginTime = ${JSON.stringify(beforeTime)}`);
   const service = db.createService(constants.DATABASE_DOCUMENTS.TRADES, tradeSchema.schema);
   const tradeQuery = await service.find({
     currency,
     baseCurrency,
-  }, {sort: {executedAt : -1}, executedAt: {$lt: beginTime}, limit: 1});
-  logger.info(`ohlcv.service.js: getLastTradeBeginTime(): tradeQuery = ${JSON.stringify(tradeQuery)}`);
-  return tradeQuery && tradeQuery.results;
+    executedAt: {$lt: beforeTime}
+  }, {sort: {executedAt : -1}, limit: 1});
+  logger.info(`ohlcv.service.js: getFirstTradeBeforeTime(): tradeQuery = ${JSON.stringify(tradeQuery)}`);
+  return tradeQuery && tradeQuery.results && tradeQuery.results[0];
 };
 
 module.exports = {
-  getLastMarketDataTimeTick,
+  getLastMarketDataStartTime,
   recordMarketData,
   getMarketData,
-  getAllTradesFromTime,
-  getLastTradeBeginTime,
-  getAllTrades,
+  getAllTradesAfterTime,
+  getFirstTradeBeforeTime,
+  getAllTradesOfCurrencyPair,
 };

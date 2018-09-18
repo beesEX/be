@@ -5,33 +5,30 @@ const {
   timeResolutionTypeArray,
 } = require('../app.constants');
 
-
-const getTickTimeOfTimeStamp = (timeStamp) => {
-  return Math.round(timeStamp.getTime());
+const isTimeStampInRangeOfStartTime = (timeResolutionType, timeStamp, startTime) => {
+  const timeStampTS = timeStamp.getTime();
+  const timeRange = timeResolutionValueArray[timeResolutionType];
+  if (timeStampTS < startTime) return false;
+  return timeStampTS - startTime <= timeRange;
 };
 
-const getCurrentTickTime = () => {
-  // return current tick time in second
-  return (new Date()).getTime();
-};
-
-const getCurrentTickTimeOfTimeResolution = (timeResolutionType) => {
+const getCurrentStartTime = (timeResolutionType) => {
   if (!timeResolutionValueArray[timeResolutionType]) return null;
-  return Math.round(Math.floor((new Date()).getTime() / timeResolutionValueArray[timeResolutionType]) * timeResolutionValueArray[timeResolutionType]);
+  return Math.floor((new Date()).getTime() / timeResolutionValueArray[timeResolutionType]) * timeResolutionValueArray[timeResolutionType];
 };
 
-const getTickTimeOfTimeResolutionOfTimeStamp = (timeResolutionType, timeStamp) => {
+const getStartTimeOfTimeStamp = (timeResolutionType, timeStamp) => {
   if (!timeResolutionValueArray[timeResolutionType]) return null;
-  return Math.round(Math.floor((timeStamp.getTime() / timeResolutionValueArray[timeResolutionType])) * timeResolutionValueArray[timeResolutionType]);
+  return Math.floor((timeStamp.getTime() / timeResolutionValueArray[timeResolutionType])) * timeResolutionValueArray[timeResolutionType];
 };
 
-const getNextTickTimeOfResolution = (currentTickTime, timeResolution) => {
-  return Math.round(currentTickTime + timeResolutionValueArray[timeResolution]);
+const getNextStartTime = (currentTickTime, timeResolution) => {
+  return currentTickTime + timeResolutionValueArray[timeResolution];
 };
 
 /*
 const updateOHLCVdata = async (timeResolutionType) => {
-  await ohlcv_data.nextTick(timeResolutionType, getCurrentTickTime());
+  await ohlcv_data.getDataToRecordAndSetStartTime(timeResolutionType, getCurrentTickTime());
 };
 
 const begin = () => {
@@ -52,9 +49,8 @@ const stop = () => {
 */
 
 module.exports = {
-  getCurrentTickTime,
-  getTickTimeOfTimeStamp,
-  getNextTickTimeOfResolution,
-  getCurrentTickTimeOfTimeResolution,
-  getTickTimeOfTimeResolutionOfTimeStamp,
+  getNextStartTime,
+  getCurrentStartTime,
+  getStartTimeOfTimeStamp,
+  isTimeStampInRangeOfStartTime,
 };

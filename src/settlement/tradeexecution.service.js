@@ -133,30 +133,30 @@ const executeTrades = async (orderbookEvent) => {
 };
 
 /*
-const getAllTradesFromTime = async (currency, baseCurrency, fromTime) => {
+const getAllTradesAfterTime = async (currency, baseCurrency, fromTime) => {
   const tradeQuery = await service.find({
     currency,
     baseCurrency,
   }, {sort: {createdAt : 1}, createdAt: {$gt: fromTime}});
-  logger.info(`tradeexecution.service.js: getAllTradesFromTime(): tradeQuery = ${JSON.stringify(tradeQuery)}`);
+  logger.info(`tradeexecution.service.js: getAllTradesAfterTime(): tradeQuery = ${JSON.stringify(tradeQuery)}`);
   return tradeQuery && tradeQuery.results;
 };
 
-const getAllTrades = async (currency, baseCurrency) => {
+const getAllTradesOfCurrencyPair = async (currency, baseCurrency) => {
   const tradeQuery = await service.find({
     currency,
     baseCurrency,
   }, {sort: {createdAt : 1}});
-  logger.info(`tradeexecution.service.js: getAllTrades(): tradeQuery = ${JSON.stringify(tradeQuery)}`);
+  logger.info(`tradeexecution.service.js: getAllTradesOfCurrencyPair(): tradeQuery = ${JSON.stringify(tradeQuery)}`);
   return tradeQuery && tradeQuery.results;
 };
 
-const getLastTradeBeginTime = async (currency, baseCurrency, beginTime) => {
+const getFirstTradeBeforeTime = async (currency, baseCurrency, beginTime) => {
   const tradeQuery = await service.findOne({
     currency,
     baseCurrency,
   }, {sort: {createdAt : -1}, createdAt: {$lt: beginTime}});
-  logger.info(`tradeexecution.service.js: getLastTradeBeginTime(): tradeQuery = ${JSON.stringify(tradeQuery)}`);
+  logger.info(`tradeexecution.service.js: getFirstTradeBeforeTime(): tradeQuery = ${JSON.stringify(tradeQuery)}`);
   return tradeQuery && tradeQuery.results;
 };
 */
