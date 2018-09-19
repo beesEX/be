@@ -13,15 +13,21 @@ const {
 } = require('../app.constants');
 
 /*
-[Tung]: pls refactor the aggregator to a class with following constructor:
+[Tung]: pls refactor the aggregator to a class named 'OhlcvAggregator' with following constructor:
 constructor(currency, baseCurrency) {
   this.currency = currency;
   this.baseCurrency = baseCurrency;
   this.lastStartTimes = {resolutionType1, resolutionType2, resolutionType3, ...}
+  this.beCheckedTradeData = {resolutionType1, resolutionType2, resolutionType3, ...}
+  this.ohlcvData = new OhlcvData(currency, baseCurrency, nextStarTimeOfUnsavedTrades/currentStartTime);
   ...
 }
 
-so you can get rid of the 3-time nested for-loop which is terrible to read. This class gets instanced by tradeexecution.service.js.
+All of the init logic should then takes place within the constructor function.
+
+so you can get rid of all 3-time nested for-loops and object structures which are terrible to read and error prone.
+This class should be instanciated together with relating orderbook instance, each orderbook of a currency pair has it's own ohlcv aggregator instance,
+so you need to export the class constructor, not a particular instance.
  */
 
 // load all unsaved being built market data in DB
@@ -88,13 +94,13 @@ const init = async () => {
           const nextStartTime = ohlcv_timer.getNextStartTime(tmp_lastStartTime, timeResolutionTypeArray[k]);
           const lastTimeStamp = new Date(nextStartTime);
           beCheckedTradeData[currencyArray[i]][baseCurrencyArray[j]][timeResolutionTypeArray[k]] = {
-            unsavedTradeData: await ohlcv_service.getAllTradesAfterTime(currencyArray[i], baseCurrencyArray[j], lastTimeStamp),
-            lastSavedTradeData: await ohlcv_service.getFirstTradeBeforeTime(currencyArray[i], baseCurrencyArray[j], lastTimeStamp),
+            unsavedTradeData: await ohlcv_service.getAllTradesAfterTime(currencyArray[i], baseCurrencyArray[j], lastTimeStamp), // [Tung]: rename field to 'notAggregatedTrades'
+            lastSavedTradeData: await ohlcv_service.getFirstTradeBeforeTime(currencyArray[i], baseCurrencyArray[j], lastTimeStamp), // [Tung]: rename field to 'lastAggregatedTrade'
           };
         }
         else {
           beCheckedTradeData[currencyArray[i]][baseCurrencyArray[j]][timeResolutionTypeArray[k]] = {
-            unsavedTradeData: await ohlcv_service.getAllTradesOfCurrencyPair(currencyArray[i], baseCurrencyArray[j]),
+            unsavedTradeData: await ohlcv_service.getAllTradesOfCurrencyPair(currencyArray[i], baseCurrencyArray[j]), // [Tung]: rename field to 'notAggregatedTrades'
           };
         }
       }
@@ -115,7 +121,7 @@ const init = async () => {
   for (let i = 0; i < currencyArray.length; i += 1) {
     for (let j = 0; j < baseCurrencyArray.length; j += 1) {
       for (let k = 0; k < timeResolutionTypeArray.length; k += 1) {
-        const toBeSavedTradeEvents = beCheckedTradeData[currencyArray[i]]
+        const toBeSavedTradeEvents = beCheckedTradeData[currencyArray[i]] // [Tung]: rename var to 'toBeAggregatedTrades'
           && beCheckedTradeData[currencyArray[i]][baseCurrencyArray[j]]
           && beCheckedTradeData[currencyArray[i]][baseCurrencyArray[j]][timeResolutionTypeArray[k]]
           && beCheckedTradeData[currencyArray[i]][baseCurrencyArray[j]][timeResolutionTypeArray[k]].unsavedTradeData;

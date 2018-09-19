@@ -40,9 +40,15 @@ class OhlcvData {
   }
 }
 
+// [Tung]: remove this var and move all functions below into the class OhlcvData above. Each orderbook instance owns an
+// ohlcv aggregator instance which owns an ohlcv data instance, so you don't need to hold the current state of aggregating
+// of all currency pairs in an object like this. Try to write the code a little mode object-oriented, we have ES6!
+// Actually, i'm not really happy with the name `OhlcvData` of the class, after moving all the functions below into the class,
+// it will then become a class containing not only current state of aggregating results, but core logic of ohlcv aggregating,
+// so pls try to rename it some how more adequately
 const data = {};
 
-const getSymbol = (currency, baseCurrency) => {
+const getSymbol = (currency, baseCurrency) => { // [Tung]: this util functions should be then removed
   return `${currency}_${baseCurrency}`;
 };
 
