@@ -1,5 +1,8 @@
 const logger = require('../logger');
 
+// [Tung]: pls fix ALL eslint errors like naming not in camel case etc. Pls also rename all js file into camel case format. Do not miss use
+// the pattern .xxx.js to name any file. xxx in this pattern is meant to be some defined component type: controller, service, schema, models, event, spec
+// but not arbitrary one like 'time', 'data', 'aggregator' etc. That with the `ohlcv.aggregator.js` as described in task was my mistake, it should be just 'ohlcvAggregator.js'
 const ohlcv_timer = require('./ohlcv.timer');
 const ohlcv_data = require('./ohlcv.data');
 const ohlcv_service = require('./ohlcv.service');
@@ -9,6 +12,17 @@ const {
   timeResolutionTypeArray
 } = require('../app.constants');
 
+/*
+[Tung]: pls refactor the aggregator to a class with following constructor:
+constructor(currency, baseCurrency) {
+  this.currency = currency;
+  this.baseCurrency = baseCurrency;
+  this.lastStartTimes = {resolutionType1, resolutionType2, resolutionType3, ...}
+  ...
+}
+
+so you can get rid of the 3-time nested for-loop which is terrible to read. This class gets instanced by tradeexecution.service.js.
+ */
 
 // load all unsaved being built market data in DB
 const init = async () => {

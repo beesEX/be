@@ -3,13 +3,13 @@ const DATABASE_DOCUMENTS = {
   ORDERS: 'orders',
   TRANSACTIONS: 'transactions',
   TRADES: 'trades',
-  ONE_MINUTE: 'ohlcv1m',
-  ONE_HOUR: 'ohlcv60m',
+  ONE_MINUTE: 'ohlcv1m', // [Tung]: rename field to OHLCV1M
+  ONE_HOUR: 'ohlcv60m', // [Tung]: rename field to OHLCV5M, and collection to 'ohlcv5m'
 };
 
-const timeResolutionTypeArray = [DATABASE_DOCUMENTS.ONE_MINUTE, DATABASE_DOCUMENTS.ONE_HOUR];
+const timeResolutionTypeArray = [DATABASE_DOCUMENTS.ONE_MINUTE, DATABASE_DOCUMENTS.ONE_HOUR]; // [Tung]: rename array var to 'OHLCV_COLLECTIONS',
 
-const timeResolutionValueArray = {};
+const timeResolutionValueArray = {}; // [Tung]: remove this array from here, define and rename it to 'OHLCV_INTERVALS' in timer.js directly
 timeResolutionValueArray[DATABASE_DOCUMENTS.ONE_MINUTE] = Math.round(1 * 60 * 1000);
 timeResolutionValueArray[DATABASE_DOCUMENTS.ONE_HOUR] = Math.round(5 * 60 * 1000);
 
