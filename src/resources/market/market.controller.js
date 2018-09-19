@@ -4,6 +4,7 @@
  */
 
 const beesV8 = require('../../trading-engine/beesV8');
+const ohlcv_service = require('../../marketdata/ohlcv.service');
 
 const { logger } = global;
 
@@ -26,5 +27,28 @@ exports.getAggregatedStateOfOrderBook = async (ctx) => {
 };
 
 exports.getMarketOhlcvData = async (ctx) => {
-  // TODO
+  const currency = ctx && ctx.params && ctx.params.currency;
+  const baseCurrency = ctx && ctx.params && ctx.params.baseCurrency;
+  const resolution = ctx && ctx.params && ctx.params.resolution;
+  const fromTime = ctx && ctx.request && ctx.request.query && ctx.request.query.from;
+  const toTime = ctx && ctx.request && ctx.request.query && ctx.request.query.to;
+
+  if (currency && baseCurrency && resolution && fromTime && toTime) {
+    ctx.body = await ohlcv_service.getMarketData(resolution, fromTime, toTime, currency, baseCurrency);
+  }
+  else {
+    let errorMessage = '';
+    if (!currency) errorMessage = 'Missing currency';
+    else if (!baseCurrency) errorMessage = 'Missing baseCurrency';
+    else if (!resolution) errorMessage = 'Missing baseCurrency';
+    else if (!fromTime) errorMessage = 'Missing from time Unix TS';
+    else if (!toTime) errorMessage = 'Missing to time Unix TS';
+    else errorMessage = 'Missing something';
+    ctx.body = {
+      error: {
+        code: 404,
+        message: errorMessage,
+      }
+    };
+  }
 };

@@ -34,11 +34,17 @@ const getLastMarketDataStartTime = async (timeResolutionType, currency, baseCurr
 
 const getMarketData = async (timeResolutionType, startDate, endDate, currency, baseCurrency) => {
   logger.info(`ohlcv.service.js: getMarketData(): currency = ${currency} baseCurrency = ${baseCurrency} timeResolutionType = ${timeResolutionType} startDate = ${startDate} endDate = ${endDate} `);
-  const marketDataQuery = await services[timeResolutionType].find({
+  const service = services[timeResolutionType];
+  if (!service) {
+    logger.error('ohlcv.service.js getMarketData(): no service found');
+    return null;
+  }
+
+  const marketDataQuery = await service.find({
     currency,
     baseCurrency,
-    startTime: {$gte: startDate, $lte: endDate }
-  }, { sort: {startTime: 1}});
+    startTime: {$gte: Math.floor(startDate), $lte: Math.floor(endDate)}
+  }, {sort: {startTime: 1}});
   // TODO: if endData >= data set startTime: also return current state of data set
   return marketDataQuery && marketDataQuery.results;
 };
