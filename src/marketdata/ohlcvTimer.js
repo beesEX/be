@@ -1,9 +1,11 @@
 const logger = require('../logger');
 
-const {
-  timeResolutionValueArray,
-  timeResolutionTypeArray,
-} = require('../app.constants');
+const {DATABASE_DOCUMENTS} = require('../app.constants');
+
+const timeResolutionValueArray = {};
+timeResolutionValueArray[DATABASE_DOCUMENTS.OHLCV1M] = Math.round(1 * 60 * 1000);
+timeResolutionValueArray[DATABASE_DOCUMENTS.OHLCV5M] = Math.round(5 * 60 * 1000);
+timeResolutionValueArray[DATABASE_DOCUMENTS.OHLCV60M] = Math.round(60 * 60 * 1000);
 
 const isTimeStampInRangeOfStartTime = (timeResolutionType, timeStamp, startTime) => {
   const timeStampTS = timeStamp.getTime();
@@ -33,8 +35,8 @@ const updateOHLCVdata = async (timeResolutionType) => {
 
 const begin = () => {
   // start timer for each time resolution type
-  for (let i = 0; i < timeResolutionTypeArray.length; i += 1) {
-    timerList.push(setInterval(() => {updateOHLCVdata(timeResolutionTypeArray[i])}, timeResolutionValueArray[timeResolutionTypeArray[i]]));
+  for (let i = 0; i < OHLCV_COLLECTIONS.length; i += 1) {
+    timerList.push(setInterval(() => {updateOHLCVdata(OHLCV_COLLECTIONS[i])}, timeResolutionValueArray[OHLCV_COLLECTIONS[i]]));
   }
   logger.info('ohlcv.timer.js begin(): timer started');
 };

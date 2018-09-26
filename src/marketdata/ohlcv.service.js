@@ -1,17 +1,16 @@
 const logger = require('../logger');
 
 const db = require('../db');
-const {
-  timeResolutionTypeArray
-} = require('../app.constants');
+const ohlcvData = require('./ohlcvData');
+const ohlcvTimer = require('./ohlcvTimer');
 
 const tradeSchema = require('../settlement/trade.schema');
 const constants = require('../app.constants');
 
 const services = {};
 
-for (let i = 0; i < timeResolutionTypeArray.length; i += 1) {
-  services[timeResolutionTypeArray[i]] = db.createService(timeResolutionTypeArray[i]);
+for (let i = 0; i < constants.OHLCV_COLLECTIONS.length; i += 1) {
+  services[constants.OHLCV_COLLECTIONS[i]] = db.createService(constants.OHLCV_COLLECTIONS[i]);
 }
 
 const recordMarketData = async (timeResolutionType, marketData) => {
@@ -43,15 +42,39 @@ const getMarketData = async (timeResolutionType, startDate, endDate, currency, b
   const marketDataQuery = await service.find({
     currency,
     baseCurrency,
-    startTime: {$gte: Math.floor(startDate), $lte: Math.floor(endDate)}
-  }, {sort: {startTime: 1}});
-  // TODO: if endData >= data set startTime: also return current state of data set
-  return marketDataQuery && marketDataQuery.results;
+    time: {$gte: Math.floor(startDate), $lte: Math.floor(endDate)}
+  }, {sort: {time: 1}});
+
+
+  const marketDataToReturn = marketDataQuery && marketDataQuery.results;
+  /*
+
+
+  const currentMarketData = ohlcvData.getCurrentOhlcvData(timeResolutionType);
+
+  if (marketDataToReturn && marketDataToReturn.length > 0) {
+    const lastStartTime = marketDataToReturn[0].time;
+    const lastClosePrice = marketDataToReturn[0].close;
+    const currStartTime = currentMarketData.time;
+    for (let startTime = ohlcvTimer.getNextStartTime(lastStartTime, timeResolutionType);
+         startTime < currStartTime;
+         startTime = ohlcvTimer.getNextStartTime(startTime, timeResolutionType)) {
+      marketDataToReturn.push({
+        open: lastClosePrice,
+        close: lastClosePrice,
+        high: lastClosePrice,
+        low: lastClosePrice,
+        volume: 0
+      });
+    }
+  }
+  marketDataToReturn.push(currentMarketData);
+  */
+  return marketDataToReturn;
 };
 
 const getAllTradesAfterTime = async (currency, baseCurrency, fromTime) => {
   logger.info(`ohlcv.service.js: getAllTradesAfterTime(): currency = ${currency} baseCurrency = ${baseCurrency} fromTime = ${JSON.stringify(fromTime)}`);
-  // TODO: $gt not work
   const service = db.createService(constants.DATABASE_DOCUMENTS.TRADES, tradeSchema.schema);
   const tradeQuery = await service.find({
     currency,

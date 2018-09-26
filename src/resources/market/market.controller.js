@@ -4,7 +4,9 @@
  */
 
 const beesV8 = require('../../trading-engine/beesV8');
-const ohlcv_service = require('../../marketdata/ohlcv.service');
+const ohlcvService = require('../../marketdata/ohlcv.service');
+
+const {DATABASE_DOCUMENTS} = require('../../app.constants');
 
 const { logger } = global;
 
@@ -33,20 +35,28 @@ exports.getMarketOhlcvData = async (ctx) => {
   const fromTime = ctx && ctx.request && ctx.request.query && ctx.request.query.from;
   const toTime = ctx && ctx.request && ctx.request.query && ctx.request.query.to;
 
-  if (currency && baseCurrency && resolution && fromTime && toTime) {
-    ctx.body = await ohlcv_service.getMarketData(resolution, fromTime, toTime, currency, baseCurrency);
+  const mapOfResolutionAndDocument = {
+    1: DATABASE_DOCUMENTS.OHLCV1M,
+    5: DATABASE_DOCUMENTS.OHLCV5M,
+    60: DATABASE_DOCUMENTS.OHLCV60M
+  };
+
+  if (currency && baseCurrency && resolution && mapOfResolutionAndDocument[resolution] && fromTime && toTime) {
+    ctx.body = await ohlcvService.getMarketData(mapOfResolutionAndDocument[resolution], fromTime, toTime, currency, baseCurrency);
   }
   else {
     let errorMessage = '';
     if (!currency) errorMessage = 'Missing currency';
     else if (!baseCurrency) errorMessage = 'Missing baseCurrency';
     else if (!resolution) errorMessage = 'Missing baseCurrency';
-    else if (!fromTime) errorMessage = 'Missing from time Unix TS';
-    else if (!toTime) errorMessage = 'Missing to time Unix TS';
+    else if (!mapOfResolutionAndDocument[resolution]) errorMessage = 'Undefined resolution';
+    else if (!fromTime && !toTime) errorMessage = 'Missing "from time" and "to time" Unix TS';
+    else if (!fromTime) errorMessage = 'Missing "from time" Unix TS';
+    else if (!toTime) errorMessage = 'Missing "to time" Unix TS';
     else errorMessage = 'Missing something';
     ctx.body = {
       error: {
-        code: 404,
+        code: 'MDT-01',
         message: errorMessage,
       }
     };

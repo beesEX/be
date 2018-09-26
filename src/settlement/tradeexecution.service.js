@@ -13,7 +13,7 @@ const {ORDER_BOOK_EVENT} = require('../trading-engine/orderbook.event');
 const Transaction = require('../wealth-management/transaction.service');
 const OrderService = require('../resources/order/order.service');
 
-const ohlcvAggregator = require('../marketdata/ohlcv.aggregator');
+const ohlcvAggregator = require('../marketdata/ohlcvAggregator');
 
 const settlementTrade = async (reasonObj, matchObj) => {
   const { currency, baseCurrency } = reasonObj;
