@@ -6,21 +6,22 @@ const db = require('../db');
 
 const service = db.createService(constants.DATABASE_DOCUMENTS.TRADES, tradeSchema.schema);
 
-const { idGenerator } = require('@paralect/node-mongo');
+const {idGenerator} = require('@paralect/node-mongo');
 
 const {ORDER_BOOK_EVENT} = require('../trading-engine/orderbook.event');
 
 const Transaction = require('../wealth-management/transaction.service');
 const OrderService = require('../resources/order/order.service');
+const {collectTrade} = require('../marketdata/ohlcv.service');
 
 const settlementTrade = async (reasonObj, matchObj) => {
-  const { currency, baseCurrency } = reasonObj;
-  const { price: tradedPrice, tradedQuantity } = matchObj;
+  const {currency, baseCurrency} = reasonObj;
+  const {price: tradedPrice, tradedQuantity} = matchObj;
   const tradedAmount = tradedQuantity * tradedPrice;
 
   const transactionProcesses = [];
 
-  if (reasonObj.side === 'BUY') {
+  if(reasonObj.side === 'BUY') {
     // release base currency of reason user
     transactionProcesses.push(Transaction.releaseByTrade(reasonObj.userId, baseCurrency, tradedAmount, reasonObj.orderId));
     // decrease base currency of reason user
@@ -35,7 +36,7 @@ const settlementTrade = async (reasonObj, matchObj) => {
     // increase base currency of match user
     transactionProcesses.push(Transaction.buy(matchObj.userId, baseCurrency, tradedAmount, matchObj.orderId));
   }
-  else {
+  else{
     // release quote currency of reason user
     transactionProcesses.push(Transaction.releaseByTrade(reasonObj.userId, currency, tradedQuantity, reasonObj.orderId));
     // decrease quote base currency of reason user
@@ -61,20 +62,20 @@ const recordTrade = async (tradeObject) => {
 
 // only for testing, will be deleted later
 /*
-const showTrades = async () => {
-  const tradeQuery = await service.find({}, {sort : {createdAt : 1}});
-  if(tradeQuery && tradeQuery.results) {
-    for (let i = 0; i < tradeQuery.results.length; i += 1) {
-      logger.info(`tradeexecution.service.js showTrades(): ${JSON.stringify(tradeQuery.results[i])}`);
-    }
-  }
-};
-*/
+ const showTrades = async () => {
+ const tradeQuery = await service.find({}, {sort : {createdAt : 1}});
+ if(tradeQuery && tradeQuery.results) {
+ for (let i = 0; i < tradeQuery.results.length; i += 1) {
+ logger.info(`tradeexecution.service.js showTrades(): ${JSON.stringify(tradeQuery.results[i])}`);
+ }
+ }
+ };
+ */
 
 const executeTrades = async (orderbookEvent) => {
   logger.info(`tradeexecution.service.js executeTrades(): received orderbookEvent = ${JSON.stringify(orderbookEvent)}`);
 
-  if (!orderbookEvent || !orderbookEvent.reason || orderbookEvent.type !== ORDER_BOOK_EVENT) {
+  if(!orderbookEvent || !orderbookEvent.reason || orderbookEvent.type !== ORDER_BOOK_EVENT) {
     logger.error('tradeexecution.service.js executeTrades(): ERROR: unexpected type');
     throw new Error('Unexpected type of orderbookEvent');
   }
@@ -82,7 +83,7 @@ const executeTrades = async (orderbookEvent) => {
   const reasonObj = orderbookEvent.reason;
   const matchList = orderbookEvent.matches;
 
-  for (let i = 0; i < matchList.length; i += 1) {
+  for(let i = 0; i < matchList.length; i += 1) {
     await settlementTrade(reasonObj, matchList[i]);
     await OrderService.updateOrdersByMatch(reasonObj, matchList[i]);
     // record trade to DB
@@ -102,7 +103,22 @@ const executeTrades = async (orderbookEvent) => {
       buyOrderId: (reasonObj.side === 'BUY') ? reasonObj.orderId : matchList[i].orderId,
       sellOrderId: (reasonObj.side === 'BUY') ? matchList[i].orderId : reasonObj.orderId
     };
-    await recordTrade(tradeObject);
+
+    // trade event for market data
+    const tradeEvent = {
+      currency: reasonObj.currency,
+      baseCurrency: reasonObj.baseCurrency,
+      price: matchList[i].price,
+      quantity: matchList[i].tradedQuantity,
+      executedAt: orderbookEvent.timestamp
+    };
+
+    await Promise.all([
+      settlementTrade(reasonObj, matchList[i]),
+      OrderService.updateOrdersByMatch(reasonObj, matchList[i]),
+      recordTrade(tradeObject),
+      collectTrade(tradeEvent)
+    ]);
   }
 
   logger.info('tradeexecution.service.js executeTrades(): Successfully traded');
@@ -114,5 +130,5 @@ const executeTrades = async (orderbookEvent) => {
 };
 
 module.exports = {
-  executeTrades,
+  executeTrades
 };

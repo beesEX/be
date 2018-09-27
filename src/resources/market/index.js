@@ -9,5 +9,6 @@ const router = new Router();
 const controller = require('./market.controller');
 
 router.get('/aggregatedOrderBook/:currency-:baseCurrency', controller.getAggregatedStateOfOrderBook);
+router.get('/ohlcv/:currency-:baseCurrency/:resolution', controller.getOHLCVDataPoints);
 
 module.exports = router.routes();
