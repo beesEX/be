@@ -45,9 +45,7 @@ exports.getOHLCVDataPoints = async (ctx) => {
 
   if(currency && baseCurrency && resolution && fromTime != undefined && toTime != undefined) {
 
-    const arrayOfDataPoints = await getDataPoints(currency, baseCurrency, resolution, parseInt(fromTime) * 1000, parseInt(toTime) * 1000); // from, to = unix timestamp in s not ms (wrong documented in chart wiki)
-
-    logger.debug(arrayOfDataPoints.length);
+    const arrayOfDataPoints = await getDataPoints(currency, baseCurrency, resolution, parseInt(fromTime), parseInt(toTime));
 
     ctx.body = {
 
