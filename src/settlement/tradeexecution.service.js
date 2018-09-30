@@ -20,40 +20,52 @@ const settlementTrade = async (reasonObj, matchObj) => {
   const { price: tradedPrice, tradedQuantity } = matchObj;
   const tradedAmount = tradedQuantity * tradedPrice;
 
-  const transactionProcesses = [];
+  //const transactionProcesses = [];
 
   if (reasonObj.side === 'BUY') {
     // release base currency of reason user
-    transactionProcesses.push(Transaction.releaseByTrade(reasonObj.userId, baseCurrency, tradedAmount, reasonObj.orderId));
+    //transactionProcesses.push(Transaction.releaseByTrade(reasonObj.userId, baseCurrency, tradedAmount, reasonObj.orderId));
+    await Transaction.releaseByTrade(reasonObj.userId, baseCurrency, tradedAmount, reasonObj.orderId);
     // decrease base currency of reason user
-    transactionProcesses.push(Transaction.sell(reasonObj.userId, baseCurrency, tradedAmount, reasonObj.orderId));
+    //transactionProcesses.push(Transaction.sell(reasonObj.userId, baseCurrency, tradedAmount, reasonObj.orderId));
+    await Transaction.sell(reasonObj.userId, baseCurrency, tradedAmount, reasonObj.orderId);
     // increase quote currency of reason user
-    transactionProcesses.push(Transaction.buy(reasonObj.userId, currency, tradedQuantity, reasonObj.orderId));
+    //transactionProcesses.push(Transaction.buy(reasonObj.userId, currency, tradedQuantity, reasonObj.orderId));
+    await Transaction.buy(reasonObj.userId, currency, tradedQuantity, reasonObj.orderId);
 
     // release quote currency of match user
-    transactionProcesses.push(Transaction.releaseByTrade(matchObj.userId, currency, tradedQuantity, matchObj.orderId));
+    //transactionProcesses.push(Transaction.releaseByTrade(matchObj.userId, currency, tradedQuantity, matchObj.orderId));
+    await Transaction.releaseByTrade(matchObj.userId, currency, tradedQuantity, matchObj.orderId);
     // decrease quote base currency of match user
-    transactionProcesses.push(Transaction.sell(matchObj.userId, currency, tradedQuantity, matchObj.orderId));
+    //transactionProcesses.push(Transaction.sell(matchObj.userId, currency, tradedQuantity, matchObj.orderId));
+    await Transaction.sell(matchObj.userId, currency, tradedQuantity, matchObj.orderId);
     // increase base currency of match user
-    transactionProcesses.push(Transaction.buy(matchObj.userId, baseCurrency, tradedAmount, matchObj.orderId));
+    //transactionProcesses.push(Transaction.buy(matchObj.userId, baseCurrency, tradedAmount, matchObj.orderId));
+    await Transaction.buy(matchObj.userId, baseCurrency, tradedAmount, matchObj.orderId);
   }
   else {
     // release quote currency of reason user
-    transactionProcesses.push(Transaction.releaseByTrade(reasonObj.userId, currency, tradedQuantity, reasonObj.orderId));
+    //transactionProcesses.push(Transaction.releaseByTrade(reasonObj.userId, currency, tradedQuantity, reasonObj.orderId));
+    await Transaction.releaseByTrade(reasonObj.userId, currency, tradedQuantity, reasonObj.orderId);
     // decrease quote base currency of reason user
-    transactionProcesses.push(Transaction.sell(reasonObj.userId, currency, tradedQuantity, reasonObj.orderId));
+    //transactionProcesses.push(Transaction.sell(reasonObj.userId, currency, tradedQuantity, reasonObj.orderId));
+    await Transaction.sell(reasonObj.userId, currency, tradedQuantity, reasonObj.orderId);
     // increase base currency of reason user
-    transactionProcesses.push(Transaction.buy(reasonObj.userId, baseCurrency, tradedAmount, reasonObj.orderId));
+    //transactionProcesses.push(Transaction.buy(reasonObj.userId, baseCurrency, tradedAmount, reasonObj.orderId));
+    await Transaction.buy(reasonObj.userId, baseCurrency, tradedAmount, reasonObj.orderId);
 
     // release base currency of match user
-    transactionProcesses.push(Transaction.releaseByTrade(matchObj.userId, baseCurrency, tradedAmount, matchObj.orderId));
+    //transactionProcesses.push(Transaction.releaseByTrade(matchObj.userId, baseCurrency, tradedAmount, matchObj.orderId));
+    await Transaction.releaseByTrade(matchObj.userId, baseCurrency, tradedAmount, matchObj.orderId);
     // decrease base currency of match user
-    transactionProcesses.push(Transaction.sell(matchObj.userId, baseCurrency, tradedAmount, matchObj.orderId));
+    //transactionProcesses.push(Transaction.sell(matchObj.userId, baseCurrency, tradedAmount, matchObj.orderId));
+    await Transaction.sell(matchObj.userId, baseCurrency, tradedAmount, matchObj.orderId);
     // increase quote currency of match user
-    transactionProcesses.push(Transaction.buy(matchObj.userId, currency, tradedQuantity, matchObj.orderId));
+    //transactionProcesses.push(Transaction.buy(matchObj.userId, currency, tradedQuantity, matchObj.orderId));
+    await Transaction.buy(matchObj.userId, currency, tradedQuantity, matchObj.orderId);
   }
 
-  return Promise.all(transactionProcesses);
+  //return Promise.all(transactionProcesses);
 };
 
 const recordTrade = async (tradeObject) => {
@@ -84,7 +96,7 @@ const executeTrades = async (orderbookEvent) => {
   const reasonObj = orderbookEvent.reason;
   const matchList = orderbookEvent.matches;
 
-  const executeTradePromises = [];
+  //const executeTradePromises = [];
 
   for (let i = 0; i < matchList.length; i += 1) {
     // trade object to record to DB
@@ -114,15 +126,22 @@ const executeTrades = async (orderbookEvent) => {
       executedAt: orderbookEvent.timestamp,
     };
 
+    await settlementTrade(reasonObj, matchList[i]);
+    await OrderService.updateOrdersByMatch(reasonObj, matchList[i]);
+    await recordTrade(tradeObject);
+    await ohlcvAggregator.collectTrade(tradeEvent);
+
+    /*
     executeTradePromises.push(Promise.all([
       settlementTrade(reasonObj, matchList[i]),
       OrderService.updateOrdersByMatch(reasonObj, matchList[i]),
       recordTrade(tradeObject),
       ohlcvAggregator.collectTrade(tradeEvent)
     ]));
+    */
   }
 
-  await Promise.all(executeTradePromises);
+  //await Promise.all(executeTradePromises);
 
   logger.info('tradeexecution.service.js executeTrades(): Successfully traded');
 
@@ -131,35 +150,6 @@ const executeTrades = async (orderbookEvent) => {
 
   return true;
 };
-
-/*
-const getAllTradesAfterTime = async (currency, baseCurrency, fromTime) => {
-  const tradeQuery = await service.find({
-    currency,
-    baseCurrency,
-  }, {sort: {createdAt : 1}, createdAt: {$gt: fromTime}});
-  logger.info(`tradeexecution.service.js: getAllTradesAfterTime(): tradeQuery = ${JSON.stringify(tradeQuery)}`);
-  return tradeQuery && tradeQuery.results;
-};
-
-const getAllTradesOfCurrencyPair = async (currency, baseCurrency) => {
-  const tradeQuery = await service.find({
-    currency,
-    baseCurrency,
-  }, {sort: {createdAt : 1}});
-  logger.info(`tradeexecution.service.js: getAllTradesOfCurrencyPair(): tradeQuery = ${JSON.stringify(tradeQuery)}`);
-  return tradeQuery && tradeQuery.results;
-};
-
-const getFirstTradeBeforeTime = async (currency, baseCurrency, beginTime) => {
-  const tradeQuery = await service.findOne({
-    currency,
-    baseCurrency,
-  }, {sort: {createdAt : -1}, createdAt: {$lt: beginTime}});
-  logger.info(`tradeexecution.service.js: getFirstTradeBeforeTime(): tradeQuery = ${JSON.stringify(tradeQuery)}`);
-  return tradeQuery && tradeQuery.results;
-};
-*/
 
 module.exports = {
   executeTrades,
