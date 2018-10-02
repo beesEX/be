@@ -7,8 +7,6 @@ const beesV8 = require('../../trading-engine/beesV8');
 
 const logger = require('../../logger');
 
-const {getDataPoints} = require('../../marketdata/ohlcv.service');
-
 exports.getAggregatedStateOfOrderBook = async (ctx) => {
 
   if(ctx.params && ctx.params.currency && ctx.params.baseCurrency) {
@@ -43,9 +41,9 @@ exports.getOHLCVDataPoints = async (ctx) => {
 
   logger.debug(`getOHLCVDataPoints: currency=${currency} baseCurrency=${baseCurrency} resolution=${resolution} from=${fromTime} to =${toTime}`);
 
-  if(currency && baseCurrency && resolution && fromTime != undefined && toTime != undefined) {
+  if(currency && baseCurrency && resolution && fromTime && toTime) {
 
-    const arrayOfDataPoints = await getDataPoints(currency, baseCurrency, resolution, parseInt(fromTime), parseInt(toTime));
+    const arrayOfDataPoints = await beesV8.getOHCLVDataPoints(currency, baseCurrency, resolution, parseInt(fromTime), parseInt(toTime));
 
     ctx.body = {
 

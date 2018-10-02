@@ -4,6 +4,7 @@ const {
   ORDER_BOOK_READY_EVENT,
   GET_AGGREGATED_STATE_EVENT,
   GET_ORDERBOOK_STATE_EVENT,
+  GET_OHCLV_DATA_POINTS,
   ORDER_BOOK_EVENT
 } = require('./orderbook.event');
 
@@ -25,7 +26,7 @@ async function zmqPublish(message, topic) {
  * The trading engine of the beesEX platform.
  * Each order book instance will be run by a child process.
  */
-class BeesV8{
+class BeesV8 {
   constructor() {
     this.symbol = 'BTC_USDT'; // hardcode
     this.mapOfIdAndResolveFunction = {};
@@ -52,29 +53,29 @@ class BeesV8{
       requestNamespace.set('requestId', message.requestId);
       logger.info(`beesV8.js: receives message from orderboook-childprocess: ${JSON.stringify(message)}`);
 
-      if (message.type === ORDER_BOOK_READY_EVENT) {
+      if(message.type === ORDER_BOOK_READY_EVENT) {
         logger.info(`beesV8.js: start(): beesV8 trading engine for ${message.symbol} started successfully`);
         this.listOfReadyOrderbook[message.symbol] = true;
         this._starterCallback();
       }
-      else if (message.type === ORDER_BOOK_EVENT) {
+      else if(message.type === ORDER_BOOK_EVENT) {
         const resolveFunction = this.mapOfIdAndResolveFunction[message.id];
-        if (resolveFunction) {
+        if(resolveFunction) {
           resolveFunction(message);
           delete this.mapOfIdAndResolveFunction[message.id];
         }
 
         // publishes orderbook event to UI per zeroMQ if success
-        if (message.reason) {
+        if(message.reason) {
           zmqPublish(JSON.stringify(message), `Orderbook-${this.symbol}`).then(() => {
             logger.info(`beesV8.js: publishes orderbook event per zeroMQ to UI server: \n ${JSON.stringify(message, null, 2)}`);
           });
         }
       }
-      else if (message.type === GET_ORDERBOOK_STATE_EVENT || message.type === GET_AGGREGATED_STATE_EVENT) {
+      else if(message.type === GET_ORDERBOOK_STATE_EVENT || message.type === GET_AGGREGATED_STATE_EVENT || message.type == GET_OHCLV_DATA_POINTS) {
         const resolveFunction = this.mapOfIdAndResolveFunction[message.id];
         if(resolveFunction) {
-          resolveFunction(message.state);
+          resolveFunction(message.data);
           delete this.mapOfIdAndResolveFunction[message.id];
         }
       }
@@ -82,11 +83,11 @@ class BeesV8{
         logger.error(`beesV8.js: unknown message type ${JSON.stringify(message.type)}`);
       }
     };
-    
+
     // bind on-message event handler to CLS namespace
     this.orderbookChildProcess.on('message', requestNamespace.bind(handleMessage));
 
-    return new Promise((resolve, rejection) => {
+    return new Promise((resolve) => {
       this._starterCallback = resolve;
     });
   }
@@ -108,7 +109,7 @@ class BeesV8{
     event.id = messageId;
     this.orderbookChildProcess.send(event);
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       this.mapOfIdAndResolveFunction[messageId] = resolve;
     });
   }
@@ -137,6 +138,32 @@ class BeesV8{
     return new Promise((resolve) => {
       this.mapOfIdAndResolveFunction[messageId] = resolve;
     });
+  }
+
+  async getOHCLVDataPoints(currency, baseCurrency, resolution, from, to) {
+
+    const messageId = uuid();
+
+    const message = {
+      type: GET_OHCLV_DATA_POINTS,
+      id: messageId,
+      currency,
+      baseCurrency,
+      resolution,
+      from,
+      to
+    };
+
+    logger.info(`beesV8.js getOHCLVDataPoints(): sends request to child process of order book ${currency}_${baseCurrency}`);
+
+    this.orderbookChildProcess.send(message);
+
+    return new Promise((resolve) => {
+
+      this.mapOfIdAndResolveFunction[messageId] = resolve;
+
+    });
+
   }
 
   /**

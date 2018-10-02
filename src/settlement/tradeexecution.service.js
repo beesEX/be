@@ -106,7 +106,7 @@ const executeTrades = async (orderbookEvent) => {
     const tradeEvent = {
       currency: reasonObj.currency,
       baseCurrency: reasonObj.baseCurrency,
-      price: matchList[i].price,
+      price: Math.min(matchList[i].price,reasonObj.price),
       quantity: matchList[i].tradedQuantity,
       executedAt: orderbookEvent.timestamp
     };

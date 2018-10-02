@@ -4,6 +4,7 @@ const {OrderEvent} = require('../resources/order/order.models');
 
 const ORDER_BOOK_READY_EVENT = 'ORDER_BOOK_READY_EVENT';
 const GET_AGGREGATED_STATE_EVENT = 'GET_AGGREGATED_STATE';
+const GET_OHCLV_DATA_POINTS = 'GET_OHCLV_DATA_POINTS';
 const GET_ORDERBOOK_STATE_EVENT = 'GET_ORDERBOOK_STATE';
 const ORDER_BOOK_EVENT = 'ORDER_BOOK_EVENT';
 
@@ -19,7 +20,7 @@ module.exports = {
   GET_AGGREGATED_STATE_EVENT,
   GET_ORDERBOOK_STATE_EVENT,
   ORDER_BOOK_EVENT,
-
+  GET_OHCLV_DATA_POINTS,
   REASON_OBJECT_TYPE,
 
   createNewMatchObject: (order, tradedQuantity, isFilledCompletely) => {
