@@ -1,4 +1,33 @@
-const { createConsoleLogger } = require('@paralect/common-logger');
+
+const winston = require('winston');
+
+createConsoleLogger = ({ isDev = false }) => {
+  const transports = [];
+  transports.push(new winston.transports.Console({
+    colorize: true,
+    humanReadableUnhandledException: true,
+    json: !isDev,
+    level: isDev ? 'debug' : 'info',
+  }));
+
+  transports.push(new winston.transports.File({
+    humanReadableUnhandledException: true,
+    json: !isDev,
+    level: isDev ? 'debug' : 'info',
+    filename: 'log/error.log'
+  }));
+
+  const logger = new winston.Logger({
+    exitOnError: false,
+    transports,
+  });
+
+  logger.debug('[logger] Configured console based logger');
+
+  return logger;
+};
+
+
 
 const logger = createConsoleLogger({isDev: process.env.NODE_ENV === 'development'});
 

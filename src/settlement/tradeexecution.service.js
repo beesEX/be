@@ -84,8 +84,6 @@ const executeTrades = async (orderbookEvent) => {
   const matchList = orderbookEvent.matches;
 
   for(let i = 0; i < matchList.length; i += 1) {
-    await settlementTrade(reasonObj, matchList[i]);
-    await OrderService.updateOrdersByMatch(reasonObj, matchList[i]);
     // record trade to DB
     const tradeObject = {
       _id: idGenerator.generate(),
@@ -113,9 +111,10 @@ const executeTrades = async (orderbookEvent) => {
       executedAt: orderbookEvent.timestamp
     };
 
+    await settlementTrade(reasonObj, matchList[i]);
+    await OrderService.updateOrdersByMatch(reasonObj, matchList[i]);
+
     await Promise.all([
-      settlementTrade(reasonObj, matchList[i]),
-      OrderService.updateOrdersByMatch(reasonObj, matchList[i]),
       recordTrade(tradeObject),
       collectTrade(tradeEvent)
     ]);
