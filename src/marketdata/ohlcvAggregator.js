@@ -212,8 +212,19 @@ class OhlcvAggregator {
     const ohlcvDataOnRAM = ohlcvData.getCurrentOhlcvData(timeResolution);
     logger.debug(`ohlcvAggregator.js getCollectedOhlcvData(): ohlcvDataOnRAM=${JSON.stringify(ohlcvDataOnRAM)}`);
 
-    let ohlcvDataToReturn = [];
-    if (ohlcvDataInDB && ohlcvDataInDB.length) ohlcvDataToReturn = ohlcvDataInDB;
+    const ohlcvDataToReturn = [];
+    if (ohlcvDataInDB && ohlcvDataInDB.length) {
+      for (let i = 0; i < ohlcvDataInDB.length; i += 1) {
+        ohlcvDataToReturn.push({
+          open: ohlcvDataInDB[i].open,
+          close: ohlcvDataInDB[i].close,
+          high: ohlcvDataInDB[i].high,
+          low: ohlcvDataInDB[i].low,
+          volume: ohlcvDataInDB[i].volume,
+          time: ohlcvDataInDB[i].time,
+        });
+      }
+    }
 
     if (ohlcvDataOnRAM && ohlcvDataOnRAM.close && ohlcvDataOnRAM.time && ohlcvDataOnRAM.time < toTimeTS) {
       ohlcvDataToReturn.push(ohlcvDataOnRAM);
@@ -226,6 +237,7 @@ class OhlcvAggregator {
           close: lastClosePrice,
           high: lastClosePrice,
           low: lastClosePrice,
+          volume: 0,
           time: nextStartTime,
         });
         nextStartTime = ohlcvTimer.getNextStartTime(nextStartTime, timeResolution);
