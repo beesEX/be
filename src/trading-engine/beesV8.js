@@ -4,8 +4,10 @@ const {
   ORDER_BOOK_READY_EVENT,
   GET_AGGREGATED_STATE_EVENT,
   GET_ORDERBOOK_STATE_EVENT,
-  ORDER_BOOK_EVENT
+  ORDER_BOOK_EVENT,
 } = require('./orderbook.event');
+
+const GET_OHLCV_DATA_EVENT = 'GET_OHLCV_DATA_EVENT';
 
 const logger = require('../logger');
 const requestNamespace = require('../config/requestNamespace');
@@ -78,7 +80,14 @@ class BeesV8{
           delete this.mapOfIdAndResolveFunction[message.id];
         }
       }
-      else{
+      else if (message.type === GET_OHLCV_DATA_EVENT) {
+        const resolveFunction = this.mapOfIdAndResolveFunction[message.id];
+        if(resolveFunction) {
+          resolveFunction(message.data);
+          delete this.mapOfIdAndResolveFunction[message.id];
+        }
+      }
+      else {
         logger.error(`beesV8.js: unknown message type ${JSON.stringify(message.type)}`);
       }
     };
@@ -102,7 +111,7 @@ class BeesV8{
    * @param {Object} event: OrderEvent object to be sent to order book child process
    */
   processOrderEvent(event) {
-    logger.info('beesV8.js processOrderEvent(): received order event = ', JSON.stringify(event));
+    logger.info(`beesV8.js processOrderEvent(): received order event = ${JSON.stringify(event)}`);
 
     const messageId = uuid();
     event.id = messageId;
@@ -158,6 +167,29 @@ class BeesV8{
     };
 
     logger.info(`beesV8.js getCurrentStateOfOrderBook(): sends request to child process of order book ${symbol}`);
+    this.orderbookChildProcess.send(message);
+
+    return new Promise((resolve) => {
+      this.mapOfIdAndResolveFunction[messageId] = resolve;
+    });
+  }
+
+  async getOhlcvData(symbol, resolution, from, to) {
+    if(symbol !== this.symbol) {
+      logger.warn('beesV8.js getOhlcvData(): receives unknown currency pair symbol=', symbol);
+      return null;
+    }
+
+    const messageId = uuid();
+    const message = {
+      type: GET_OHLCV_DATA_EVENT,
+      resolution,
+      from,
+      to,
+      id: messageId
+    };
+
+    logger.info(`beesV8.js getOhlcvData(): sends request to ohlcv Aggregator ${symbol}`);
     this.orderbookChildProcess.send(message);
 
     return new Promise((resolve) => {

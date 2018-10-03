@@ -290,7 +290,7 @@ const handleMessage = (event) => {
   requestNamespace.set('requestId', event.requestId);
   switch (event.type) {
     case OrderBookEvent.GET_AGGREGATED_STATE_EVENT: {
-      logger.debug(`orderbook.js: received a message from parent process of type ${OrderBookEvent.EVENT_GET_AGGREGATED_STATE}`);
+      logger.debug(`orderbook.js: received a message from parent process of type ${OrderBookEvent.GET_AGGREGATED_STATE_EVENT}`);
 
       const state = orderbook.getAggregatedState();
       process.send({
@@ -314,19 +314,30 @@ const handleMessage = (event) => {
       break;
     }
     default: {
-      const orderbookEvent = orderbook.processOrderEvent(event);
+      const listOfOrderEventType = [];
+      listOfOrderEventType.push(OrderEvent.LIMIT_PLACED_EVENT);
+      listOfOrderEventType.push(OrderEvent.MARKET_PLACED_EVENT);
+      listOfOrderEventType.push(OrderEvent.LIMIT_UPDATED_EVENT);
+      listOfOrderEventType.push(OrderEvent.QUANTITY_UPDATED_EVENT);
+      listOfOrderEventType.push(OrderEvent.CANCELED_EVENT);
 
-      // send order book event to settlement module
-      if (orderbookEvent && orderbookEvent.reason) TradeExecutionService.executeTrades(orderbookEvent);
+      if(listOfOrderEventType.indexOf(event._type) >= 0) {
+        logger.debug(`orderbook.js: received a message from parent process of type ${event._type}`);
+        const orderbookEvent = orderbook.processOrderEvent(event);
 
-      // send order book event back to parent process
-      orderbookEvent.id = event.id;
-      process.send(orderbookEvent);
+        // send order book event to settlement module
+        if (orderbookEvent && orderbookEvent.reason) TradeExecutionService.executeTrades(orderbookEvent);
+
+        // send order book event back to parent process
+        orderbookEvent.id = event.id;
+        process.send(orderbookEvent);
+      }
+      break;
     }
   }
 };
 process.on('message', (event) => {
-
+  logger.debug(`orderbook.js: received a message = ${JSON.stringify(event)}`);
   const handle = requestNamespace.bind(handleMessage);
 
   handle(event);

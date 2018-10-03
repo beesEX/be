@@ -55,6 +55,8 @@ class OhlcvResolutionDataSet {
   }
 
   getCurrentOhlcvData (timeResolutionType) {
+    if (!this.resolutionDataSet[timeResolutionType].data) return null;
+
     const currentMarketData = Object.assign({}, this.resolutionDataSet[timeResolutionType].data);
     currentMarketData.time = this.resolutionDataSet[timeResolutionType].startTime;
     return currentMarketData;

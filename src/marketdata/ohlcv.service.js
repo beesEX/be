@@ -1,7 +1,6 @@
 const logger = require('../logger');
 
 const db = require('../db');
-const ohlcvData = require('./ohlcvData');
 const ohlcvTimer = require('./ohlcvTimer');
 
 const tradeSchema = require('../settlement/trade.schema');
@@ -31,8 +30,8 @@ const getLastMarketDataStartTime = async (timeResolutionType, currency, baseCurr
   return marketDataQuery && marketDataQuery.results && marketDataQuery.results[0] && marketDataQuery.results[0].startTime;
 };
 
-const getMarketData = async (timeResolutionType, startDate, endDate, currency, baseCurrency) => {
-  logger.info(`ohlcv.service.js: getMarketData(): currency = ${currency} baseCurrency = ${baseCurrency} timeResolutionType = ${timeResolutionType} startDate = ${startDate} endDate = ${endDate} `);
+const getMarketData = async (timeResolutionType, fromTimeTS, toTimeTS, currency, baseCurrency) => {
+  logger.info(`ohlcv.service.js: getMarketData(): currency = ${currency} baseCurrency = ${baseCurrency} timeResolutionType = ${timeResolutionType} startDate = ${fromTimeTS} endDate = ${toTimeTS} `);
   const service = services[timeResolutionType];
   if (!service) {
     logger.error('ohlcv.service.js getMarketData(): no service found');
@@ -42,34 +41,11 @@ const getMarketData = async (timeResolutionType, startDate, endDate, currency, b
   const marketDataQuery = await service.find({
     currency,
     baseCurrency,
-    time: {$gte: Math.floor(startDate), $lte: Math.floor(endDate)}
+    time: {$gte: Math.floor(fromTimeTS), $lte: Math.floor(toTimeTS)}
   }, {sort: {time: 1}});
 
-
   const marketDataToReturn = marketDataQuery && marketDataQuery.results;
-  /*
 
-
-  const currentMarketData = ohlcvData.getCurrentOhlcvData(timeResolutionType);
-
-  if (marketDataToReturn && marketDataToReturn.length > 0) {
-    const lastStartTime = marketDataToReturn[0].time;
-    const lastClosePrice = marketDataToReturn[0].close;
-    const currStartTime = currentMarketData.time;
-    for (let startTime = ohlcvTimer.getNextStartTime(lastStartTime, timeResolutionType);
-         startTime < currStartTime;
-         startTime = ohlcvTimer.getNextStartTime(startTime, timeResolutionType)) {
-      marketDataToReturn.push({
-        open: lastClosePrice,
-        close: lastClosePrice,
-        high: lastClosePrice,
-        low: lastClosePrice,
-        volume: 0
-      });
-    }
-  }
-  marketDataToReturn.push(currentMarketData);
-  */
   return marketDataToReturn;
 };
 

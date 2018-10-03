@@ -4,9 +4,13 @@ const ohlcvTimer = require('./ohlcvTimer');
 const ohlcvData = require('./ohlcvData');
 const ohlcvService = require('./ohlcv.service');
 
+const requestNamespace = require('../config/requestNamespace');
+
 const {
   OHLCV_COLLECTIONS
 } = require('../app.constants');
+
+const GET_OHLCV_DATA_EVENT = 'GET_OHLCV_DATA_EVENT';
 
 class OhlcvAggregator {
   constructor(currency, baseCurrency) {
@@ -72,9 +76,9 @@ class OhlcvAggregator {
     for (let k = 0; k < OHLCV_COLLECTIONS.length; k += 1) {
       const toBeSavedTradeEvents = beCheckedTradeData[OHLCV_COLLECTIONS[k]].unsavedTradeData;
       const lastSavedTradeEvent = beCheckedTradeData[OHLCV_COLLECTIONS[k]].lastSavedTradeData;
-      const tmp_lastStartTime = lastStartTime[OHLCV_COLLECTIONS[k]];
+      const lastStartTimeOfThisResolution = lastStartTime[OHLCV_COLLECTIONS[k]];
       const currentStartTime = ohlcvTimer.getCurrentStartTime(OHLCV_COLLECTIONS[k]);
-      if (!tmp_lastStartTime) { // no market data for this time resolution
+      if (!lastStartTimeOfThisResolution) { // no market data for this time resolution
         // if no toBeSavedTradeEvents: just create data for current start time
         if (!toBeSavedTradeEvents || toBeSavedTradeEvents.length === 0) {
           ohlcvData.createData(OHLCV_COLLECTIONS[k], currentStartTime);
@@ -104,7 +108,7 @@ class OhlcvAggregator {
         else {
           //put all toBeSavedTradeEvents to this data set
           for (let l = 0; l < toBeSavedTradeEvents.length; l += 1) {
-            if (toBeSavedTradeEvents[l].executedAt.getTime() > tmp_lastStartTime) // redundant check
+            if (toBeSavedTradeEvents[l].executedAt.getTime() > lastStartTimeOfThisResolution) // redundant check
               await this.updateDataForResolution(OHLCV_COLLECTIONS[k], toBeSavedTradeEvents[l]);
           }
         }
@@ -119,7 +123,7 @@ class OhlcvAggregator {
       const dataToRecordInDB = ohlcvData.resolutionDataSet[timeResolutionType].getDataToRecordAndSetStartTime(startTime);
       await ohlcvService.recordMarketData(timeResolutionType, dataToRecordInDB);
     }
-  };
+  }
 
   // only use for init
   async updateDataForResolution (timeResolutionType, tradeObject) {
@@ -155,7 +159,7 @@ class OhlcvAggregator {
     else {
       logger.error(`ohlcvAggregator.js updateDataForResolution(): ERROR: Data of resolution ${timeResolutionType} must be created first`);
     }
-  };
+  }
 
 
   /*
@@ -167,7 +171,6 @@ class OhlcvAggregator {
         executedAt: orderbookEvent.timestamp,
       };
    */
-
   async collectTrade (tradeEvent) {
     logger.info(`ohlcvAggregator.js collectTrade(): tradeEvent=${JSON.stringify(tradeEvent)}`);
 
@@ -198,8 +201,39 @@ class OhlcvAggregator {
       }
     }
     logger.info(`ohlcvAggregator.js collectTrade(): data=${JSON.stringify(ohlcvData.resolutionDataSet,null,2)}`);
-  };
+  }
 
+  async getCollectedOhlcvData (timeResolution, fromTimeTS, toTimeTS) {
+    logger.info(`ohlcvAggregator.js getCollectedOhlcvData(): timeResolution=${timeResolution}`);
+
+    const ohlcvDataInDB = await ohlcvService.getMarketData(timeResolution, fromTimeTS, toTimeTS, this.currency, this.baseCurrency);
+    logger.debug(`ohlcvAggregator.js getCollectedOhlcvData(): ohlcvDataInDB=${JSON.stringify(ohlcvDataInDB)}`);
+
+    const ohlcvDataOnRAM = ohlcvData.getCurrentOhlcvData(timeResolution);
+    logger.debug(`ohlcvAggregator.js getCollectedOhlcvData(): ohlcvDataOnRAM=${JSON.stringify(ohlcvDataOnRAM)}`);
+
+    let ohlcvDataToReturn = [];
+    if (ohlcvDataInDB && ohlcvDataInDB.length) ohlcvDataToReturn = ohlcvDataInDB;
+
+    if (ohlcvDataOnRAM && ohlcvDataOnRAM.close && ohlcvDataOnRAM.time && ohlcvDataOnRAM.time < toTimeTS) {
+      ohlcvDataToReturn.push(ohlcvDataOnRAM);
+
+      let nextStartTime = ohlcvTimer.getNextStartTime(ohlcvDataOnRAM.time, timeResolution);
+      const lastClosePrice = ohlcvDataOnRAM.close;
+      while (nextStartTime <= toTimeTS) {
+        ohlcvDataToReturn.push({
+          open: lastClosePrice,
+          close: lastClosePrice,
+          high: lastClosePrice,
+          low: lastClosePrice,
+          time: nextStartTime,
+        });
+        nextStartTime = ohlcvTimer.getNextStartTime(nextStartTime, timeResolution);
+      }
+    }
+
+    return ohlcvDataToReturn;
+  }
 }
 
 const ohlcvAggregator = new OhlcvAggregator('BTC', 'USDT');
@@ -207,130 +241,31 @@ ohlcvAggregator.init().then(() => {
   logger.info('ohlcvAggregator.js init(): finished initiation');
 });
 
-/*
-// load all unsaved being built market data in DB
-const init = async () => {
-  // hard code
-  const currencyArray = ['BTC'];
-  const baseCurrencyArray = ['USDT'];
+// Order Book event handling logic for events received from parent process, sent by beesV8.js
+const handleMessage = async (event) => {
+  requestNamespace.set('requestId', event.requestId);
+  switch (event.type) {
+    case GET_OHLCV_DATA_EVENT: {
+      logger.debug(`ohlcvAggregator.js: received a message from parent process = ${JSON.stringify(event)}`);
 
-  // get the last unsaved market data from trade table
-  // - get last start time for each pair of currency of each time resolution
-  // - for each start time, load the last saved trade and all unsaved trades
+      const data = await ohlcvAggregator.getCollectedOhlcvData(event.resolution, event.from, event.to);
+      logger.info(`ohlcvAggregator.js: data to return = ${JSON.stringify(data)}`);
 
-  const lastStartTime = {};
-  for (let i = 0; i < currencyArray.length; i += 1) {
-    lastStartTime[currencyArray[i]] = {};
-    for (let j = 0; j < baseCurrencyArray.length; j += 1) {
-      lastStartTime[currencyArray[i]][baseCurrencyArray[j]] = {};
-      const lastStartTimeOfCurrencyPairPromises = [];
-      for (let k = 0; k < OHLCV_COLLECTIONS.length; k += 1) {
-        lastStartTimeOfCurrencyPairPromises.push(ohlcvService.getLastMarketDataStartTime(OHLCV_COLLECTIONS[k], currencyArray[i], baseCurrencyArray[j]));
-      }
-      const lastStartTimeOfCurrencyPair = await Promise.all(lastStartTimeOfCurrencyPairPromises);
-      for (let k = 0; k < OHLCV_COLLECTIONS.length; k += 1) {
-        if (lastStartTimeOfCurrencyPair[k]) {
-          lastStartTime[currencyArray[i]][baseCurrencyArray[j]][OHLCV_COLLECTIONS[k]] = lastStartTimeOfCurrencyPair[k];
-        }
-      }
+      process.send({
+        id: event.id,
+        type: GET_OHLCV_DATA_EVENT,
+        data
+      });
+
+      break;
     }
   }
-  logger.info(`ohlcvAggregator.js init(): lastStartTime=${JSON.stringify(lastStartTime,null,2)}`);
-
-  const beCheckedTradeData = {};
-  for (let i = 0; i < currencyArray.length; i += 1) {
-    beCheckedTradeData[currencyArray[i]] = {};
-    for (let j = 0; j < baseCurrencyArray.length; j += 1) {
-      beCheckedTradeData[currencyArray[i]][baseCurrencyArray[j]] = {};
-      for (let k = 0; k < OHLCV_COLLECTIONS.length; k += 1) {
-        const tmp_lastStartTime = lastStartTime[currencyArray[i]][baseCurrencyArray[j]][OHLCV_COLLECTIONS[k]];
-        if (tmp_lastStartTime) {
-          const nextStartTime = ohlcvTimer.getNextStartTime(tmp_lastStartTime, OHLCV_COLLECTIONS[k]);
-          const lastTimeStamp = new Date(nextStartTime);
-          beCheckedTradeData[currencyArray[i]][baseCurrencyArray[j]][OHLCV_COLLECTIONS[k]] = {
-            unsavedTradeData: await ohlcvService.getAllTradesAfterTime(currencyArray[i], baseCurrencyArray[j], lastTimeStamp),
-            lastSavedTradeData: await ohlcvService.getFirstTradeBeforeTime(currencyArray[i], baseCurrencyArray[j], lastTimeStamp),
-          };
-        }
-        else {
-          beCheckedTradeData[currencyArray[i]][baseCurrencyArray[j]][OHLCV_COLLECTIONS[k]] = {
-            unsavedTradeData: await ohlcvService.getAllTradesOfCurrencyPair(currencyArray[i], baseCurrencyArray[j]),
-          };
-        }
-      }
-    }
-  }
-  logger.info(`ohlcvAggregator.js init(): beCheckedTradeData=${JSON.stringify(beCheckedTradeData,null,2)}`);
-
-  // for each data of each resolution of each pair currency:
-  // if no market data for this time resolution (tmp_lastStartTime = null):
-  //  - if no toBeSavedTradeEvents: just create data set for current start time
-  //  - else: create data set with start time = toBeSavedTradeEvents[0].executedTime and put all toBeSavedTradeEvents to this data set
-  // else: there is market data for this time resolution (tmp_lastStartTime != null)
-  //  create new data set with start time is next start time of executed time of last saved trade
-  //  set last close price for data set
-  //  - if no new trade event (!toBeSavedTradeEvents || toBeSavedTradeEvents.length = 0): some thing error! (how was last market data saved?)  //
-  //  - else (there are some unprocessed trade events): put all toBeSavedTradeEvents to this data set
-
-  for (let i = 0; i < currencyArray.length; i += 1) {
-    for (let j = 0; j < baseCurrencyArray.length; j += 1) {
-      for (let k = 0; k < OHLCV_COLLECTIONS.length; k += 1) {
-        const toBeSavedTradeEvents = beCheckedTradeData[currencyArray[i]]
-          && beCheckedTradeData[currencyArray[i]][baseCurrencyArray[j]]
-          && beCheckedTradeData[currencyArray[i]][baseCurrencyArray[j]][OHLCV_COLLECTIONS[k]]
-          && beCheckedTradeData[currencyArray[i]][baseCurrencyArray[j]][OHLCV_COLLECTIONS[k]].unsavedTradeData;
-        const lastSavedTradeEvent = beCheckedTradeData[currencyArray[i]]
-          && beCheckedTradeData[currencyArray[i]][baseCurrencyArray[j]]
-          && beCheckedTradeData[currencyArray[i]][baseCurrencyArray[j]][OHLCV_COLLECTIONS[k]]
-          && beCheckedTradeData[currencyArray[i]][baseCurrencyArray[j]][OHLCV_COLLECTIONS[k]].lastSavedTradeData;
-        const tmp_lastStartTime = lastStartTime[currencyArray[i]][baseCurrencyArray[j]][OHLCV_COLLECTIONS[k]];
-        const currentStartTime = ohlcvTimer.getCurrentStartTime(OHLCV_COLLECTIONS[k]);
-        if (!tmp_lastStartTime) { // no market data for this time resolution
-          // if no toBeSavedTradeEvents: just create data for current start time
-          if (!toBeSavedTradeEvents || toBeSavedTradeEvents.length === 0) {
-            ohlcvData.createData(OHLCV_COLLECTIONS[k], currentStartTime, currencyArray[i], baseCurrencyArray[j]);
-          }
-          // else: put all toBeSavedTradeEvents in order
-          else {
-            const firstStartTime = ohlcvTimer.getStartTimeOfTimeStamp(OHLCV_COLLECTIONS[k], toBeSavedTradeEvents[0].executedAt);
-            ohlcvData.createData(OHLCV_COLLECTIONS[k], firstStartTime, currencyArray[i], baseCurrencyArray[j]);
-            for (let l = 0; l < toBeSavedTradeEvents.length; l += 1) {
-              await updateDataForResolution(OHLCV_COLLECTIONS[k], toBeSavedTradeEvents[l]);
-            }
-          }
-        }
-        else { // there is market data for this time resolution
-          const startTimeOfLastSavedTrade = ohlcvTimer.getStartTimeOfTimeStamp(OHLCV_COLLECTIONS[k], lastSavedTradeEvent.executedAt);
-          const startTime = ohlcvTimer.getNextStartTime(startTimeOfLastSavedTrade, OHLCV_COLLECTIONS[k]);
-          ohlcvData.createData(OHLCV_COLLECTIONS[k], startTime, currencyArray[i], baseCurrencyArray[j]);
-          const lastClosePrice = lastSavedTradeEvent.price;
-          ohlcvData.setLastClosePrice(OHLCV_COLLECTIONS[k], currencyArray[i], baseCurrencyArray[j], lastClosePrice);
-
-          // if no toBeSavedTradeEvents:
-          if (!toBeSavedTradeEvents || toBeSavedTradeEvents.length === 0) {
-            //  SOME THING ERROR!
-            logger.error(`ohlcvAggregator.js init(): Error`);
-          }
-          // else: there is toBeSavedTradeEvents
-          else {
-            //put all toBeSavedTradeEvents to this data set
-            for (let l = 0; l < toBeSavedTradeEvents.length; l += 1) {
-              if (toBeSavedTradeEvents[l].executedAt.getTime() > tmp_lastStartTime) // redundant check
-                await updateDataForResolution(OHLCV_COLLECTIONS[k], toBeSavedTradeEvents[l]);
-            }
-          }
-        }
-      }
-    }
-  }
-  logger.info(`ohlcvAggregator.js init(): data=${JSON.stringify(ohlcvData.data,null,2)}`);
 };
 
-init().then(() => {
-  logger.info('ohlcvAggregator.js init(): finish initiation');
-  // start ohlcv timer
-  //ohlcvTimer.begin();
+process.on('message', (event) => {
+  logger.debug(`ohlcvAggregator.js: received a message = ${JSON.stringify(event)}`);
+  const handle = requestNamespace.bind(handleMessage);
+  handle(event);
 });
-*/
 
 module.exports = ohlcvAggregator;
