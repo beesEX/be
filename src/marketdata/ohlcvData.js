@@ -6,12 +6,12 @@ class OhlcvData {
     this.currency = currency;
     this.baseCurrency = baseCurrency;
     this.startTime = startTime;
-    this.dataToRecordInDB = null;
+    this.dataToRecordInDB = null; // [Tung]: why does this field need to be an instance property of this class? just create object to record and return it
     this.lastClosePrice = null;
     this.data = null;
   }
 
-  updateData(tradeEvent) {
+  updateData(tradeEvent) { // [Tung]: rename function to 'aggregate(tradeEvent)'
     if (!this.data) this.data = {};
     if (!this.data.open) this.data.open = tradeEvent.price;
     this.data.close = tradeEvent.price;
@@ -21,7 +21,7 @@ class OhlcvData {
     this.lastClosePrice = tradeEvent.price;
   }
 
-  getDataToRecordAndSetStartTime(startTime) {
+  getDataToRecordAndSetStartTime(startTime) { // [Tung]: rename function to 'reset(startTime)', of course it returns finish aggregated data point to record as now
     this.dataToRecordInDB = Object.assign({}, this.data);
     this.dataToRecordInDB.time = this.startTime;
     this.dataToRecordInDB.currency = this.currency;
@@ -65,4 +65,4 @@ class OhlcvResolutionDataSet {
 
 const ohlcvResolutionDataSet = new OhlcvResolutionDataSet('BTC', 'USDT');
 
-module.exports = ohlcvResolutionDataSet;
+module.exports = ohlcvResolutionDataSet; // [Tung]: export the constructor, not an instance, so one aggregator instance can create a DataSet object itself

@@ -7,13 +7,13 @@ const ohlcvService = require('./ohlcv.service');
 const requestNamespace = require('../config/requestNamespace');
 
 const {
-  OHLCV_COLLECTIONS
+  OHLCV_COLLECTIONS // [Tung]: rename this constant to 'OHLCV_RESOLUTIONS' to be more logical here, i know, that we are using the collection names here, but it this context they have the meaning of resolutions, just do renaming here, not in app.constants.js
 } = require('../app.constants');
 
 const GET_OHLCV_DATA_EVENT = 'GET_OHLCV_DATA_EVENT';
 
 class OhlcvAggregator {
-  constructor(currency, baseCurrency) {
+  constructor(currency, baseCurrency) { // [Tung]: create an instance of OhlcvResolutionDataSet in this constructor, it's more object oriented.
     this.currency = currency;
     this.baseCurrency = baseCurrency;
   }
@@ -27,7 +27,7 @@ class OhlcvAggregator {
 
     const lastStartTimeOfCurrencyPairPromises = [];
     for (let k = 0; k < OHLCV_COLLECTIONS.length; k += 1) {
-      lastStartTimeOfCurrencyPairPromises.push(ohlcvService.getLastMarketDataStartTime(OHLCV_COLLECTIONS[k], this.currency, this.baseCurrency));
+      lastStartTimeOfCurrencyPairPromises.push(ohlcvService.getLastMarketDataStartTime(OHLCV_COLLECTIONS[k], this.currency, this.baseCurrency)); // [Tung]: change input param order to: currency, baseCurrency, resolution.
     }
     const lastStartTimeOfCurrencyPair = await Promise.all(lastStartTimeOfCurrencyPairPromises);
     for (let k = 0; k < OHLCV_COLLECTIONS.length; k += 1) {
@@ -174,7 +174,7 @@ class OhlcvAggregator {
   async collectTrade (tradeEvent) {
     logger.info(`ohlcvAggregator.js collectTrade(): tradeEvent=${JSON.stringify(tradeEvent)}`);
 
-    const resolutionTypeList = Object.getOwnPropertyNames(ohlcvData.resolutionDataSet);
+    const resolutionTypeList = Object.getOwnPropertyNames(ohlcvData.resolutionDataSet); // [Tung]: why don't use the above constant 'OHLCV_COLLECTIONS' or 'OHLCV_RESOLUTIONS' after renaming?
     for (let i = 0; i < resolutionTypeList.length; i += 1) {
       const currentStartTime = ohlcvData.resolutionDataSet[resolutionTypeList[i]].startTime;
       if (tradeEvent.executedAt.getTime() < currentStartTime) {
@@ -196,7 +196,7 @@ class OhlcvAggregator {
           });
           nextStartTime = ohlcvTimer.getNextStartTime(nextStartTime, resolutionTypeList[i]);
         }
-        await this.recordMarketDataAndSetStartTimeForCurrencyPair(resolutionTypeList[i], nextStartTime);
+        await this.recordMarketDataAndSetStartTimeForCurrencyPair(resolutionTypeList[i], nextStartTime); // [Tung]: why do we need this line outside of the while-loop?
         ohlcvData.resolutionDataSet[resolutionTypeList[i]].updateData(tradeEvent);
       }
     }
@@ -206,7 +206,7 @@ class OhlcvAggregator {
   async getCollectedOhlcvData (timeResolution, fromTimeTS, toTimeTS) {
     logger.info(`ohlcvAggregator.js getCollectedOhlcvData(): timeResolution=${timeResolution}`);
 
-    const ohlcvDataInDB = await ohlcvService.getMarketData(timeResolution, fromTimeTS, toTimeTS, this.currency, this.baseCurrency);
+    const ohlcvDataInDB = await ohlcvService.getMarketData(timeResolution, fromTimeTS, toTimeTS, this.currency, this.baseCurrency); // [Tung]: change input params order to: currency, baseCurrency, resolution, fromTS, toTS. So it is consistent with the param order of datafeed API.
     logger.debug(`ohlcvAggregator.js getCollectedOhlcvData(): ohlcvDataInDB=${JSON.stringify(ohlcvDataInDB)}`);
 
     const ohlcvDataOnRAM = ohlcvData.getCurrentOhlcvData(timeResolution);

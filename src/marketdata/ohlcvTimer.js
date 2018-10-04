@@ -2,14 +2,14 @@ const logger = require('../logger');
 
 const {DATABASE_DOCUMENTS} = require('../app.constants');
 
-const timeResolutionValueArray = {};
+const timeResolutionValueArray = {}; // [Tung]: rename to 'RESOLUTION_2_AGGREGATING_PERIOD_LENGTH';
 timeResolutionValueArray[DATABASE_DOCUMENTS.OHLCV1M] = Math.round(1 * 60 * 1000);
 timeResolutionValueArray[DATABASE_DOCUMENTS.OHLCV5M] = Math.round(5 * 60 * 1000);
 timeResolutionValueArray[DATABASE_DOCUMENTS.OHLCV60M] = Math.round(60 * 60 * 1000);
 
-const isTimeStampInRangeOfStartTime = (timeResolutionType, timeStamp, startTime) => {
+const isTimeStampInRangeOfStartTime = (timeResolutionType, timeStamp, startTime) => { // [Tung]: this functions should better belong to OhlcvResolutionDataSet class as an instance function, it should be renamed to 'isInCurrentAggregatingPeriod()', it's more object oriented
   const timeStampTS = timeStamp.getTime();
-  const timeRange = timeResolutionValueArray[timeResolutionType];
+  const timeRange = timeResolutionValueArray[timeResolutionType]; // [Tung]: rename 'timeRange' to 'periodLength'
   if (timeStampTS < startTime) return false;
   return timeStampTS - startTime <= timeRange;
 };
