@@ -110,24 +110,14 @@ module.exports = class OrderBookSide {
       const tmpLLOE = this.orderMap.getFirstElementOfPriceLevel(priceLevel);
       if (!tmpLLOE) break; // all orders at this price level are matched
 
-      let tradedQuantity;
-      if (order.remainingQuantity() < tmpLLOE.order.remainingQuantity()) {
-        // order will be fulfilled right now
-        logger.info(`orderbookside.js: match(): matches counter order id=${tmpLLOE.order._id} with trade quantity ${order.remainingQuantity()}`);
+      const tradedQuantity = Math.min(order.remainingQuantity(), tmpLLOE.order.remainingQuantity());
+      logger.info(`orderbookside.js: match(): matches counter order id=${tmpLLOE.order._id} with trade quantity=${tradedQuantity}`);
 
-        tradedQuantity = order.remainingQuantity();
-        tmpLLOE.order.filledQuantity += tradedQuantity;
-        order.filledQuantity = order.quantity;
-      }
-      else {
-        logger.info(`orderbookside.js: match(): matches counter order id=${tmpLLOE.order._id} with trade quantity ${tmpLLOE.order.remainingQuantity()}`);
+      tmpLLOE.order.filledQuantity += tradedQuantity;
+      order.filledQuantity += tradedQuantity;
 
-        tradedQuantity = tmpLLOE.order.remainingQuantity();
-        order.filledQuantity += tradedQuantity;
-        tmpLLOE.order.filledQuantity = tmpLLOE.order.quantity;
-
-        this.orderMap.removeOrder(tmpLLOE.order);
-      }
+      if (tmpLLOE.order.remainingQuantity() <= ZERO) tmpLLOE.order.filledQuantity = tmpLLOE.order.quantity;
+      if (order.remainingQuantity() <= ZERO) order.filledQuantity = order.quantity;
 
       matchingEventList.push(OrderBookEvent.createNewMatchObject(tmpLLOE.order, tradedQuantity, tmpLLOE.order.remainingQuantity() <= ZERO));
 
