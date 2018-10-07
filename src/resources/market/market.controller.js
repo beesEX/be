@@ -47,7 +47,12 @@ exports.getMarketOhlcvData = async (ctx) => {
 
   if (currency && baseCurrency && resolution && mapOfResolutionAndDocument[resolution] && fromTime && toTime) {
     const symbol = `${currency}_${baseCurrency}`;
-    ctx.body = await beesV8.getOhlcvData(symbol, mapOfResolutionAndDocument[resolution], fromTime, toTime);
+    const arrayOfDataPoints = await beesV8.getOhlcvData(symbol, mapOfResolutionAndDocument[resolution], fromTime, toTime);
+    ctx.body = {
+
+      data: arrayOfDataPoints
+
+    };
   }
   else {
     let errorMessage = '';
