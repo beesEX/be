@@ -2,7 +2,7 @@ const logger = require('../../logger');
 
 const orderSchema = require('./order.schema');
 const constants = require('../../app.constants');
-const ZERO = constants.ZERO;
+const {ZERO} = require('../../app.constants');
 
 const db = require('../../db');
 
