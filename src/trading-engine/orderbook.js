@@ -9,7 +9,7 @@ const TradeExecutionService = require('../settlement/tradeexecution.service');
 const logger = require('../logger');
 const requestNamespace = require('../config/requestNamespace');
 
-const ZERO = 0.0000000000001;
+const {ZERO} = require('./../app.constants');
 
 /**
  * Limit Order Book performs order matching after principals of price/time priority

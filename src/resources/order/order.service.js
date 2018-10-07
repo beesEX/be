@@ -2,6 +2,8 @@ const logger = require('../../logger');
 
 const orderSchema = require('./order.schema');
 const constants = require('../../app.constants');
+const ZERO = constants.ZERO;
+
 const db = require('../../db');
 
 const service = db.createService(constants.DATABASE_DOCUMENTS.ORDERS, orderSchema.schema);
@@ -15,7 +17,7 @@ const ON_BOOK_STATUS = [orderSchema.ORDER_STATUS.PLACED, orderSchema.ORDER_STATU
 const { idGenerator } = require('@paralect/node-mongo');
 const txService = require('../../wealth-management/transaction.service');
 
-function getUniqueResultFromQueryResult (orderQuery) {
+function getUniqueResultFromQueryResult(orderQuery) {
   if (!orderQuery || !orderQuery.results || orderQuery.results.length === 0) {
     throw new Error('Order not found');
   }
@@ -164,7 +166,7 @@ module.exports = {
         if (doc.limitPrice !== orderbookEvent.reason.price) doc.orderbookTS = new Date().getTime();
         doc.limitPrice = orderbookEvent.reason.price;
         doc.quantity = orderbookEvent.reason.quantity;
-        if (doc.filledQuantity === orderbookEvent.reason.quantity) doc.status = orderSchema.ORDER_STATUS.FILLED;
+        if (orderbookEvent.reason.quantity - doc.filledQuantity <= ZERO) doc.status = orderSchema.ORDER_STATUS.FILLED;
         doc.lastUpdatedAt = new Date();
 
         // releases over locked fund amount if any before updating the order record in DB
@@ -313,7 +315,7 @@ module.exports = {
       status: {$in: ON_BOOK_STATUS}
     }, (doc) => {
       doc.filledQuantity += matchObj.tradedQuantity;
-      doc.status = (doc.filledQuantity === doc.quantity) ? orderSchema.ORDER_STATUS.FILLED : orderSchema.ORDER_STATUS.PARTIALLY_FILLED;
+      doc.status = (doc.quantity - doc.filledQuantity <= ZERO) ? orderSchema.ORDER_STATUS.FILLED : orderSchema.ORDER_STATUS.PARTIALLY_FILLED;
       doc.lastUpdatedAt = new Date();
     });
 
@@ -323,7 +325,7 @@ module.exports = {
       status: {$in: ON_BOOK_STATUS}
     }, (doc) => {
       doc.filledQuantity += matchObj.tradedQuantity;
-      doc.status = (doc.filledQuantity === doc.quantity) ? orderSchema.ORDER_STATUS.FILLED : orderSchema.ORDER_STATUS.PARTIALLY_FILLED;
+      doc.status = (doc.quantity - doc.filledQuantity <= ZERO) ? orderSchema.ORDER_STATUS.FILLED : orderSchema.ORDER_STATUS.PARTIALLY_FILLED;
       doc.lastUpdatedAt = new Date();
     });
 

@@ -1,7 +1,7 @@
 const OrderMap = require('./ordermap');
 const OrderBookEvent = require('./orderbook.event');
 
-const ZERO = 0.0000000000001;
+const {ZERO} = require('./../app.constants');
 
 const logger = require('../logger');
 
