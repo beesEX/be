@@ -1,58 +1,28 @@
-const logger = require('../logger');
 
 const {DATABASE_DOCUMENTS} = require('../app.constants');
 
-const timeResolutionValueArray = {}; // [Tung]: rename to 'RESOLUTION_2_AGGREGATING_PERIOD_LENGTH';
-timeResolutionValueArray[DATABASE_DOCUMENTS.OHLCV1M] = Math.round(1 * 60 * 1000);
-timeResolutionValueArray[DATABASE_DOCUMENTS.OHLCV5M] = Math.round(5 * 60 * 1000);
-timeResolutionValueArray[DATABASE_DOCUMENTS.OHLCV60M] = Math.round(60 * 60 * 1000);
-
-const isTimeStampInRangeOfStartTime = (timeResolutionType, timeStamp, startTime) => { // [Tung]: this functions should better belong to OhlcvResolutionDataSet class as an instance function, it should be renamed to 'isInCurrentAggregatingPeriod()', it's more object oriented
-  const timeStampTS = timeStamp.getTime();
-  const timeRange = timeResolutionValueArray[timeResolutionType]; // [Tung]: rename 'timeRange' to 'periodLength'
-  if (timeStampTS < startTime) return false;
-  return timeStampTS - startTime <= timeRange;
-};
+const RESOLUTION_2_AGGREGATING_PERIOD_LENGTH = {};
+RESOLUTION_2_AGGREGATING_PERIOD_LENGTH[DATABASE_DOCUMENTS.OHLCV1M] = Math.round(1 * 60 * 1000);
+RESOLUTION_2_AGGREGATING_PERIOD_LENGTH[DATABASE_DOCUMENTS.OHLCV5M] = Math.round(5 * 60 * 1000);
+RESOLUTION_2_AGGREGATING_PERIOD_LENGTH[DATABASE_DOCUMENTS.OHLCV60M] = Math.round(60 * 60 * 1000);
 
 const getCurrentStartTime = (timeResolutionType) => {
-  if (!timeResolutionValueArray[timeResolutionType]) return null;
-  return Math.floor((new Date()).getTime() / timeResolutionValueArray[timeResolutionType]) * timeResolutionValueArray[timeResolutionType];
+  if (!RESOLUTION_2_AGGREGATING_PERIOD_LENGTH[timeResolutionType]) return null;
+  return Math.floor((new Date()).getTime() / RESOLUTION_2_AGGREGATING_PERIOD_LENGTH[timeResolutionType]) * RESOLUTION_2_AGGREGATING_PERIOD_LENGTH[timeResolutionType];
 };
 
 const getStartTimeOfTimeStamp = (timeResolutionType, timeStamp) => {
-  if (!timeResolutionValueArray[timeResolutionType]) return null;
-  return Math.floor((timeStamp.getTime() / timeResolutionValueArray[timeResolutionType])) * timeResolutionValueArray[timeResolutionType];
+  if (!RESOLUTION_2_AGGREGATING_PERIOD_LENGTH[timeResolutionType]) return null;
+  return Math.floor((timeStamp.getTime() / RESOLUTION_2_AGGREGATING_PERIOD_LENGTH[timeResolutionType])) * RESOLUTION_2_AGGREGATING_PERIOD_LENGTH[timeResolutionType];
 };
 
 const getNextStartTime = (currentTickTime, timeResolution) => {
-  return currentTickTime + timeResolutionValueArray[timeResolution];
+  return currentTickTime + RESOLUTION_2_AGGREGATING_PERIOD_LENGTH[timeResolution];
 };
-
-/*
-const updateOHLCVdata = async (timeResolutionType) => {
-  await ohlcv_data.getDataToRecordAndSetStartTime(timeResolutionType, getCurrentTickTime());
-};
-
-const begin = () => {
-  // start timer for each time resolution type
-  for (let i = 0; i < OHLCV_COLLECTIONS.length; i += 1) {
-    timerList.push(setInterval(() => {updateOHLCVdata(OHLCV_COLLECTIONS[i])}, timeResolutionValueArray[OHLCV_COLLECTIONS[i]]));
-  }
-  logger.info('ohlcv.timer.js begin(): timer started');
-};
-
-const stop = () => {
-  // stop all timers
-  for (let i = 0; i < timerList.length; i += 1) {
-    clearInterval(timerList[i]);
-  }
-};
-
-*/
 
 module.exports = {
+  RESOLUTION_2_AGGREGATING_PERIOD_LENGTH,
   getNextStartTime,
   getCurrentStartTime,
   getStartTimeOfTimeStamp,
-  isTimeStampInRangeOfStartTime,
 };

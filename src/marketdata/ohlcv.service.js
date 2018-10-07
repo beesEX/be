@@ -1,7 +1,6 @@
 const logger = require('../logger');
 
 const db = require('../db');
-const ohlcvTimer = require('./ohlcvTimer');
 
 const tradeSchema = require('../settlement/trade.schema');
 const constants = require('../app.constants');
@@ -20,7 +19,7 @@ const recordMarketData = async (timeResolutionType, marketData) => {
   return createdMarketData;
 };
 
-const getLastMarketDataStartTime = async (timeResolutionType, currency, baseCurrency) => {
+const getLastMarketDataStartTime = async (currency, baseCurrency, timeResolutionType) => {
   //logger.info(`ohlcv.service.js: getLastMarketDataStartTime(): currency = ${currency} baseCurrency = ${baseCurrency} timeResolutionType = ${timeResolutionType}`);
   const marketDataQuery = await services[timeResolutionType].find({
     currency,
@@ -30,7 +29,7 @@ const getLastMarketDataStartTime = async (timeResolutionType, currency, baseCurr
   return marketDataQuery && marketDataQuery.results && marketDataQuery.results[0] && marketDataQuery.results[0].startTime;
 };
 
-const getMarketData = async (timeResolutionType, fromTimeTS, toTimeTS, currency, baseCurrency) => {
+const getMarketData = async (currency, baseCurrency, timeResolutionType, fromTimeTS, toTimeTS) => {
   logger.info(`ohlcv.service.js: getMarketData(): currency = ${currency} baseCurrency = ${baseCurrency} timeResolutionType = ${timeResolutionType} startDate = ${fromTimeTS} endDate = ${toTimeTS} `);
   const service = services[timeResolutionType];
   if (!service) {
