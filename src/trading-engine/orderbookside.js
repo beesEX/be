@@ -121,6 +121,7 @@ module.exports = class OrderBookSide {
 
       matchingEventList.push(OrderBookEvent.createNewMatchObject(tmpLLOE.order, tradedQuantity, tmpLLOE.order.remainingQuantity() <= ZERO));
 
+      if (tmpLLOE.order.remainingQuantity() <= ZERO) this.orderMap.removeOrder(tmpLLOE.order);
       if (order.remainingQuantity() <= ZERO) break;
     }
 
