@@ -124,7 +124,7 @@ class OhlcvAggregator {
     const ohlcvDataOfTimeResolution = this.ohlcvDataSet.resolutionDataSet[timeResolutionType];
     if (ohlcvDataOfTimeResolution) {
       const dataToRecordInDB = ohlcvDataOfTimeResolution.reset(startTime);
-      await ohlcvService.recordMarketData(timeResolutionType, dataToRecordInDB);
+      if (dataToRecordInDB) await ohlcvService.recordMarketData(timeResolutionType, dataToRecordInDB);
     }
   }
 
@@ -133,7 +133,7 @@ class OhlcvAggregator {
     logger.info(`ohlcvAggregator.js updateDataForResolution(): tradeEvent=${JSON.stringify(tradeObject)}`);
     const ohlcvDataOfTimeResolution = this.ohlcvDataSet.resolutionDataSet[timeResolutionType];
     if (ohlcvDataOfTimeResolution) {
-      if (this.ohlcvDataSet.isInCurrentAggregatingPeriod(timeResolutionType, tradeObject.executedAt) || !ohlcvDataOfTimeResolution.lastClosePrice) {
+      if (this.ohlcvDataSet.isInCurrentAggregatingPeriod(timeResolutionType, tradeObject.executedAt)) {
         ohlcvDataOfTimeResolution.aggregate(tradeObject);
       }
       else {
@@ -167,7 +167,7 @@ class OhlcvAggregator {
       if (ohlcvTradeData.time < ohlcvDataOfTimeResolution.startTime) {
         logger.info(`ohlcvAggregator.js collectTrade(): ERROR tradeEvent.executedAt.getTime()=${ohlcvTradeData.time} < currentStartTime=${ohlcvDataOfTimeResolution.startTime}`);
       }
-      else if (this.ohlcvDataSet.isInCurrentAggregatingPeriod(OHLCV_RESOLUTIONS[i], ohlcvTradeData.time) || !ohlcvDataOfTimeResolution.lastClosePrice) {
+      else if (this.ohlcvDataSet.isInCurrentAggregatingPeriod(OHLCV_RESOLUTIONS[i], ohlcvTradeData.time)) {
         ohlcvDataOfTimeResolution.aggregate(ohlcvTradeData);
       }
       else {
