@@ -5,6 +5,7 @@ const OrderService = require('../resources/order/order.service');
 const {Order, OrderEvent, OrderPlacedEvent, MarketOrderPlacedEvent, OrderQuantityUpdatedEvent, OrderLimitUpdatedEvent, OrderCanceledEvent} = require('../resources/order/order.models');
 
 const TradeExecutionService = require('../settlement/tradeexecution.service');
+const ohlcvAggregator = require('../marketdata/ohlcvAggregator');
 
 const logger = require('../logger');
 const requestNamespace = require('../config/requestNamespace');
@@ -54,9 +55,10 @@ class OrderBook {
     logger.info(`orderbook.js processOrderEvent(): receices order event: ${JSON.stringify(event)}`);
     const order = new Order(event._order);
     const orderSymbol = `${event._order.currency}_${event._order.baseCurrency}`;
+
     if (orderSymbol !== this.symbol) {
       logger.warn(`orderbook.js processOrderEvent(): currency pair of order event ${orderSymbol} not matches that of order book ${this.symbol}`);
-      return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
+      return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null, null);
     }
 
     let orderbookEvent = null;
@@ -66,7 +68,7 @@ class OrderBook {
     else if (event._type === OrderEvent.QUANTITY_UPDATED_EVENT) orderbookEvent = this.updateQuantity(new OrderQuantityUpdatedEvent(order, event.oldQuantity, event.oldPrice));
     else if (event._type === OrderEvent.CANCELED_EVENT) orderbookEvent = this.cancel(new OrderCanceledEvent(order));
     else logger.warn(`orderbook.js processOrderEvent(): unknown event type ${event._type} will be rejected`);
-    if (!orderbookEvent) return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
+    if (!orderbookEvent) return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null,null, null);
     return orderbookEvent;
   }
 
@@ -80,13 +82,13 @@ class OrderBook {
 
     logger.info(`orderbook.js placeLimit(): processing new LIMIT order placed: ${JSON.stringify(order)}`);
 
-    let matchingEventList = [];
+    let matchingEvent = null;
 
     if (order.side === 'BUY') {
-      matchingEventList = this.asks.tryToMatch(order);
+      matchingEvent = this.asks.tryToMatch(order);
     }
     else { // SELL
-      matchingEventList = this.bids.tryToMatch(order);
+      matchingEvent = this.bids.tryToMatch(order);
     }
 
     // if the order could not be filled completely, put the remaining qty on book
@@ -94,14 +96,14 @@ class OrderBook {
       logger.info(`orderbook.js placeLimit(): ${order.remainingQuantity()} remaining units of LIMIT order will be put on book`);
       
       if (order.side === 'BUY') {
-        if (!this.bids.putOrderOnBook(order)) return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
+        if (!this.bids.putOrderOnBook(order)) return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null,null, null);
       }
       else { // SELL
-        if (!this.asks.putOrderOnBook(order)) return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
+        if (!this.asks.putOrderOnBook(order)) return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null, null);
       }
     }
 
-    return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO);
+    return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEvent && matchingEvent.matchList, matchingEvent && matchingEvent.ohlcvData, order.remainingQuantity() <= ZERO);
   }
 
   /**
@@ -114,23 +116,23 @@ class OrderBook {
 
     if (order.type !== 'MARKET') {
       logger.info(`orderbook.js placeMarket(): received order ${order} is not a MARKET order and will be rejected`);
-      return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
+      return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null, null);
     }
     logger.info(`orderbook.js placeMarket(): processing new MARKET order placed: ${JSON.stringify(order)}`);
 
-    let matchingEventList = [];
+    let matchingEvent = null;
     if (order.side === 'BUY') {
-      matchingEventList = this.asks.tryToMatch(order);
+      matchingEvent = this.asks.tryToMatch(order);
     }
     else { // SELL
-      matchingEventList = this.bids.tryToMatch(order);
+      matchingEvent = this.bids.tryToMatch(order);
     }
 
     // remaining units of market order will not be put on book, gets just rejected.
     if (order.remainingQuantity() > ZERO) {
       logger.info(`orderbook.js placeMarket(): ${order.remainingQuantity()} remaining units of MARKET order will be rejected`);
     }
-    return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO);
+    return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEvent && matchingEvent.matchList, matchingEvent && matchingEvent.ohlcvData, order.remainingQuantity() <= ZERO);
   }
 
   /**
@@ -152,9 +154,9 @@ class OrderBook {
       updatedOrder = this.asks.updateQuantity(order);
     }
 
-    if (updatedOrder) return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, updatedOrder.remainingQuantity() <= ZERO);
+    if (updatedOrder) return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, null, updatedOrder.remainingQuantity() <= ZERO);
     logger.error(`orderbook.js updateQuantity(): failed to update event ${JSON.stringify(orderUpdatedEvent)}`);
-    return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
+    return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null, null);
   }
 
   /**
@@ -178,11 +180,11 @@ class OrderBook {
     logger.info(`orderbook.js updateLimit(): old Order on book = ${JSON.stringify(oldOrder)}`);
     if (!oldOrder) {
       logger.error('orderbook.js updateLimit(): ERROR: not found this order to update');
-      return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
+      return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null, null);
     }
     if (oldOrder.filledQuantity !== order.filledQuantity) {
       logger.error(`orderbook.js updateLimit(): ERROR: old filled quantity=${oldOrder.filledQuantity} != new filled quantity=${order.filledQuantity}`);
-      return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
+      return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null, null);
     }
 
     // remove existing order with old price from book
@@ -198,13 +200,13 @@ class OrderBook {
       return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
     }
 
-    let matchingEventList = [];
+    let matchingEvent = null;
     // process updated order like new placed order
     if (order.side === 'BUY') {
-      matchingEventList = this.asks.tryToMatch(order);
+      matchingEvent = this.asks.tryToMatch(order);
     }
     else { // SELL
-      matchingEventList = this.bids.tryToMatch(order);
+      matchingEvent = this.bids.tryToMatch(order);
     }
 
     // if the order could not be filled completely, put the remaining qty on book
@@ -220,11 +222,11 @@ class OrderBook {
       }
       if (!isPut) {
         logger.error('orderbook.js updateLimit(): ERROR: unable to put on order book side');
-        return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
+        return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null, null);
       }
     }
 
-    return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEventList, order.remainingQuantity() <= ZERO);
+    return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, matchingEvent && matchingEvent.matchList, matchingEvent && matchingEvent.ohlcvData, order.remainingQuantity() <= ZERO);
 
   }
 
@@ -246,10 +248,10 @@ class OrderBook {
       isCanceled = this.asks.removeOrder(order);
     }
 
-    if (isCanceled) return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, order.remainingQuantity() <= ZERO);
+    if (isCanceled) return OrderBookEvent.createNewOrderbookEvent(this.symbol, reasonObject, null, null, order.remainingQuantity() <= ZERO);
 
     logger.error('orderbook.js cancel(): unable to cancel order');
-    return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null);
+    return OrderBookEvent.createNewOrderbookEvent(this.symbol, null, null, null, null);
   }
 
   /**
@@ -327,6 +329,9 @@ const handleMessage = (event) => {
 
         // send order book event to settlement module
         if (orderbookEvent && orderbookEvent.reason) TradeExecutionService.executeTrades(orderbookEvent);
+
+        // send ohlcvData to ohlcvAggreagtor
+        if (orderbookEvent.ohlcvData && orderbookEvent.ohlcvData.time) ohlcvAggregator.collectOhlcvTradeData(orderbookEvent.ohlcvData);
 
         // send order book event back to parent process
         orderbookEvent.id = event.id;

@@ -70,18 +70,32 @@ module.exports = class OrderBookSide {
   */
   tryToMatch(order) {
     let matchingEventList = [];
+    const ohlcvData = {};
+
     while (order.remainingQuantity() > ZERO) {
       const bestPriceLevel = this.bestPrice();
       if (bestPriceLevel && order.fulfill(bestPriceLevel)) {
-        const tmpTradingEventList = this.match(order, bestPriceLevel);
-        logger.debug(`orderbookside.js: tryToMatch(): tmpTradingEventList = ${JSON.stringify(tmpTradingEventList)}`);
+        const tradingEvent = this.match(order, bestPriceLevel);
+        logger.debug(`orderbookside.js: tryToMatch(): tradingEvent = ${JSON.stringify(tradingEvent)}`);
 
-        matchingEventList = matchingEventList.concat(tmpTradingEventList);
+        matchingEventList = matchingEventList.concat(tradingEvent.matchingEventList);
+        // update ohlcv data
+        if (!ohlcvData.time) ohlcvData.time = new Date().getTime();
+        if (!ohlcvData.open) ohlcvData.open = bestPriceLevel;
+        ohlcvData.close = bestPriceLevel;
+        ohlcvData.high = ohlcvData.high ? Math.max(bestPriceLevel, ohlcvData.high) : bestPriceLevel;
+        ohlcvData.low = ohlcvData.low ? Math.min(bestPriceLevel, ohlcvData.low) : bestPriceLevel;
+        ohlcvData.volume = ohlcvData.volume ? (ohlcvData.volume + tradingEvent.volume) : tradingEvent.volume;
       }
       else break;
     }
     logger.debug(`orderbookside.js: tryToMatch(): matchingEventList = ${JSON.stringify(matchingEventList)}`);
-    return matchingEventList;
+    logger.debug(`orderbookside.js: tryToMatch(): ohlcvData = ${JSON.stringify(ohlcvData)}`);
+
+    return {
+      matchList: matchingEventList,
+      ohlcvData: ohlcvData,
+    };
   }
 
   /*
@@ -105,12 +119,14 @@ module.exports = class OrderBookSide {
    */
   match(order, priceLevel) {
     const matchingEventList = [];
+    let volume = 0;
 
     while (true) {
       const tmpLLOE = this.orderMap.getFirstElementOfPriceLevel(priceLevel);
       if (!tmpLLOE) break; // all orders at this price level are matched
 
       const tradedQuantity = Math.min(order.remainingQuantity(), tmpLLOE.order.remainingQuantity());
+      volume += tradedQuantity;
       logger.info(`orderbookside.js: match(): matches counter order id=${tmpLLOE.order._id} with trade quantity=${tradedQuantity}`);
 
       tmpLLOE.order.filledQuantity += tradedQuantity;
@@ -125,7 +141,10 @@ module.exports = class OrderBookSide {
       if (order.remainingQuantity() <= ZERO) break;
     }
 
-    return matchingEventList;
+    return {
+      matchingEventList,
+      volume,
+    };
   }
 
   getAggregatedState() {

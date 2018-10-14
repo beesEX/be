@@ -150,31 +150,32 @@ class OhlcvAggregator {
   }
 
   /*
-  const tradeEvent = {
-        currency: reasonObj.currency,
-        baseCurrency: reasonObj.baseCurrency,
-        price: matchList[i].price,
-        quantity: matchList[i].tradedQuantity,
-        executedAt: orderbookEvent.timestamp,
-      };
+   const ohlcvTradeData = {
+      open,
+      high,
+      low,
+      close,
+      volume,
+      time,
+   }
    */
-  async collectTrade(tradeEvent) {
-    logger.info(`ohlcvAggregator.js collectTrade(): tradeEvent=${JSON.stringify(tradeEvent)}`);
+  async collectOhlcvTradeData(ohlcvTradeData) {
+    logger.info(`ohlcvAggregator.js collectTrade(): tradeEvent=${JSON.stringify(ohlcvTradeData)}`);
 
     for (let i = 0; i < OHLCV_RESOLUTIONS.length; i += 1) {
       const ohlcvDataOfTimeResolution = this.ohlcvDataSet.resolutionDataSet[OHLCV_RESOLUTIONS[i]];
-      if (tradeEvent.executedAt.getTime() < ohlcvDataOfTimeResolution.startTime) {
-        logger.info(`ohlcvAggregator.js collectTrade(): ERROR tradeEvent.executedAt.getTime()=${tradeEvent.executedAt.getTime()} < currentStartTime=${ohlcvDataOfTimeResolution.startTime}`);
+      if (ohlcvTradeData.time < ohlcvDataOfTimeResolution.startTime) {
+        logger.info(`ohlcvAggregator.js collectTrade(): ERROR tradeEvent.executedAt.getTime()=${ohlcvTradeData.time} < currentStartTime=${ohlcvDataOfTimeResolution.startTime}`);
       }
-      else if (this.ohlcvDataSet.isInCurrentAggregatingPeriod(OHLCV_RESOLUTIONS[i], tradeEvent.executedAt) || !ohlcvDataOfTimeResolution.lastClosePrice) {
-        ohlcvDataOfTimeResolution.aggregate(tradeEvent);
+      else if (this.ohlcvDataSet.isInCurrentAggregatingPeriod(OHLCV_RESOLUTIONS[i], ohlcvTradeData.time) || !ohlcvDataOfTimeResolution.lastClosePrice) {
+        ohlcvDataOfTimeResolution.aggregate(ohlcvTradeData);
       }
       else {
-        while (!this.ohlcvDataSet.isInCurrentAggregatingPeriod(OHLCV_RESOLUTIONS[i], tradeEvent.executedAt)) {
+        while (!this.ohlcvDataSet.isInCurrentAggregatingPeriod(OHLCV_RESOLUTIONS[i], ohlcvTradeData.time)) {
           const nextStartTime = ohlcvTimer.getNextStartTime(ohlcvDataOfTimeResolution.startTime, OHLCV_RESOLUTIONS[i]);
           await this.recordDataAndResetStartTime(OHLCV_RESOLUTIONS[i], nextStartTime);
         }
-        ohlcvDataOfTimeResolution.aggregate(tradeEvent);
+        ohlcvDataOfTimeResolution.aggregate(ohlcvTradeData);
       }
     }
     logger.info(`ohlcvAggregator.js collectTrade(): data=${JSON.stringify(this.ohlcvDataSet.resolutionDataSet, null, 2)}`);

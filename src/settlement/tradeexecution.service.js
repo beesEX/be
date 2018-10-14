@@ -13,8 +13,6 @@ const {ORDER_BOOK_EVENT} = require('../trading-engine/orderbook.event');
 const Transaction = require('../wealth-management/transaction.service');
 const OrderService = require('../resources/order/order.service');
 
-const ohlcvAggregator = require('../marketdata/ohlcvAggregator');
-
 const settlementTrade = async (reasonObj, matchObj) => {
   const { currency, baseCurrency } = reasonObj;
   const { price: tradedPrice, tradedQuantity } = matchObj;
@@ -45,45 +43,25 @@ const settlementTrade = async (reasonObj, matchObj) => {
   }
   else {
     // release quote currency of reason user
-    //transactionProcesses.push(Transaction.releaseByTrade(reasonObj.userId, currency, tradedQuantity, reasonObj.orderId));
     await Transaction.releaseByTrade(reasonObj.userId, currency, tradedQuantity, reasonObj.orderId);
     // decrease quote base currency of reason user
-    //transactionProcesses.push(Transaction.sell(reasonObj.userId, currency, tradedQuantity, reasonObj.orderId));
     await Transaction.sell(reasonObj.userId, currency, tradedQuantity, reasonObj.orderId);
     // increase base currency of reason user
-    //transactionProcesses.push(Transaction.buy(reasonObj.userId, baseCurrency, tradedAmount, reasonObj.orderId));
     await Transaction.buy(reasonObj.userId, baseCurrency, tradedAmount, reasonObj.orderId);
 
     // release base currency of match user
-    //transactionProcesses.push(Transaction.releaseByTrade(matchObj.userId, baseCurrency, tradedAmount, matchObj.orderId));
     await Transaction.releaseByTrade(matchObj.userId, baseCurrency, tradedAmount, matchObj.orderId);
     // decrease base currency of match user
-    //transactionProcesses.push(Transaction.sell(matchObj.userId, baseCurrency, tradedAmount, matchObj.orderId));
     await Transaction.sell(matchObj.userId, baseCurrency, tradedAmount, matchObj.orderId);
     // increase quote currency of match user
-    //transactionProcesses.push(Transaction.buy(matchObj.userId, currency, tradedQuantity, matchObj.orderId));
     await Transaction.buy(matchObj.userId, currency, tradedQuantity, matchObj.orderId);
   }
-
-  //return Promise.all(transactionProcesses);
 };
 
 const recordTrade = async (tradeObject) => {
   const recordedTradeObject = await service.create(tradeObject);
   logger.info(`tradeexecution.service.js: recordTrade(): recordedTradeObject = ${JSON.stringify(recordedTradeObject)}`);
 };
-
-// only for testing, will be deleted later
-/*
-const showTrades = async () => {
-  const tradeQuery = await service.find({}, {sort : {createdAt : 1}});
-  if(tradeQuery && tradeQuery.results) {
-    for (let i = 0; i < tradeQuery.results.length; i += 1) {
-      logger.info(`tradeexecution.service.js showTrades(): ${JSON.stringify(tradeQuery.results[i])}`);
-    }
-  }
-};
-*/
 
 const executeTrades = async (orderbookEvent) => {
   logger.info(`tradeexecution.service.js executeTrades(): received orderbookEvent = ${JSON.stringify(orderbookEvent)}`);
@@ -117,31 +95,10 @@ const executeTrades = async (orderbookEvent) => {
       sellOrderId: (reasonObj.side === 'BUY') ? matchList[i].orderId : reasonObj.orderId
     };
 
-    // trade event for market data
-    const tradeEvent = {
-      currency: reasonObj.currency,
-      baseCurrency: reasonObj.baseCurrency,
-      price: matchList[i].price,
-      quantity: matchList[i].tradedQuantity,
-      executedAt: orderbookEvent.timestamp,
-    };
-
     await settlementTrade(reasonObj, matchList[i]);
     await OrderService.updateOrdersByMatch(reasonObj, matchList[i]);
     await recordTrade(tradeObject);
-    await ohlcvAggregator.collectTrade(tradeEvent);
-
-    /*
-    executeTradePromises.push(Promise.all([
-      settlementTrade(reasonObj, matchList[i]),
-      OrderService.updateOrdersByMatch(reasonObj, matchList[i]),
-      recordTrade(tradeObject),
-      ohlcvAggregator.collectTrade(tradeEvent)
-    ]));
-    */
   }
-
-  //await Promise.all(executeTradePromises);
 
   logger.info('tradeexecution.service.js executeTrades(): Successfully traded');
 

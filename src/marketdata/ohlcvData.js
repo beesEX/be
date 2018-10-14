@@ -9,14 +9,14 @@ class OhlcvData {
     this.data = null;
   }
 
-  aggregate(tradeEvent) {
+  aggregate(ohlcvTradeData) {
     if (!this.data) this.data = {};
-    if (!this.data.open) this.data.open = tradeEvent.price;
-    this.data.close = tradeEvent.price;
-    this.data.high = this.data.high ? Math.max(tradeEvent.price, this.data.high) : tradeEvent.price;
-    this.data.low = this.data.low ? Math.min(tradeEvent.price, this.data.low) : tradeEvent.price;
-    this.data.volume = this.data.volume ? (this.data.volume + tradeEvent.quantity) : tradeEvent.quantity;
-    this.lastClosePrice = tradeEvent.price;
+    if (!this.data.open) this.data.open = ohlcvTradeData.open;
+    this.data.close = ohlcvTradeData.close;
+    this.data.high = this.data.high ? Math.max(ohlcvTradeData.high, this.data.high) : ohlcvTradeData.high;
+    this.data.low = this.data.low ? Math.min(ohlcvTradeData.low, this.data.low) : ohlcvTradeData.low;
+    this.data.volume = this.data.volume ? (this.data.volume + ohlcvTradeData.volume) : ohlcvTradeData.volume;
+    this.lastClosePrice = ohlcvTradeData.close;
   }
 
   reset(startTime) {
@@ -76,9 +76,8 @@ class OhlcvResolutionDataSet {
     return currentMarketData;
   }
 
-  isInCurrentAggregatingPeriod(timeResolutionType, timeStamp) {
+  isInCurrentAggregatingPeriod(timeResolutionType, timeStampTS) {
     const startTime = this.resolutionDataSet[timeResolutionType] && this.resolutionDataSet[timeResolutionType].startTime;
-    const timeStampTS = timeStamp.getTime();
     const periodLength = RESOLUTION_2_AGGREGATING_PERIOD_LENGTH[timeResolutionType];
     if (timeStampTS < startTime) return false;
     return timeStampTS - startTime <= periodLength;
