@@ -9,25 +9,21 @@ const {DATABASE_DOCUMENTS} = require('../../app.constants');
 
 const logger = require('../../logger');
 
-exports.getAggregatedStateOfOrderBook = async (ctx) => {
+const tradeService = require('../../settlement/trade.service');
 
+const getAggregatedStateOfOrderBook = async (ctx) => {
   if (ctx.params && ctx.params.currency && ctx.params.baseCurrency) {
-
     logger.info(`market.controller.js: getAggregatedStateOfOrderBook(): currency = ${ctx.params.currency} base currency = ${ctx.params.baseCurrency}`);
-
     ctx.body = await beesV8.getAggregatedStateOfOrderBook(`${ctx.params.currency}_${ctx.params.baseCurrency}`);
   }
   else {
-
     ctx.body = {
-
       error: 'currency/baseCurrency is missing'
-
     };
   }
 };
 
-exports.getMarketOhlcvData = async (ctx) => {
+const getMarketOhlcvData = async (ctx) => {
   logger.info(`market.controller.js: getMarketOhlcvData(): ctx.params=${JSON.stringify(ctx && ctx.params)} ctx.query=${JSON.stringify(ctx && ctx.request && ctx.request.query)}`);
 
   const currency = ctx && ctx.params && ctx.params.currency;
@@ -71,4 +67,20 @@ exports.getMarketOhlcvData = async (ctx) => {
       }
     };
   }
+};
+
+const getLastTrade = async (ctx) => {
+  logger.info(`market.controller.js: getLastTrade(): ctx.params=${JSON.stringify(ctx && ctx.params)}`);
+
+  const currency = ctx && ctx.params && ctx.params.currency;
+  const baseCurrency = ctx && ctx.params && ctx.params.baseCurrency;
+
+  ctx.body = await tradeService.getLastTrades(currency, baseCurrency);
+};
+
+
+module.exports = {
+  getAggregatedStateOfOrderBook,
+  getMarketOhlcvData,
+  getLastTrade,
 };
