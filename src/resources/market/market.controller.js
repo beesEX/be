@@ -75,7 +75,11 @@ const getLastTrade = async (ctx) => {
   const currency = ctx && ctx.params && ctx.params.currency;
   const baseCurrency = ctx && ctx.params && ctx.params.baseCurrency;
 
-  ctx.body = await tradeService.getLastTrades(currency, baseCurrency);
+  const lastTrades = await tradeService.getLastTrades(currency, baseCurrency);
+
+  ctx.body = {
+    data: lastTrades,
+  };
 };
 
 

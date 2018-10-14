@@ -29,7 +29,8 @@ module.exports = {
       price: order.limitPrice,
       quantity: order.quantity,
       tradedQuantity,
-      filledCompletely: isFilledCompletely
+      filledCompletely: isFilledCompletely,
+      matchedAt: new Date()
     };
   },
 
