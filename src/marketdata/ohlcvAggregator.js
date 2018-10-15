@@ -124,7 +124,7 @@ class OhlcvAggregator {
     const ohlcvDataOfTimeResolution = this.ohlcvDataSet.resolutionDataSet[timeResolutionType];
     if (ohlcvDataOfTimeResolution) {
       const dataToRecordInDB = ohlcvDataOfTimeResolution.reset(startTime);
-      if (dataToRecordInDB) await ohlcvService.recordMarketData(timeResolutionType, dataToRecordInDB);
+      if (dataToRecordInDB) await ohlcvService.recordMarketData(timeResolutionType, dataToRecordInDB); // [Tung] do we need to wait here for the DB write to come back? not just fire and forget isn't it?
     }
   }
 
@@ -139,7 +139,7 @@ class OhlcvAggregator {
       else {
         while (!this.ohlcvDataSet.isInCurrentAggregatingPeriod(timeResolutionType, tradeObject.executedAt)) {
           const nextStartTime = ohlcvTimer.getNextStartTime(ohlcvDataOfTimeResolution.startTime, timeResolutionType);
-          await this.recordDataAndResetStartTime(timeResolutionType, nextStartTime);
+          await this.recordDataAndResetStartTime(timeResolutionType, nextStartTime); // [Tung] do we need to wait here for the DB write to come back? not just fire and forget isn't it?
         }
         ohlcvDataOfTimeResolution.aggregate(tradeObject);
       }
@@ -165,7 +165,7 @@ class OhlcvAggregator {
     for (let i = 0; i < OHLCV_RESOLUTIONS.length; i += 1) {
       const ohlcvDataOfTimeResolution = this.ohlcvDataSet.resolutionDataSet[OHLCV_RESOLUTIONS[i]];
       if (ohlcvTradeData.time < ohlcvDataOfTimeResolution.startTime) {
-        logger.info(`ohlcvAggregator.js collectTrade(): ERROR tradeEvent.executedAt.getTime()=${ohlcvTradeData.time} < currentStartTime=${ohlcvDataOfTimeResolution.startTime}`);
+        logger.info(`ohlcvAggregator.js collectTrade(): ERROR tradeEvent.executedAt.getTime()=${ohlcvTradeData.time} < currentStartTime=${ohlcvDataOfTimeResolution.startTime}`); //[Tung] why use info log level for error?
       }
       else if (this.ohlcvDataSet.isInCurrentAggregatingPeriod(OHLCV_RESOLUTIONS[i], ohlcvTradeData.time)) {
         ohlcvDataOfTimeResolution.aggregate(ohlcvTradeData);
@@ -173,7 +173,7 @@ class OhlcvAggregator {
       else {
         while (!this.ohlcvDataSet.isInCurrentAggregatingPeriod(OHLCV_RESOLUTIONS[i], ohlcvTradeData.time)) {
           const nextStartTime = ohlcvTimer.getNextStartTime(ohlcvDataOfTimeResolution.startTime, OHLCV_RESOLUTIONS[i]);
-          await this.recordDataAndResetStartTime(OHLCV_RESOLUTIONS[i], nextStartTime);
+          await this.recordDataAndResetStartTime(OHLCV_RESOLUTIONS[i], nextStartTime); // [Tung] do we need to wait here for the DB write to come back? not just fire and forget isn't it?
         }
         ohlcvDataOfTimeResolution.aggregate(ohlcvTradeData);
       }
@@ -192,7 +192,7 @@ class OhlcvAggregator {
 
     const ohlcvDataToReturn = [];
     if (ohlcvDataInDB && ohlcvDataInDB.length) {
-      for (let i = 0; i < ohlcvDataInDB.length; i += 1) {
+      for (let i = 0; i < ohlcvDataInDB.length; i += 1) { // [Tung]: why do we need to do this heavy lifting array shifting? this consumes CPU time and RAM, why not just use ohlcvDataInDB and add data points on RAM to it?
         ohlcvDataToReturn.push({
           open: ohlcvDataInDB[i].open,
           close: ohlcvDataInDB[i].close,

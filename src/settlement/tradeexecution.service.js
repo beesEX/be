@@ -80,7 +80,7 @@ const executeTrades = async (orderbookEvent) => {
       sellOrderId: (reasonObj.side === 'BUY') ? matchList[i].orderId : reasonObj.orderId
     };
 
-    await tradeService.recordTrade(tradeObject);
+    await tradeService.recordTrade(tradeObject); // [Tung]: it's not necessary to wait for the DB write to return, just fire and forget to gain some performance
   }
 
   logger.info('tradeexecution.service.js executeTrades(): Successfully traded');
