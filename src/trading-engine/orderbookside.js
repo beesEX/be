@@ -80,7 +80,7 @@ module.exports = class OrderBookSide {
 
         matchingEventList = matchingEventList.concat(tradingEvent.matchingEventList);
         // update ohlcv data
-        if (!ohlcvData.time) ohlcvData.time = new Date().getTime(); // [Tung] why don't use the timestamp of the first match of the first tradingEvent.matchingEventList?
+        if (!ohlcvData.time) ohlcvData.time = tradingEvent.matchingEventList[0].matchedAt;
         if (!ohlcvData.open) ohlcvData.open = bestPriceLevel;
         ohlcvData.close = bestPriceLevel;
         ohlcvData.high = ohlcvData.high ? Math.max(bestPriceLevel, ohlcvData.high) : bestPriceLevel;

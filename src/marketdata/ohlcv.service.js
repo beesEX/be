@@ -29,7 +29,7 @@ const getLastMarketDataStartTime = async (currency, baseCurrency, timeResolution
   return marketDataQuery && marketDataQuery.results && marketDataQuery.results[0] && marketDataQuery.results[0].startTime;
 };
 
-const getMarketData = async (currency, baseCurrency, timeResolutionType, fromTimeTS, toTimeTS) => {
+const getMarketData = async (currency, baseCurrency, timeResolutionType, fromTimeTS, toTimeTS, isShortForm = false) => {
   logger.info(`ohlcv.service.js: getMarketData(): currency = ${currency} baseCurrency = ${baseCurrency} timeResolutionType = ${timeResolutionType} startDate = ${fromTimeTS} endDate = ${toTimeTS} `);
   const service = services[timeResolutionType];
   if (!service) {
@@ -37,13 +37,27 @@ const getMarketData = async (currency, baseCurrency, timeResolutionType, fromTim
     return null;
   }
 
+  const options = {sort: {time: 1}};
+  if (isShortForm) {
+    options.open = 1;
+    options.close = 1;
+    options.high = 1;
+    options.low = 1;
+    options.volume = 1;
+    options.time = 1;
+    options.currency = 0;
+    options.baseCurrency = 0;
+    options.createdAt = 0;
+    options._id = 0;
+  }
+
   const marketDataQuery = await service.find({
     currency,
     baseCurrency,
     time: {$gte: Math.floor(fromTimeTS), $lte: Math.floor(toTimeTS)}
-  }, {sort: {time: 1}});
+  }, options);
 
-  const marketDataToReturn = marketDataQuery && marketDataQuery.results;
+  const marketDataToReturn = (marketDataQuery && marketDataQuery.results) || [];
 
   return marketDataToReturn;
 };
