@@ -121,7 +121,7 @@ class OhlcvAggregator {
     logger.info(`ohlcvAggregator.js init(): data=${JSON.stringify(this.ohlcvDataSet,null,2)}`);
   }
 
-  async recordDataAndResetStartTime(timeResolutionType, startTime) {
+  recordDataAndResetStartTime(timeResolutionType, startTime) {
     const ohlcvDataOfTimeResolution = this.ohlcvDataSet.resolutionDataSet[timeResolutionType];
     if (ohlcvDataOfTimeResolution) {
       logger.info(`ohlcvAggregator.js recordDataAndResetStartTime(): timeResolutionType=${timeResolutionType} startTime=${startTime}`);
@@ -134,7 +134,7 @@ class OhlcvAggregator {
   }
 
   // only use for init
-  async updateDataForResolutionUsingTradeObject(timeResolutionType, tradeObject) {
+  updateDataForResolutionUsingTradeObject(timeResolutionType, tradeObject) {
     logger.info(`ohlcvAggregator.js updateDataForResolutionUsingTradeObject(): tradeObject=${JSON.stringify(tradeObject)}`);
 
     const ohlcvTradeData = {
