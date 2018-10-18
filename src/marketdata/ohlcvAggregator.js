@@ -91,7 +91,7 @@ class OhlcvAggregator {
           const firstStartTime = ohlcvTimer.getStartTimeOfTimeStamp(OHLCV_RESOLUTIONS[k], toBeSavedTradeEvents[0].executedAt);
           this.ohlcvDataSet.createData(OHLCV_RESOLUTIONS[k], firstStartTime);
           for (let l = 0; l < toBeSavedTradeEvents.length; l += 1) {
-            this.updateDataForResolution(OHLCV_RESOLUTIONS[k], toBeSavedTradeEvents[l]);
+            this.updateDataForResolutionUsingTradeObject(OHLCV_RESOLUTIONS[k], toBeSavedTradeEvents[l]);
           }
         }
       }
@@ -112,7 +112,7 @@ class OhlcvAggregator {
           //put all toBeSavedTradeEvents to this data set
           for (let l = 0; l < toBeSavedTradeEvents.length; l += 1) {
             if (toBeSavedTradeEvents[l].executedAt.getTime() > lastStartTimeOfThisResolution){ // redundant check
-              this.updateDataForResolution(OHLCV_RESOLUTIONS[k], toBeSavedTradeEvents[l]);
+              this.updateDataForResolutionUsingTradeObject(OHLCV_RESOLUTIONS[k], toBeSavedTradeEvents[l]);
             }
           }
         }
@@ -121,32 +121,47 @@ class OhlcvAggregator {
     logger.info(`ohlcvAggregator.js init(): data=${JSON.stringify(this.ohlcvDataSet,null,2)}`);
   }
 
-  recordDataAndResetStartTime(timeResolutionType, startTime) {
+  async recordDataAndResetStartTime(timeResolutionType, startTime) {
     const ohlcvDataOfTimeResolution = this.ohlcvDataSet.resolutionDataSet[timeResolutionType];
     if (ohlcvDataOfTimeResolution) {
+      logger.info(`ohlcvAggregator.js recordDataAndResetStartTime(): timeResolutionType=${timeResolutionType} startTime=${startTime}`);
       const dataToRecordInDB = ohlcvDataOfTimeResolution.reset(startTime);
       if (dataToRecordInDB) ohlcvService.recordMarketData(timeResolutionType, dataToRecordInDB);
+    }
+    else {
+      logger.error(`ohlcvAggregator.js recordDataAndResetStartTime(): ERROR: no timeResolutionType=${timeResolutionType} found`);
     }
   }
 
   // only use for init
-  updateDataForResolution(timeResolutionType, tradeObject) {
-    logger.info(`ohlcvAggregator.js updateDataForResolution(): tradeEvent=${JSON.stringify(tradeObject)}`);
+  async updateDataForResolutionUsingTradeObject(timeResolutionType, tradeObject) {
+    logger.info(`ohlcvAggregator.js updateDataForResolutionUsingTradeObject(): tradeObject=${JSON.stringify(tradeObject)}`);
+
+    const ohlcvTradeData = {
+      open: tradeObject.price,
+      high: tradeObject.price,
+      low: tradeObject.price,
+      close: tradeObject.price,
+      volume: tradeObject.quantity,
+      time: tradeObject.matchedAt.getTime(),
+    };
+
     const ohlcvDataOfTimeResolution = this.ohlcvDataSet.resolutionDataSet[timeResolutionType];
-    if (ohlcvDataOfTimeResolution) {
-      if (this.ohlcvDataSet.isInCurrentAggregatingPeriod(timeResolutionType, tradeObject.executedAt)) {
-        ohlcvDataOfTimeResolution.aggregate(tradeObject);
-      }
-      else {
-        while (!this.ohlcvDataSet.isInCurrentAggregatingPeriod(timeResolutionType, tradeObject.executedAt)) {
-          const nextStartTime = ohlcvTimer.getNextStartTime(ohlcvDataOfTimeResolution.startTime, timeResolutionType);
-          this.recordDataAndResetStartTime(timeResolutionType, nextStartTime);
-        }
-        ohlcvDataOfTimeResolution.aggregate(tradeObject);
-      }
+    if (!ohlcvDataOfTimeResolution) {
+      logger.error(`ohlcvAggregator.js updateDataForResolutionUsingTradeObject(): ERROR: Data of resolution ${timeResolutionType} must be created first`);
+    }
+    if (ohlcvTradeData.time < ohlcvDataOfTimeResolution.startTime) {
+      logger.error(`ohlcvAggregator.js updateDataForResolutionUsingTradeObject(): ERROR ohlcvTradeData.time=${ohlcvTradeData.time} < currentStartTime=${ohlcvDataOfTimeResolution.startTime}`);
+    }
+    else if (this.ohlcvDataSet.isInCurrentAggregatingPeriod(timeResolutionType, ohlcvTradeData.time)) {
+      ohlcvDataOfTimeResolution.aggregate(ohlcvTradeData);
     }
     else {
-      logger.error(`ohlcvAggregator.js updateDataForResolution(): ERROR: Data of resolution ${timeResolutionType} must be created first`);
+      while (!this.ohlcvDataSet.isInCurrentAggregatingPeriod(timeResolutionType, ohlcvTradeData.time)) {
+        const nextStartTime = ohlcvTimer.getNextStartTime(ohlcvDataOfTimeResolution.startTime, timeResolutionType);
+        this.recordDataAndResetStartTime(timeResolutionType, nextStartTime);
+      }
+      ohlcvDataOfTimeResolution.aggregate(ohlcvTradeData);
     }
   }
 
@@ -166,7 +181,7 @@ class OhlcvAggregator {
     for (let i = 0; i < OHLCV_RESOLUTIONS.length; i += 1) {
       const ohlcvDataOfTimeResolution = this.ohlcvDataSet.resolutionDataSet[OHLCV_RESOLUTIONS[i]];
       if (ohlcvTradeData.time < ohlcvDataOfTimeResolution.startTime) {
-        logger.error(`ohlcvAggregator.js collectTrade(): ERROR tradeEvent.executedAt.getTime()=${ohlcvTradeData.time} < currentStartTime=${ohlcvDataOfTimeResolution.startTime}`);
+        logger.error(`ohlcvAggregator.js collectTrade(): ERROR ohlcvTradeData.time=${ohlcvTradeData.time} < currentStartTime=${ohlcvDataOfTimeResolution.startTime}`);
       }
       else if (this.ohlcvDataSet.isInCurrentAggregatingPeriod(OHLCV_RESOLUTIONS[i], ohlcvTradeData.time)) {
         ohlcvDataOfTimeResolution.aggregate(ohlcvTradeData);

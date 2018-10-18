@@ -24,9 +24,9 @@ const getLastMarketDataStartTime = async (currency, baseCurrency, timeResolution
   const marketDataQuery = await services[timeResolutionType].find({
     currency,
     baseCurrency,
-  }, { sort: {startTime: -1}, limit: 1});
+  }, { sort: {time: -1}, limit: 1});
   logger.log(`ohlcv.service.js getLastMarketDataStartTime(): currency = ${currency} baseCurrency = ${baseCurrency} timeResolutionType = ${timeResolutionType} marketDataQuery=${JSON.stringify(marketDataQuery)}`);
-  return marketDataQuery && marketDataQuery.results && marketDataQuery.results[0] && marketDataQuery.results[0].startTime;
+  return marketDataQuery && marketDataQuery.results && marketDataQuery.results[0] && marketDataQuery.results[0].time;
 };
 
 const getMarketData = async (currency, baseCurrency, timeResolutionType, fromTimeTS, toTimeTS, isShortForm = false) => {

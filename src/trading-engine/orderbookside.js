@@ -80,7 +80,7 @@ module.exports = class OrderBookSide {
 
         matchingEventList = matchingEventList.concat(tradingEvent.matchingEventList);
         // update ohlcv data
-        if (!ohlcvData.time) ohlcvData.time = tradingEvent.matchingEventList[0].matchedAt;
+        if (!ohlcvData.time) ohlcvData.time = tradingEvent.matchingEventList[0].matchedAt.getTime();
         if (!ohlcvData.open) ohlcvData.open = bestPriceLevel;
         ohlcvData.close = bestPriceLevel;
         ohlcvData.high = ohlcvData.high ? Math.max(bestPriceLevel, ohlcvData.high) : bestPriceLevel;
