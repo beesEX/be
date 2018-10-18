@@ -27,6 +27,8 @@ class OrderBook {
       symbol: this.symbol,
     };
 
+    // TODO call and wait ohlcv.Aggregator init()
+
     // load all active orders for this symbol in DB
     logger.info(`orderbook.js constructor(): initiating order book of symbol=${JSON.stringify(this.symbol)} ...`);
     OrderService.getActiveOrdersOfSymbol(this.symbol).then((activeOrderLists) => {

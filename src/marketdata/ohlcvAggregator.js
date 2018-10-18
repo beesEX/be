@@ -229,6 +229,8 @@ class OhlcvAggregator {
 }
 
 const ohlcvAggregator = new OhlcvAggregator('BTC', 'USDT');
+
+// TODO: init() will be called by order book
 ohlcvAggregator.init().then(() => {
   logger.info('ohlcvAggregator.js init(): finished initiation');
 });
