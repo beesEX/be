@@ -62,6 +62,8 @@ const getMarketData = async (currency, baseCurrency, timeResolutionType, fromTim
   return marketDataToReturn;
 };
 
+// TODO: move these function to trade.service
+
 const getAllTradesAfterTime = async (currency, baseCurrency, fromTime) => {
   logger.info(`ohlcv.service.js: getAllTradesAfterTime(): currency = ${currency} baseCurrency = ${baseCurrency} fromTime = ${JSON.stringify(fromTime)}`);
   const service = db.createService(constants.DATABASE_DOCUMENTS.TRADES, tradeSchema.schema);
