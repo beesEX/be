@@ -51,7 +51,7 @@ class TXService {
     const totalBalance = creditSum - debitSum;
 
     if (totalBalance < 0) {
-      logger.error(`transaction.service.js getBalance(): system bookkepping calculations had errors; ${currency} account of userId=${userId} has negative total balance!`);
+      logger.error(`transaction.service.js getBalance(): system book kepping calculations had errors; ${currency} account of userId=${userId} has negative total balance!`);
       throw new Error('system bookkepping calculations had errors: negative total balance!');
     }
 
@@ -93,7 +93,7 @@ class TXService {
     const availableBalance = creditSum - debitSum;
 
     if (availableBalance < 0) {
-      logger.error(`transaction.service.js getAvailableBalance(): system bookkepping calculations had errors; ${currency} account of userId=${userId} has negative available balance!`);
+      logger.error(`transaction.service.js getAvailableBalance(): system book kepping calculations had errors; ${currency} account of userId=${userId} has negative available balance!`);
       throw new Error('system bookkepping calculations had errors: negative available balance!');
     }
 

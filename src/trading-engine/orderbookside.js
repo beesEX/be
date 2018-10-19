@@ -1,7 +1,7 @@
 const OrderMap = require('./ordermap');
 const OrderBookEvent = require('./orderbook.event');
 
-const ZERO = 0.0000000000001;
+const {ZERO} = require('./../app.constants');
 
 const logger = require('../logger');
 
@@ -70,18 +70,32 @@ module.exports = class OrderBookSide {
   */
   tryToMatch(order) {
     let matchingEventList = [];
+    const ohlcvData = {};
+
     while (order.remainingQuantity() > ZERO) {
       const bestPriceLevel = this.bestPrice();
       if (bestPriceLevel && order.fulfill(bestPriceLevel)) {
-        const tmpTradingEventList = this.match(order, bestPriceLevel);
-        logger.debug(`orderbookside.js: tryToMatch(): tmpTradingEventList = ${JSON.stringify(tmpTradingEventList)}`);
+        const tradingEvent = this.match(order, bestPriceLevel);
+        logger.debug(`orderbookside.js: tryToMatch(): tradingEvent = ${JSON.stringify(tradingEvent)}`);
 
-        matchingEventList = matchingEventList.concat(tmpTradingEventList);
+        matchingEventList = matchingEventList.concat(tradingEvent.matchingEventList);
+        // update ohlcv data
+        if (!ohlcvData.time) ohlcvData.time = tradingEvent.matchingEventList[0].matchedAt.getTime();
+        if (!ohlcvData.open) ohlcvData.open = bestPriceLevel;
+        ohlcvData.close = bestPriceLevel;
+        ohlcvData.high = ohlcvData.high ? Math.max(bestPriceLevel, ohlcvData.high) : bestPriceLevel;
+        ohlcvData.low = ohlcvData.low ? Math.min(bestPriceLevel, ohlcvData.low) : bestPriceLevel;
+        ohlcvData.volume = ohlcvData.volume ? (ohlcvData.volume + tradingEvent.volume) : tradingEvent.volume;
       }
       else break;
     }
     logger.debug(`orderbookside.js: tryToMatch(): matchingEventList = ${JSON.stringify(matchingEventList)}`);
-    return matchingEventList;
+    logger.debug(`orderbookside.js: tryToMatch(): ohlcvData = ${JSON.stringify(ohlcvData)}`);
+
+    return {
+      matchList: matchingEventList,
+      ohlcvData: ohlcvData,
+    };
   }
 
   /*
@@ -105,36 +119,32 @@ module.exports = class OrderBookSide {
    */
   match(order, priceLevel) {
     const matchingEventList = [];
+    let volume = 0;
 
     while (true) {
       const tmpLLOE = this.orderMap.getFirstElementOfPriceLevel(priceLevel);
       if (!tmpLLOE) break; // all orders at this price level are matched
 
-      let tradedQuantity;
-      if (order.remainingQuantity() < tmpLLOE.order.remainingQuantity()) {
-        // order will be fulfilled right now
-        logger.info(`orderbookside.js: match(): matches counter order id=${tmpLLOE.order._id} with trade quantity ${order.remainingQuantity()}`);
+      const tradedQuantity = Math.min(order.remainingQuantity(), tmpLLOE.order.remainingQuantity());
+      volume += tradedQuantity;
+      logger.info(`orderbookside.js: match(): matches counter order id=${tmpLLOE.order._id} with trade quantity=${tradedQuantity}`);
 
-        tradedQuantity = order.remainingQuantity();
-        tmpLLOE.order.filledQuantity += tradedQuantity;
-        order.filledQuantity = order.quantity;
-      }
-      else {
-        logger.info(`orderbookside.js: match(): matches counter order id=${tmpLLOE.order._id} with trade quantity ${tmpLLOE.order.remainingQuantity()}`);
+      tmpLLOE.order.filledQuantity += tradedQuantity;
+      order.filledQuantity += tradedQuantity;
 
-        tradedQuantity = tmpLLOE.order.remainingQuantity();
-        order.filledQuantity += tradedQuantity;
-        tmpLLOE.order.filledQuantity = tmpLLOE.order.quantity;
-
-        this.orderMap.removeOrder(tmpLLOE.order);
-      }
+      if (tmpLLOE.order.remainingQuantity() <= ZERO) tmpLLOE.order.filledQuantity = tmpLLOE.order.quantity;
+      if (order.remainingQuantity() <= ZERO) order.filledQuantity = order.quantity;
 
       matchingEventList.push(OrderBookEvent.createNewMatchObject(tmpLLOE.order, tradedQuantity, tmpLLOE.order.remainingQuantity() <= ZERO));
 
+      if (tmpLLOE.order.remainingQuantity() <= ZERO) this.orderMap.removeOrder(tmpLLOE.order);
       if (order.remainingQuantity() <= ZERO) break;
     }
 
-    return matchingEventList;
+    return {
+      matchingEventList,
+      volume,
+    };
   }
 
   getAggregatedState() {

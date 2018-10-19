@@ -1,9 +1,20 @@
+const DATABASE_DOCUMENTS = {
+  USERS: 'users',
+  ORDERS: 'orders',
+  TRANSACTIONS: 'transactions',
+  TRADES: 'trades',
+  OHLCV1M: 'ohlcv1m',
+  OHLCV5M: 'ohlcv5m',
+  OHLCV60M: 'ohlcv60m',
+};
+
+const OHLCV_COLLECTIONS = [DATABASE_DOCUMENTS.OHLCV1M, DATABASE_DOCUMENTS.OHLCV5M, DATABASE_DOCUMENTS.OHLCV60M];
+
+const ZERO = 0.0000000000001;
+
 module.exports = {
-  DATABASE_DOCUMENTS: {
-    USERS: 'users',
-    ORDERS: 'orders',
-    TRANSACTIONS: 'transactions',
-    TRADES: 'trades',
-  },
+  ZERO,
+  DATABASE_DOCUMENTS,
   CURRENCY_SYMBOLS: ['BTC', 'BCH', 'ETH', 'XRP', 'EOS', 'LTC', 'XLM', 'ADA', 'USDT', 'MIOTA', 'NANO', 'ICX'],
+  OHLCV_COLLECTIONS,
 };

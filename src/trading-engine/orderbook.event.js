@@ -29,7 +29,8 @@ module.exports = {
       price: order.limitPrice,
       quantity: order.quantity,
       tradedQuantity,
-      filledCompletely: isFilledCompletely
+      filledCompletely: isFilledCompletely,
+      matchedAt: new Date()
     };
   },
 
@@ -81,11 +82,12 @@ module.exports = {
     return null;
   },
 
-  createNewOrderbookEvent: (symbol, reason, matchingEvent, isFilledCompletely) => {
+  createNewOrderbookEvent: (symbol, reason, matchingEvent, ohlcvData, isFilledCompletely) => {
     return {
       type: ORDER_BOOK_EVENT,
       symbol,
       reason,
+      ohlcvData,
       matches: matchingEvent || [],
       filledCompletely: isFilledCompletely || false,
       timestamp: new Date()
