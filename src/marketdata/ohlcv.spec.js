@@ -12,6 +12,7 @@ const {open, publish, close} = require('../util/zeroMQpublisher');
 //TODO: need to lock write mode in DB
 const db = require('../db');
 const constants = require('../app.constants');
+const ohlcvTimer = require('./ohlcvTimer');
 
 
 // =====================================================================
@@ -109,11 +110,13 @@ describe('test ohlcv aggregate process', () => {
     /*
     epoch 1: |
     - price: 6500, quantity: 1
-    o:6500 h:6500 l:6500 c:6500 v:1
+    ohlcv1m: o:6500 h:6500 l:6500 c:6500 v:1
+    ohlcv5m: o:6500 h:6500 l:6500 c:6500 v:1
 
     epoch 2: |
     - empty
-    o:6500 h:6500 l:6500 c:6500 v:0
+    ohlcv1m: o:6500 h:6500 l:6500 c:6500 v:0
+    ohlcv5m: o:6500 h:6500 l:6500 c:6500 v:1
 
     epoch 3: |=====|
     - price: 6510, quantity: 1
@@ -186,12 +189,69 @@ describe('test ohlcv aggregate process', () => {
 
     await beesV8.start();
 
-    /*
-    epoch 1: |
-    - price: 6500, quantity: 1
-    o:6500 h:6500 l:6500 c:6500 v:1
-    */
-    await makeTrade(6500, 1);
+    const epochList = [];
+    epochList.push([
+      {price: 6500, quantity: 1}
+    ]);
+    epochList.push([]);
+    epochList.push([
+      {price: 6510, quantity: 1},
+      {price: 6520, quantity: 1}
+    ]);
+    epochList.push([
+      {price: 6500, quantity: 1},
+      {price: 6490, quantity: 1}
+    ]);
+    epochList.push([
+      {price: 6510, quantity: 1},
+      {price: 6490, quantity: 1},
+      {price: 6520, quantity: 1}
+    ]);
+    epochList.push([
+      {price: 6520, quantity: 1},
+      {price: 6490, quantity: 1},
+      {price: 6510, quantity: 1}
+    ]);
+    epochList.push([
+      {price: 6490, quantity: 1},
+      {price: 6520, quantity: 1},
+      {price: 6500, quantity: 1}
+    ]);
+    epochList.push([
+      {price: 6500, quantity: 1},
+      {price: 6520, quantity: 1},
+      {price: 6490, quantity: 1}
+    ]);
+    epochList.push([
+      {price: 6500, quantity: 1},
+      {price: 6520, quantity: 1},
+      {price: 6505, quantity: 1},
+      {price: 6490, quantity: 1},
+      {price: 6510, quantity: 1}
+    ]);
+    epochList.push([
+      {price: 6510, quantity: 1},
+      {price: 6515, quantity: 1},
+      {price: 6520, quantity: 1},
+      {price: 6505, quantity: 1},
+      {price: 6490, quantity: 1},
+      {price: 6510, quantity: 1},
+      {price: 6500, quantity: 1}
+    ]);
+    epochList.push([
+      {price: 6490, quantity: 1},
+      {price: 6515, quantity: 1},
+      {price: 6520, quantity: 1},
+      {price: 6505, quantity: 1},
+      {price: 6490, quantity: 1}
+    ]);
+    epochList.push([
+      {price: 6520, quantity: 1},
+      {price: 6515, quantity: 1},
+      {price: 6490, quantity: 1},
+      {price: 6505, quantity: 1},
+      {price: 6520, quantity: 1}
+    ]);
 
     await beesV8.stop();
   });
