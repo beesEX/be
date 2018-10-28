@@ -308,22 +308,27 @@ module.exports = {
    */
   updateOrdersByMatch: async (reasonObj, matchObj) => {
     logger.info(`order.service.js: updateOrdersByMatch(): received reason object = ${JSON.stringify(reasonObj)} and match object = ${JSON.stringify(matchObj)}`);
-
+    logger.debug(`typeof reasonObj.orderId = ${typeof reasonObj.orderId}`);
     // update reason order
     const updatedReasonOrder = await service.update({
       _id: reasonObj.orderId,
       status: {$in: ON_BOOK_STATUS}
     }, (doc) => {
+      logger.debug(`typeof reason doc._id = ${doc._id.toString()}`);
+      doc._id = reasonObj.orderId;
       doc.filledQuantity += matchObj.tradedQuantity;
       doc.status = (doc.quantity - doc.filledQuantity <= ZERO) ? orderSchema.ORDER_STATUS.FILLED : orderSchema.ORDER_STATUS.PARTIALLY_FILLED;
       doc.lastUpdatedAt = new Date();
     });
 
+    logger.debug(`typeof matchObj.orderId = ${typeof matchObj.orderId}`);
     // update match order
     const updatedMatchOrder = await service.update({
       _id: matchObj.orderId,
       status: {$in: ON_BOOK_STATUS}
     }, (doc) => {
+      logger.debug(`typeof match doc._id = ${doc._id.toString()}`);
+      doc._id = matchObj.orderId;
       doc.filledQuantity += matchObj.tradedQuantity;
       doc.status = (doc.quantity - doc.filledQuantity <= ZERO) ? orderSchema.ORDER_STATUS.FILLED : orderSchema.ORDER_STATUS.PARTIALLY_FILLED;
       doc.lastUpdatedAt = new Date();

@@ -25,7 +25,7 @@ module.exports = {
 
   createNewMatchObject: (order, tradedQuantity, isFilledCompletely) => {
     return {
-      orderId: order._id,
+      orderId: order._id.toString(),
       userId: order.userId,
       price: order.limitPrice,
       quantity: order.quantity,

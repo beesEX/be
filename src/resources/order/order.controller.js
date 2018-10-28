@@ -25,7 +25,7 @@ exports.orderPlaceHandler = async (ctx) => {
   };
 
   try {
-    ctx.body = await orderService.placeOrder(new Order(newOrderObj));
+    ctx.body = await orderService.placeOrder(newOrderObj);
   } catch (e) {
     ctx.body = { errors: [{code: 'ORD-001', msg: e.message}]};
   }

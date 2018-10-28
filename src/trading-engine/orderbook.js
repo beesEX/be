@@ -1,3 +1,7 @@
+const logger = require('../logger');
+
+global.logger = logger;
+
 const OrderBookSide = require('./orderbookside');
 const OrderBookEvent = require('./orderbook.event');
 const OrderService = require('../resources/order/order.service');
@@ -7,10 +11,10 @@ const {Order, OrderEvent, OrderPlacedEvent, MarketOrderPlacedEvent, OrderQuantit
 const TradeExecutionService = require('../settlement/tradeexecution.service');
 const ohlcvAggregator = require('../marketdata/ohlcvAggregator');
 
-const logger = require('../logger');
 const requestNamespace = require('../config/requestNamespace');
 
 const {ZERO} = require('./../app.constants');
+
 
 /**
  * Limit Order Book performs order matching after principals of price/time priority
