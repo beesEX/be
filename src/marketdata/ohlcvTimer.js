@@ -16,8 +16,8 @@ const getStartTimeOfTimeStamp = (timeResolutionType, timeStamp) => {
   return Math.floor((timeStamp.getTime() / RESOLUTION_2_AGGREGATING_PERIOD_LENGTH[timeResolutionType])) * RESOLUTION_2_AGGREGATING_PERIOD_LENGTH[timeResolutionType];
 };
 
-const getNextStartTime = (currentTickTime, timeResolution) => {
-  return currentTickTime + RESOLUTION_2_AGGREGATING_PERIOD_LENGTH[timeResolution];
+const getNextStartTime = (currentStartTime, timeResolution) => {
+  return currentStartTime + RESOLUTION_2_AGGREGATING_PERIOD_LENGTH[timeResolution];
 };
 
 module.exports = {

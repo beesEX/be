@@ -345,7 +345,7 @@ class TXService {
     const fundreleasedTX = await service.create(tx);
 
     this._updateBalances(fundreleasedTX);
-    logger.info('transaction.service.js: releaseByTrade(): fund release by trade tx = ', JSON.stringify(fundreleasedTX));
+    logger.info(`transaction.service.js: releaseByTrade(): fund release by trade tx = ${JSON.stringify(fundreleasedTX)}`);
 
     return fundreleasedTX;
   }
@@ -364,7 +364,7 @@ class TXService {
     const tradedTX = await service.create(tx);
 
     this._updateBalances(tradedTX);
-    logger.info('transaction.service.js: buy(): new fund crediting by trade tx = ', JSON.stringify(tradedTX));
+    logger.info(`transaction.service.js: buy(): new fund crediting by trade tx = ${JSON.stringify(tradedTX)}`);
 
     return tradedTX;
   }
@@ -383,7 +383,7 @@ class TXService {
     const tradedTX = await service.create(tx);
 
     this._updateBalances(tradedTX);
-    logger.info('transaction.service.js: sell(): new fund debiting by trade tx = ', JSON.stringify(tradedTX));
+    logger.info(`transaction.service.js: sell(): new fund debiting by trade tx = ${JSON.stringify(tradedTX)}`);
 
     return tradedTX;
   }

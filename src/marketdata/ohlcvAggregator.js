@@ -105,20 +105,20 @@ class OhlcvAggregator {
         // if no toBeSavedTradeEvents:
         if (!toBeSavedTradeEvents || toBeSavedTradeEvents.length === 0) {
           //  SOME THING ERROR!
-          logger.error(`ohlcvAggregator.js init(): Error`);
+          logger.error('ohlcvAggregator.js init(): Error');
         }
         // else: there is toBeSavedTradeEvents
         else {
           //put all toBeSavedTradeEvents to this data set
           for (let l = 0; l < toBeSavedTradeEvents.length; l += 1) {
-            if (toBeSavedTradeEvents[l].executedAt.getTime() > lastStartTimeOfThisResolution){ // redundant check
+            if (toBeSavedTradeEvents[l].executedAt.getTime() > lastStartTimeOfThisResolution) { // redundant check
               this.updateDataForResolutionUsingTradeObject(OHLCV_RESOLUTIONS[k], toBeSavedTradeEvents[l]);
             }
           }
         }
       }
     }
-    logger.info(`ohlcvAggregator.js init(): data=${JSON.stringify(this.ohlcvDataSet,null,2)}`);
+    logger.info(`ohlcvAggregator.js init(): data=${JSON.stringify(this.ohlcvDataSet, null, 2)}`);
   }
 
   recordDataAndResetStartTime(timeResolutionType, startTime) {
@@ -252,6 +252,7 @@ const handleMessage = async (event) => {
 
       break;
     }
+    default: break;
   }
 };
 

@@ -1,6 +1,6 @@
 class Order {
   constructor(orderObjFromDB) {
-    this._id = orderObjFromDB._id;
+    this._id = orderObjFromDB._id.toString();
     this.type = orderObjFromDB.type;
     this.side = orderObjFromDB.side;
     this.currency = orderObjFromDB.currency;
