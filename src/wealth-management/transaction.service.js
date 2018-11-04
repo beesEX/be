@@ -11,6 +11,8 @@ const DEBIT_AVAIL = [TRANSACTION_TYPE.WITHDRAW, TRANSACTION_TYPE.SELL, TRANSACTI
 const CREDIT_TOTAL = [TRANSACTION_TYPE.DEPOSIT, TRANSACTION_TYPE.BUY];
 const DEBIT_TOTAL = [TRANSACTION_TYPE.WITHDRAW, TRANSACTION_TYPE.SELL];
 
+const { ZERO } = constants;
+
 class TXService {
   constructor() {
     this._creditTotalSumMap = new Map();
@@ -228,8 +230,8 @@ class TXService {
     }
 
     const remainingLockedAmount = totalLockedAmount - totalReleasedAmount;
-    if (remainingLockedAmount < 0) {
-      throw new Error(`system has released more fund than locked amount for orderId=${orderId}!!!`);
+    if (remainingLockedAmount < -ZERO) {
+      throw new Error(`system has released more fund than locked amount for orderId=${orderId}!!!; remaing locked fund amount = ${remainingLockedAmount}`);
     }
 
     if (remainingLockedAmount > 0) {

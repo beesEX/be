@@ -364,3 +364,15 @@ process.send = (message) => {
   originalProcessSendFn.call(process, message);
 
 };
+
+process.on('unhandledRejection', (reason, p) => {
+  logger.error(`orderbook.js: Possibly Unhandled Rejection at: Promise ${p} reason: ${reason}`);
+});
+
+process.on('error', (error) => {
+  logger.error(`orderbook.js: received an error; msg= ${JSON.stringify(error)}`);
+});
+
+process.on('exit', (code, signal) => {
+  logger.info(`orderbook.js: exited with code=${code} and signal=${signal}`);
+});

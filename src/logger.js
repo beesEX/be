@@ -9,7 +9,6 @@ function createWrappedConsoleLogger() {
   const wrappedLogger = {
 
     log: function log(level, message) {
-
       if(arguments.length === 1) {
 
         message = level;
@@ -46,18 +45,18 @@ function createWrappedConsoleLogger() {
 
   arrayOfLogLevel.forEach((logLevel) => {
 
-    wrappedLogger[ logLevel ] = (message) => {
+    wrappedLogger[ logLevel ] = (...messages) => {
 
       const requestId = requestNamespace.get('requestId');
 
       if(requestId) {
 
-        logger[ logLevel ](`[Request Id: ${requestId}]: ${message}`);
+        logger[ logLevel ](`[Request Id: ${requestId}]:`, ...messages);
 
       }
       else{
 
-        logger[ logLevel ](message);
+        logger[ logLevel ](...messages);
       }
 
     };
