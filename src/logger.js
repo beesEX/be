@@ -1,4 +1,32 @@
-const { createConsoleLogger } = require('@paralect/common-logger');
+const winston = require('winston');
+
+createConsoleLogger = ({isDev = false}) => {
+  const transports = [];
+  transports.push(new winston.transports.Console({
+    colorize: true,
+    humanReadableUnhandledException: true,
+    json: !isDev,
+    level: isDev ? 'debug' : 'info'
+  }));
+
+  transports.push(new winston.transports.File({
+    humanReadableUnhandledException: true,
+    json: !isDev,
+    level: isDev ? 'debug' : 'info',
+    filename: 'log/error.log',
+    maxsize: 2 * 1024 * 1024 // MB
+  }));
+
+  const logger = new winston.Logger({
+    exitOnError: false,
+    transports
+  });
+
+  logger.debug('[logger] Configured console based logger');
+
+  return logger;
+};
+
 
 const logger = createConsoleLogger({isDev: process.env.NODE_ENV === 'development'});
 
@@ -9,6 +37,7 @@ function createWrappedConsoleLogger() {
   const wrappedLogger = {
 
     log: function log(level, message) {
+
       if(arguments.length === 1) {
 
         message = level;
@@ -18,7 +47,7 @@ function createWrappedConsoleLogger() {
 
       }
 
-      wrappedLogger[ level ](message);
+      wrappedLogger[level](message);
 
     }
 
@@ -35,7 +64,12 @@ function createWrappedConsoleLogger() {
 
     logLevels = {
 
-      debug: 4, error: 0, info: 2, silly: 5, verbose: 3, warn: 1
+      debug: 4,
+      error: 0,
+      info: 2,
+      silly: 5,
+      verbose: 3,
+      warn: 1
 
     };
 
@@ -45,18 +79,18 @@ function createWrappedConsoleLogger() {
 
   arrayOfLogLevel.forEach((logLevel) => {
 
-    wrappedLogger[ logLevel ] = (...messages) => {
+    wrappedLogger[logLevel] = (...messages) => {
 
       const requestId = requestNamespace.get('requestId');
 
       if(requestId) {
 
-        logger[ logLevel ](`[Request Id: ${requestId}]:`, ...messages);
+        logger[logLevel](`[Request Id: ${requestId}]:`, ...messages);
 
       }
       else{
 
-        logger[ logLevel ](...messages);
+        logger[logLevel](...messages);
       }
 
     };

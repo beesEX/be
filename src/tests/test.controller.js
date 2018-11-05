@@ -7,6 +7,7 @@ const {DATABASE_DOCUMENTS} = require('../app.constants');
 const db = require('../db');
 const Router = require('koa-router');
 const txService = require('../wealth-management/transaction.service');
+const beesV8 = require('../trading-engine/beesV8');
 
 const router = new Router();
 
@@ -25,6 +26,10 @@ const reset = async (ctx) => {
 
 
   });
+
+  arrayOfPromises.push(beesV8.resetOrderBook());
+
+  arrayOfPromises.push(beesV8.resetOhlcvAggregator());
 
   try{
 
