@@ -70,7 +70,7 @@ describe('get the aggregated state of the order book', () => {
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 0,
+        _id: "0",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 100,
@@ -84,7 +84,7 @@ describe('get the aggregated state of the order book', () => {
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 1,
+        _id: "1",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 100,
@@ -122,7 +122,7 @@ describe('get the aggregated state of the order book', () => {
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 0,
+        _id: "0",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 100,
@@ -136,7 +136,7 @@ describe('get the aggregated state of the order book', () => {
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 1,
+        _id: "1",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 150,
@@ -172,7 +172,7 @@ describe('get the aggregated state of the order book', () => {
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 0,
+        _id: "0",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 100,
@@ -186,7 +186,7 @@ describe('get the aggregated state of the order book', () => {
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 1,
+        _id: "1",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 150,
@@ -200,7 +200,7 @@ describe('get the aggregated state of the order book', () => {
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 0,
+        _id: "0",
         type: 'LIMIT',
         side: 'SELL',
         limitPrice: 600,
@@ -214,7 +214,7 @@ describe('get the aggregated state of the order book', () => {
     beesV8.processOrderEvent({
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 1,
+        _id: "1",
         type: 'LIMIT',
         side: 'SELL',
         limitPrice: 500,
@@ -342,7 +342,7 @@ describe('test event process of trading engine', () => {
     const orderEvent0 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 0,
+        _id: "0",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 100,
@@ -366,7 +366,7 @@ describe('test event process of trading engine', () => {
     const orderEvent1 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 1,
+        _id: "1",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 100,
@@ -392,7 +392,7 @@ describe('test event process of trading engine', () => {
     const orderEvent2 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 2,
+        _id: "2",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 10,
@@ -419,7 +419,7 @@ describe('test event process of trading engine', () => {
     const orderEvent3 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 3,
+        _id: "3",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 10,
@@ -447,7 +447,7 @@ describe('test event process of trading engine', () => {
     const orderEvent4 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 4,
+        _id: "4",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 100,
@@ -477,7 +477,7 @@ describe('test event process of trading engine', () => {
     const orderEvent5 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 5,
+        _id: "5",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 50,
@@ -517,7 +517,7 @@ describe('test event process of trading engine', () => {
     const orderEvent6 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 6,
+        _id: "6",
         type: 'LIMIT',
         side: 'SELL',
         limitPrice: 101,
@@ -563,7 +563,7 @@ describe('test event process of trading engine', () => {
     const orderEvent7 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 7,
+        _id: "7",
         type: 'LIMIT',
         side: 'SELL',
         limitPrice: 49,
@@ -610,7 +610,7 @@ describe('test event process of trading engine', () => {
     const orderEvent8 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 8,
+        _id: "8",
         type: 'LIMIT',
         side: 'SELL',
         limitPrice: 100,
@@ -655,7 +655,7 @@ describe('test event process of trading engine', () => {
     const orderEvent9 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 9,
+        _id: "9",
         type: 'LIMIT',
         side: 'SELL',
         limitPrice: 10,
@@ -700,7 +700,7 @@ describe('test event process of trading engine', () => {
     const orderEvent10 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 10,
+        _id: "10",
         type: 'LIMIT',
         side: 'SELL',
         limitPrice: 10,
@@ -745,7 +745,7 @@ describe('test event process of trading engine', () => {
     const orderEvent11 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 11,
+        _id: "11",
         type: 'LIMIT',
         side: 'SELL',
         limitPrice: 100,
@@ -790,7 +790,7 @@ describe('test event process of trading engine', () => {
     const orderEvent12 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 12,
+        _id: "12",
         type: 'LIMIT',
         side: 'SELL',
         limitPrice: 1,
@@ -825,7 +825,7 @@ describe('test event process of trading engine', () => {
     const orderEvent13 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 13,
+        _id: "13",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 101.00000001,
@@ -890,7 +890,7 @@ describe('test event process of trading engine', () => {
     const orderEvent0 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 0,
+        _id: "0",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 40,
@@ -905,7 +905,7 @@ describe('test event process of trading engine', () => {
     const orderEvent1 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 1,
+        _id: "1",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 20,
@@ -920,7 +920,7 @@ describe('test event process of trading engine', () => {
     const orderEvent2 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 2,
+        _id: "2",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 30,
@@ -935,7 +935,7 @@ describe('test event process of trading engine', () => {
     const orderEvent3 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 3,
+        _id: "3",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 10,
@@ -950,7 +950,7 @@ describe('test event process of trading engine', () => {
     const orderEvent4 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 4,
+        _id: "4",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 30,
@@ -965,7 +965,7 @@ describe('test event process of trading engine', () => {
     const orderEvent5 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 5,
+        _id: "5",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 30,
@@ -980,7 +980,7 @@ describe('test event process of trading engine', () => {
     const orderEvent6 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 6,
+        _id: "6",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 40,
@@ -995,7 +995,7 @@ describe('test event process of trading engine', () => {
     const orderEvent7 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 7,
+        _id: "7",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 20,
@@ -1010,7 +1010,7 @@ describe('test event process of trading engine', () => {
     const orderEvent8 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 8,
+        _id: "8",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 40,
@@ -1025,7 +1025,7 @@ describe('test event process of trading engine', () => {
     const orderEvent9 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 9,
+        _id: "9",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 40,
@@ -1589,7 +1589,7 @@ describe('test event process of trading engine', () => {
     const orderEvent0 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 0,
+        _id: "0",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 40,
@@ -1604,7 +1604,7 @@ describe('test event process of trading engine', () => {
     const orderEvent1 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 1,
+        _id: "1",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 20,
@@ -1619,7 +1619,7 @@ describe('test event process of trading engine', () => {
     const orderEvent2 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 2,
+        _id: "2",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 30,
@@ -1634,7 +1634,7 @@ describe('test event process of trading engine', () => {
     const orderEvent3 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 3,
+        _id: "3",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 10,
@@ -1649,7 +1649,7 @@ describe('test event process of trading engine', () => {
     const orderEvent4 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 4,
+        _id: "4",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 30,
@@ -1664,7 +1664,7 @@ describe('test event process of trading engine', () => {
     const orderEvent5 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 5,
+        _id: "5",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 30,
@@ -1679,7 +1679,7 @@ describe('test event process of trading engine', () => {
     const orderEvent6 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 6,
+        _id: "6",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 40,
@@ -1694,7 +1694,7 @@ describe('test event process of trading engine', () => {
     const orderEvent7 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 7,
+        _id: "7",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 20,
@@ -1709,7 +1709,7 @@ describe('test event process of trading engine', () => {
     const orderEvent8 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 8,
+        _id: "8",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 40,
@@ -1724,7 +1724,7 @@ describe('test event process of trading engine', () => {
     const orderEvent9 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 9,
+        _id: "9",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 40,
@@ -1785,7 +1785,7 @@ describe('test event process of trading engine', () => {
     beesV8.processOrderEvent({
       _type: OrderEvent.MARKET_PLACED_EVENT,
       _order: {
-        _id: 10,
+        _id: "10",
         type: 'MARKET',
         side: 'BUY',
         limitPrice: 10000,
@@ -1821,7 +1821,7 @@ describe('test event process of trading engine', () => {
     beesV8.processOrderEvent({
       _type: OrderEvent.MARKET_PLACED_EVENT,
       _order: {
-        _id: 11,
+        _id: "11",
         type: 'MARKET',
         side: 'SELL',
         limitPrice: 10000,
@@ -1856,7 +1856,7 @@ describe('test event process of trading engine', () => {
     beesV8.processOrderEvent({
       _type: OrderEvent.MARKET_PLACED_EVENT,
       _order: {
-        _id: 12,
+        _id: "12",
         type: 'MARKET',
         side: 'SELL',
         limitPrice: 1,
@@ -1922,7 +1922,7 @@ describe('test event process of trading engine', () => {
     beesV8.processOrderEvent({
       _type: OrderEvent.MARKET_PLACED_EVENT,
       _order: {
-        _id: 13,
+        _id: "13",
         type: 'MARKET',
         side: 'SELL',
         limitPrice: 20,
@@ -1958,7 +1958,7 @@ describe('test event process of trading engine', () => {
     beesV8.processOrderEvent({
       _type: OrderEvent.MARKET_PLACED_EVENT,
       _order: {
-        _id: 12,
+        _id: "12",
         type: 'MARKET',
         side: 'BUY',
         limitPrice: 20,
@@ -2001,7 +2001,7 @@ describe('test event process of trading engine', () => {
     beesV8.processOrderEvent({
       _type: OrderEvent.MARKET_PLACED_EVENT,
       _order: {
-        _id: 13,
+        _id: "13",
         type: 'MARKET',
         side: 'BUY',
         limitPrice: 200,
@@ -2034,7 +2034,7 @@ describe('test event process of trading engine', () => {
     beesV8.processOrderEvent({
       _type: OrderEvent.MARKET_PLACED_EVENT,
       _order: {
-        _id: 14,
+        _id: "14",
         type: 'MARKET',
         side: 'BUY',
         limitPrice: 1,
@@ -2061,7 +2061,7 @@ describe('test event process of trading engine', () => {
     beesV8.processOrderEvent({
       _type: OrderEvent.MARKET_PLACED_EVENT,
       _order: {
-        _id: 14,
+        _id: "14",
         type: 'MARKET',
         side: 'BUY',
         limitPrice: 100,
@@ -2109,7 +2109,7 @@ describe('test event process of trading engine', () => {
     const orderEvent0 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 0,
+        _id: "0",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 20,
@@ -2124,7 +2124,7 @@ describe('test event process of trading engine', () => {
     const orderEvent1 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 1,
+        _id: "1",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 30,
@@ -2139,7 +2139,7 @@ describe('test event process of trading engine', () => {
     const orderEvent2 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 2,
+        _id: "2",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 10,
@@ -2154,7 +2154,7 @@ describe('test event process of trading engine', () => {
     const orderEvent3 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 3,
+        _id: "3",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 30,
@@ -2169,7 +2169,7 @@ describe('test event process of trading engine', () => {
     const orderEvent4 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 4,
+        _id: "4",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 30,
@@ -2184,7 +2184,7 @@ describe('test event process of trading engine', () => {
     const orderEvent5 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 5,
+        _id: "5",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 20,
@@ -2293,7 +2293,7 @@ describe('test event process of trading engine', () => {
     const orderEvent6 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 6,
+        _id: "6",
         type: 'LIMIT',
         side: 'SELL',
         limitPrice: 200,
@@ -2308,7 +2308,7 @@ describe('test event process of trading engine', () => {
     const orderEvent7 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 7,
+        _id: "7",
         type: 'LIMIT',
         side: 'SELL',
         limitPrice: 300,
@@ -2323,7 +2323,7 @@ describe('test event process of trading engine', () => {
     const orderEvent8 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 8,
+        _id: "8",
         type: 'LIMIT',
         side: 'SELL',
         limitPrice: 100,
@@ -2338,7 +2338,7 @@ describe('test event process of trading engine', () => {
     const orderEvent9 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 9,
+        _id: "9",
         type: 'LIMIT',
         side: 'SELL',
         limitPrice: 300,
@@ -2353,7 +2353,7 @@ describe('test event process of trading engine', () => {
     const orderEvent10 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 10,
+        _id: "10",
         type: 'LIMIT',
         side: 'SELL',
         limitPrice: 300,
@@ -2368,7 +2368,7 @@ describe('test event process of trading engine', () => {
     const orderEvent11 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 11,
+        _id: "11",
         type: 'LIMIT',
         side: 'SELL',
         limitPrice: 200,
@@ -2659,7 +2659,7 @@ describe('test event process of trading engine', () => {
     const orderEvent12 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 12,
+        _id: "12",
         type: 'LIMIT',
         side: 'SELL',
         limitPrice: 1,
@@ -2791,7 +2791,7 @@ describe('test event process of trading engine', () => {
     const orderEvent13 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 13,
+        _id: "13",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 400,
@@ -2878,7 +2878,7 @@ describe('test event process of trading engine', () => {
     const orderEvent14 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 14,
+        _id: "14",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 400,
@@ -2963,7 +2963,7 @@ describe('test event process of trading engine', () => {
     const orderEvent15 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 15,
+        _id: "15",
         type: 'LIMIT',
         side: 'SELL',
         limitPrice: 10,
@@ -3031,7 +3031,7 @@ describe('test event process of trading engine', () => {
     const orderEvent0 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 0,
+        _id: "0",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 20,
@@ -3046,7 +3046,7 @@ describe('test event process of trading engine', () => {
     const orderEvent1 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 1,
+        _id: "1",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 30,
@@ -3061,7 +3061,7 @@ describe('test event process of trading engine', () => {
     const orderEvent2 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 2,
+        _id: "2",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 10,
@@ -3076,7 +3076,7 @@ describe('test event process of trading engine', () => {
     const orderEvent3 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 3,
+        _id: "3",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 30,
@@ -3091,7 +3091,7 @@ describe('test event process of trading engine', () => {
     const orderEvent4 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 4,
+        _id: "4",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 30,
@@ -3106,7 +3106,7 @@ describe('test event process of trading engine', () => {
     const orderEvent5 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 5,
+        _id: "5",
         type: 'LIMIT',
         side: 'BUY',
         limitPrice: 20,
@@ -3408,7 +3408,7 @@ describe('test event process of trading engine', () => {
     const orderEvent6 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 6,
+        _id: "6",
         type: 'LIMIT',
         side: 'SELL',
         limitPrice: 200,
@@ -3449,7 +3449,7 @@ describe('test event process of trading engine', () => {
     const orderEvent7 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 7,
+        _id: "7",
         type: 'LIMIT',
         side: 'SELL',
         limitPrice: 200,
@@ -3491,7 +3491,7 @@ describe('test event process of trading engine', () => {
     const orderEvent8 = {
       _type: OrderEvent.LIMIT_PLACED_EVENT,
       _order: {
-        _id: 8,
+        _id: "8",
         type: 'LIMIT',
         side: 'SELL',
         limitPrice: 200,
