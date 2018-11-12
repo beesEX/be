@@ -1,4 +1,4 @@
-// TODO: write unit test
+// Created bz: Viet Anh Ho
 
 // mocha unit tests of ohlcv aggregator come here
 const logger = require('../logger');
@@ -10,11 +10,9 @@ const beesV8 = require('../trading-engine/beesV8');
 const {OrderEvent} = require('../resources/order/order.models');
 const {open, publish, close} = require('../util/zeroMQpublisher');
 
-//TODO: need to lock write mode in DB
 const db = require('../db');
 const constants = require('../app.constants');
 const ohlcvTimer = require('./ohlcvTimer');
-
 
 // =====================================================================
 //                        OHLCV AGGREGATOR TEST
@@ -325,16 +323,20 @@ describe('test ohlcv aggregate process', () => {
         const tradeList = intervalTradeList[i];
 
         const timeToSleep = getDurationFromNowToNextStartTime(timeResolution) + extraSleepTimeMs + i * ohlcvTimer.RESOLUTION_2_AGGREGATING_PERIOD_LENGTH[timeResolution];
-        console.log(`ohlcv.spec.js test_ohlcv_1m: sleep for ${timeToSleep} ms`);
+        logger.info(`ohlcv.spec.js test_ohlcv_1m: tradeList[${i}] will be executed after ${timeToSleep} ms`);
+
         setTimeout(async () => {
-          console.log(`ohlcv.spec.js test_ohlcv_1m: execute trade list ${JSON.stringify(tradeList, null, 2)} ms`);
+          logger.info(`ohlcv.spec.js test_ohlcv_1m: execute trade list ${JSON.stringify(tradeList, null, 2)} ms`);
           await executeTradeList(tradeList);
+
           const currentStartTime = ohlcvTimer.getCurrentStartTime(timeResolution);
           const nextStartTIme = ohlcvTimer.getNextStartTime(currentStartTime, timeResolution);
+
           const currentMarketDataList = await beesV8.getOhlcvData('BTC_USDT', timeResolution, currentStartTime, nextStartTIme-1);
           const currentMarketData = currentMarketDataList && currentMarketDataList.length && currentMarketDataList[0];
+
           const expectedMarketData = expectedMarketDataList[i];
-          console.log(`ohlcv.spec.js test_ohlcv_1m: compare ${JSON.stringify(currentMarketData)} and ${JSON.stringify(expectedMarketData)}`);
+          logger.info(`ohlcv.spec.js test_ohlcv_1m: compare ${JSON.stringify(currentMarketData)} and ${JSON.stringify(expectedMarketData)}`);
           expect(isMarketDataSameAsExpect(currentMarketData, expectedMarketData)).to.be.equal(true);
 
           if(i === intervalTradeList.length -1) {
@@ -345,5 +347,4 @@ describe('test ohlcv aggregate process', () => {
       }
     }).then(done);
   }).timeout(15 * 60 * 1000);
-
 });

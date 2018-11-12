@@ -4,7 +4,9 @@ const ohlcvTimer = require('./ohlcvTimer');
 const {
   OhlcvResolutionDataSet
 } = require('./ohlcvData');
+
 const ohlcvService = require('./ohlcv.service');
+const tradeService = require('../settlement/trade.service');
 
 const requestNamespace = require('../config/requestNamespace');
 
@@ -54,13 +56,13 @@ class OhlcvAggregator {
         const nextStartTime = ohlcvTimer.getNextStartTime(lastStartTime[OHLCV_RESOLUTIONS[k]], OHLCV_RESOLUTIONS[k]);
         const lastTimeStamp = new Date(nextStartTime);
         beCheckedTradeData[OHLCV_RESOLUTIONS[k]] = {
-          unsavedTradeData: await ohlcvService.getAllTradesAfterTime(this.currency, this.baseCurrency, lastTimeStamp),
-          lastSavedTradeData: await ohlcvService.getFirstTradeBeforeTime(this.currency, this.baseCurrency, lastTimeStamp),
+          unsavedTradeData: await tradeService.getAllTradesAfterTime(this.currency, this.baseCurrency, lastTimeStamp),
+          lastSavedTradeData: await tradeService.getFirstTradeBeforeTime(this.currency, this.baseCurrency, lastTimeStamp),
         };
       }
       else {
         beCheckedTradeData[OHLCV_RESOLUTIONS[k]] = {
-          unsavedTradeData: await ohlcvService.getAllTradesOfCurrencyPair(this.currency, this.baseCurrency),
+          unsavedTradeData: await tradeService.getAllTradesOfCurrencyPair(this.currency, this.baseCurrency),
         };
       }
     }
@@ -105,7 +107,7 @@ class OhlcvAggregator {
         // if no toBeSavedTradeEvents:
         if (!toBeSavedTradeEvents || toBeSavedTradeEvents.length === 0) {
           //  SOME THING ERROR!
-          logger.error('ohlcvAggregator.js init(): Error');
+          logger.error('ohlcvAggregator.js init(): ERROR: how last ohlcv data can be persisted to DB');
         }
         // else: there is toBeSavedTradeEvents
         else {
@@ -229,11 +231,6 @@ class OhlcvAggregator {
 }
 
 const ohlcvAggregator = new OhlcvAggregator('BTC', 'USDT');
-
-// TODO: init() will be called by order book
-ohlcvAggregator.init().then(() => {
-  logger.info('ohlcvAggregator.js init(): finished initiation');
-});
 
 const handleMessage = async (event) => {
   requestNamespace.set('requestId', event.requestId);

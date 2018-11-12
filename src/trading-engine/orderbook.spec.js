@@ -7,7 +7,6 @@ const beesV8 = require('./beesV8');
 const {OrderEvent} = require('../resources/order/order.models');
 const {open, publish, close} = require('../util/zeroMQpublisher');
 
-//TODO: need to lock write mode in DB
 const db = require('../db');
 const constants = require('../app.constants');
 
