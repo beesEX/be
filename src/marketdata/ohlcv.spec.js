@@ -1,4 +1,4 @@
-// Created bz: Viet Anh Ho
+// Created by: Viet Anh Ho
 
 // mocha unit tests of ohlcv aggregator come here
 const logger = require('../logger');
