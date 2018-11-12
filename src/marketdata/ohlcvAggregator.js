@@ -97,7 +97,11 @@ class OhlcvAggregator {
           }
         }
       }
-      else { // there is market data for this time resolution
+      else if (!lastSavedTradeEvent) {
+        logger.info('ohlcvAggregator.js init(): there are ohlcv data but no trade data in DB (reason can be unit test)');
+        this.ohlcvDataSet.createData(OHLCV_RESOLUTIONS[k], lastStartTimeOfThisResolution);
+      }
+      else { // there is market data for this time resolution\
         const startTimeOfLastSavedTrade = ohlcvTimer.getStartTimeOfTimeStamp(OHLCV_RESOLUTIONS[k], lastSavedTradeEvent.executedAt);
         const startTime = ohlcvTimer.getNextStartTime(startTimeOfLastSavedTrade, OHLCV_RESOLUTIONS[k]);
         this.ohlcvDataSet.createData(OHLCV_RESOLUTIONS[k], startTime);
@@ -107,7 +111,7 @@ class OhlcvAggregator {
         // if no toBeSavedTradeEvents:
         if (!toBeSavedTradeEvents || toBeSavedTradeEvents.length === 0) {
           //  SOME THING ERROR!
-          logger.error('ohlcvAggregator.js init(): ERROR: how last ohlcv data can be persisted to DB');
+          logger.info('ohlcvAggregator.js init(): there are ohlcv data and last saved trade but no unsaved trade -> how ohlcv data can be written in DB? (reason can be unit test)');
         }
         // else: there is toBeSavedTradeEvents
         else {
