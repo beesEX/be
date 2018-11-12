@@ -13,8 +13,16 @@ const config = require('config');
 const Koa = require('koa');
 
 process.on('unhandledRejection', (reason, p) => {
-  logger.error('Possibly Unhandled Rejection at: Promise ', p, ' reason: ', reason);
+  logger.error('app.js Possibly Unhandled Rejection at: Promise ', p, ' reason: ', reason);
   // application specific logging here
+});
+
+process.on('error', (error) => {
+  logger.error(`app.js: BE received an error; msg= ${JSON.stringify(error)}`);
+});
+
+process.on('exit', (code, signal) => {
+  logger.info(`app.js: BE exited with code=${code} and signal=${signal}`);
 });
 
 const app = new Koa();

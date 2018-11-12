@@ -5,9 +5,10 @@ const {
   GET_AGGREGATED_STATE_EVENT,
   GET_ORDERBOOK_STATE_EVENT,
   ORDER_BOOK_EVENT,
+  ORDER_BOOK_RESET
 } = require('./orderbook.event');
 
-const GET_OHLCV_DATA_EVENT = 'GET_OHLCV_DATA_EVENT';
+const {GET_OHLCV_DATA_EVENT, OHLCV_AGGREGATOR_RESET} = require('../app.constants');
 
 const logger = require('../logger');
 const requestNamespace = require('../config/requestNamespace');
@@ -27,7 +28,7 @@ async function zmqPublish(message, topic) {
  * The trading engine of the beesEX platform.
  * Each order book instance will be run by a child process.
  */
-class BeesV8{
+class BeesV8 {
   constructor() {
     this.symbol = 'BTC_USDT'; // hardcode
     this.mapOfIdAndResolveFunction = {};
@@ -54,48 +55,65 @@ class BeesV8{
       requestNamespace.set('requestId', message.requestId);
       logger.info(`beesV8.js: receives message from orderboook-childprocess: ${JSON.stringify(message)}`);
 
-      if (message.type === ORDER_BOOK_READY_EVENT) {
-        logger.info(`beesV8.js: start(): beesV8 trading engine for ${message.symbol} started successfully`);
-        this.listOfReadyOrderbook[message.symbol] = true;
-        this._starterCallback();
-      }
-      else if (message.type === ORDER_BOOK_EVENT) {
-        const resolveFunction = this.mapOfIdAndResolveFunction[message.id];
-        if (resolveFunction) {
-          resolveFunction(message);
-          delete this.mapOfIdAndResolveFunction[message.id];
-        }
+      let resolveFunction = this.mapOfIdAndResolveFunction[message.id];
 
-        // publishes orderbook event to UI per zeroMQ if success
-        if (message.reason) {
-          zmqPublish(JSON.stringify(message), `Orderbook-${this.symbol}`).then(() => {
-            logger.info(`beesV8.js: publishes orderbook event per zeroMQ to UI server: \n ${JSON.stringify(message, null, 2)}`);
-          });
-        }
+      switch(message.type) {
+
+        case ORDER_BOOK_READY_EVENT:
+
+          logger.info(`beesV8.js: start(): beesV8 trading engine for ${message.symbol} started successfully`);
+          this.listOfReadyOrderbook[message.symbol] = true;
+          this._starterCallback();
+
+          break;
+
+        case ORDER_BOOK_EVENT:
+        case ORDER_BOOK_RESET:
+        case OHLCV_AGGREGATOR_RESET:
+
+          if(resolveFunction) {
+            resolveFunction(message);
+            delete this.mapOfIdAndResolveFunction[message.id];
+          }
+
+          // publishes orderbook event to UI per zeroMQ if success
+          if(message.reason) {
+            zmqPublish(JSON.stringify(message), `Orderbook-${this.symbol}`).then(() => {
+              logger.info(`beesV8.js: publishes orderbook event per zeroMQ to UI server: \n ${JSON.stringify(message, null, 2)}`);
+            });
+          }
+
+          break;
+
+        case GET_ORDERBOOK_STATE_EVENT:
+        case GET_AGGREGATED_STATE_EVENT:
+
+          if(resolveFunction) {
+            resolveFunction(message.state);
+            delete this.mapOfIdAndResolveFunction[message.id];
+          }
+
+          break;
+
+        case GET_OHLCV_DATA_EVENT:
+
+          if(resolveFunction) {
+            resolveFunction(message.data);
+            delete this.mapOfIdAndResolveFunction[message.id];
+          }
+
+          break;
+
+        default:
+          logger.error(`beesV8.js: unknown message type ${JSON.stringify(message.type)}`);
       }
-      else if (message.type === GET_ORDERBOOK_STATE_EVENT || message.type === GET_AGGREGATED_STATE_EVENT) {
-        const resolveFunction = this.mapOfIdAndResolveFunction[message.id];
-        if(resolveFunction) {
-          resolveFunction(message.state);
-          delete this.mapOfIdAndResolveFunction[message.id];
-        }
-      }
-      else if (message.type === GET_OHLCV_DATA_EVENT) {
-        const resolveFunction = this.mapOfIdAndResolveFunction[message.id];
-        if(resolveFunction) {
-          resolveFunction(message.data);
-          delete this.mapOfIdAndResolveFunction[message.id];
-        }
-      }
-      else {
-        logger.error(`beesV8.js: unknown message type ${JSON.stringify(message.type)}`);
-      }
+
     };
-    
+
     // bind on-message event handler to CLS namespace
     this.orderbookChildProcess.on('message', requestNamespace.bind(handleMessage));
 
-    return new Promise((resolve, rejection) => {
+    return new Promise((resolve) => {
       this._starterCallback = resolve;
     });
   }
@@ -117,7 +135,7 @@ class BeesV8{
     event.id = messageId;
     this.orderbookChildProcess.send(event);
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       this.mapOfIdAndResolveFunction[messageId] = resolve;
     });
   }
@@ -195,6 +213,42 @@ class BeesV8{
     return new Promise((resolve) => {
       this.mapOfIdAndResolveFunction[messageId] = resolve;
     });
+  }
+
+  resetOhlcvAggregator() {
+
+    const messageId = uuid();
+
+    const message = {
+
+      type: OHLCV_AGGREGATOR_RESET,
+      id: messageId
+
+    };
+
+    this.orderbookChildProcess.send(message);
+
+    return new Promise((resolve) => {
+      this.mapOfIdAndResolveFunction[messageId] = resolve;
+    });
+
+  }
+
+  resetOrderBook() {
+
+    const messageId = uuid();
+
+    const message = {
+      type: ORDER_BOOK_RESET,
+      id: messageId
+    };
+
+    this.orderbookChildProcess.send(message);
+
+    return new Promise((resolve) => {
+      this.mapOfIdAndResolveFunction[messageId] = resolve;
+    });
+
   }
 
   /**

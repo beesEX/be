@@ -1,4 +1,4 @@
-const {RESOLUTION_2_AGGREGATING_PERIOD_LENGTH} = require('./ohlcvTimer');
+const {RESOLUTION_2_AGGREGATING_PERIOD_LENGTH, getCurrentStartTime} = require('./ohlcvTimer');
 
 class OhlcvData {
   constructor(currency, baseCurrency, startTime) {
@@ -10,8 +10,8 @@ class OhlcvData {
   }
 
   aggregate(ohlcvTradeData) {
-    if (!this.data) this.data = {};
-    if (!this.data.open) this.data.open = ohlcvTradeData.open;
+    if(!this.data) this.data = {};
+    if(!this.data.open) this.data.open = ohlcvTradeData.open;
     this.data.close = ohlcvTradeData.close;
     this.data.high = this.data.high ? Math.max(ohlcvTradeData.high, this.data.high) : ohlcvTradeData.high;
     this.data.low = this.data.low ? Math.min(ohlcvTradeData.low, this.data.low) : ohlcvTradeData.low;
@@ -21,7 +21,7 @@ class OhlcvData {
 
   reset(startTime) {
     let dataToRecordInDB = null;
-    if (this.data && this.data.open) {
+    if(this.data && this.data.open) {
       dataToRecordInDB = Object.assign({}, this.data);
       dataToRecordInDB.time = this.startTime;
       dataToRecordInDB.currency = this.currency;
@@ -33,7 +33,7 @@ class OhlcvData {
       this.data.low = null;
       this.data.volume = null;
     }
-    else if (this.lastClosePrice) {
+    else if(this.lastClosePrice) {
       dataToRecordInDB = {
         open: this.lastClosePrice,
         close: this.lastClosePrice,
@@ -43,7 +43,7 @@ class OhlcvData {
         time: this.startTime,
         currency: this.currency,
         baseCurrency: this.baseCurrency,
-        createdAt: new Date(),
+        createdAt: new Date()
       };
     }
     this.startTime = startTime;
@@ -59,7 +59,7 @@ class OhlcvResolutionDataSet {
   }
 
   createData(timeResolutionType, startTime) {
-    if (!this.resolutionDataSet[timeResolutionType]) {
+    if(!this.resolutionDataSet[timeResolutionType]) {
       this.resolutionDataSet[timeResolutionType] = new OhlcvData(this.currency, this.baseCurrency, startTime);
     }
   }
@@ -69,7 +69,7 @@ class OhlcvResolutionDataSet {
   }
 
   getCurrentOhlcvData(timeResolutionType) {
-    if (!this.resolutionDataSet[timeResolutionType].data) return null;
+    if(!this.resolutionDataSet[timeResolutionType].data) return null;
 
     const currentMarketData = Object.assign({}, this.resolutionDataSet[timeResolutionType].data);
     currentMarketData.time = this.resolutionDataSet[timeResolutionType].startTime;
@@ -80,11 +80,40 @@ class OhlcvResolutionDataSet {
     const startTime = this.resolutionDataSet[timeResolutionType] && this.resolutionDataSet[timeResolutionType].startTime;
     const periodLength = RESOLUTION_2_AGGREGATING_PERIOD_LENGTH[timeResolutionType];
     console.log(`startTime=${startTime} timeStampTS=${timeStampTS} periodLength=${periodLength}`);
-    if (timeStampTS < startTime) return false;
+    if(timeStampTS < startTime) return false;
     return timeStampTS - startTime <= periodLength;
+  }
+
+  reset() {
+
+    const arrayOfResolutions = Object.keys(this.resolutionDataSet);
+
+    arrayOfResolutions.forEach((resolution) => {
+
+      const startTime = getCurrentStartTime(resolution);
+
+      const data = this.resolutionDataSet[resolution].data;
+
+      if(data) {
+
+
+        if(data.reset) {
+
+          data.reset(startTime);
+
+        }
+        else{
+
+          this.resolutionDataSet[resolution].data = null;
+
+        }
+
+      }
+
+    });
   }
 }
 
 module.exports = {
-  OhlcvResolutionDataSet,
+  OhlcvResolutionDataSet
 };
