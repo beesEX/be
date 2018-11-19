@@ -28,7 +28,7 @@ async function zmqPublish(message, topic) {
  * The trading engine of the beesEX platform.
  * Each order book instance will be run by a child process.
  */
-class BeesV8 {
+class BeesV8{
   constructor() {
     this.symbol = 'BTC_USDT'; // hardcode
     this.mapOfIdAndResolveFunction = {};

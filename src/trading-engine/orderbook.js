@@ -31,13 +31,11 @@ class OrderBook {
       symbol: this.symbol
     };
 
-    // TODO call and wait ohlcv.Aggregator init()
-
     // load all active orders for this symbol in DB
     logger.info(`orderbook.js constructor(): initiating order book of symbol=${JSON.stringify(this.symbol)} ...`);
-    OrderService.getActiveOrdersOfSymbol(this.symbol).then((activeOrderLists) => {
-      if(activeOrderLists) {
-        for(let i = 0; i < activeOrderLists.length; i += 1) {
+    OrderService.getActiveOrdersOfSymbol(this.symbol).then(async (activeOrderLists) => {
+      if (activeOrderLists) {
+        for (let i = 0; i < activeOrderLists.length; i += 1) {
           logger.info(`orderbook.js constructor(): loaded order=${JSON.stringify(activeOrderLists[i])}`);
           const toBeLoadedOrder = new Order(activeOrderLists[i]);
           if(toBeLoadedOrder.side === 'BUY') {
@@ -48,6 +46,10 @@ class OrderBook {
           }
         }
       }
+      // initialize OHLCV aggregator
+      await ohlcvAggregator.init();
+      logger.info('orderbook.js constructor(): finished initializing OHLCV Aggregator');
+
       process.send(readyEvent);
     });
   }

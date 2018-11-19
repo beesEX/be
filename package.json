@@ -6,11 +6,11 @@
   "author": "Vu, Duc Tung; Ho, Viet Anh; Ta, Lam Hoang; Le, Ngoc Son",
   "license": "MIT",
   "scripts": {
-    "start": "NODE_ENV=development nodemon --watch src src/app.js",
+    "start": "SET NODE_ENV=development& nodemon --watch src src/app.js",
     "test": "run-s test:**",
     "test:eslint": "eslint ./src",
-    "test:mocha": "NODE_ENV=test mocha --timeout 20000 --recursive --exit -c -R spec src/**/*.spec.js",
-    "development": "NODE_ENV=development nodemon --watch src src/app.js",
+    "test:mocha": "SET NODE_ENV=test& mocha --timeout 20000 --recursive --exit -c -R spec src/**/*.spec.js",
+    "development": "SET NODE_ENV=development& nodemon --watch src src/app.js",
     "format": "prettier-eslint --write \"src/**/*.js\"",
     "add-contributor": "all-contributors add",
     "generate-contributors": "all-contributors generate"
@@ -19,7 +19,7 @@
     "@paralect/common-logger": "0.1.10",
     "@paralect/node-mongo": "1.0.0",
     "app-module-path": "2.2.0",
-    "bcrypt": "^3.0.0",
+    "bcrypt": "^3.0.2",
     "cls-hooked": "^4.2.2",
     "collections": "^5.1.4",
     "joi": "13.3.0",
@@ -28,7 +28,7 @@
     "koa": "2.5.1",
     "koa-bodyparser": "4.2.0",
     "koa-helmet": "4.0.0",
-    "koa-jwt": "^3.3.2",
+    "koa-jwt": "^3.5.1",
     "koa-logger": "3.2.0",
     "koa-mount": "3.0.0",
     "koa-router": "7.4.0",
@@ -36,7 +36,7 @@
     "lodash": "4.17.10",
     "nodemon": "1.17.3",
     "uuid": "^3.3.2",
-    "zeromq": "^4.6.0"
+    "zeromq": "^5.1.0"
   },
   "devDependencies": {
     "@paralect/eslint-config": "0.1.5",

@@ -59,7 +59,7 @@ class OhlcvResolutionDataSet {
   }
 
   createData(timeResolutionType, startTime) {
-    if(!this.resolutionDataSet[timeResolutionType]) {
+    if (!this.resolutionDataSet[timeResolutionType]) {
       this.resolutionDataSet[timeResolutionType] = new OhlcvData(this.currency, this.baseCurrency, startTime);
     }
   }
@@ -79,7 +79,7 @@ class OhlcvResolutionDataSet {
   isInCurrentAggregatingPeriod(timeResolutionType, timeStampTS) {
     const startTime = this.resolutionDataSet[timeResolutionType] && this.resolutionDataSet[timeResolutionType].startTime;
     const periodLength = RESOLUTION_2_AGGREGATING_PERIOD_LENGTH[timeResolutionType];
-    console.log(`startTime=${startTime} timeStampTS=${timeStampTS} periodLength=${periodLength}`);
+    //console.log(`startTime=${startTime} timeStampTS=${timeStampTS} periodLength=${periodLength}`);
     if(timeStampTS < startTime) return false;
     return timeStampTS - startTime <= periodLength;
   }

@@ -2,7 +2,7 @@
  * @author son87.lengoc@gmail.com
  * Created by Ngoc Son Le.
  */
-
+const logger = require('../logger');
 const {DATABASE_DOCUMENTS} = require('../app.constants');
 const db = require('../db');
 const Router = require('koa-router');
@@ -34,6 +34,7 @@ const reset = async (ctx) => {
   try{
 
     await Promise.all(arrayOfPromises);
+    logger.debug('reset DB done');
 
     const userId = ctx.state.user._id.toString();
 

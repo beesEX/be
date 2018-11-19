@@ -1,20 +1,20 @@
 const winston = require('winston');
 
-createConsoleLogger = ({isDev = false}) => {
+const createConsoleLogger = ({isDev = false}) => {
   const transports = [];
-  transports.push(new winston.transports.Console({
+  /*transports.push(new winston.transports.Console({
     colorize: true,
     humanReadableUnhandledException: true,
     json: !isDev,
     level: isDev ? 'debug' : 'info'
-  }));
+  }));*/
 
   transports.push(new winston.transports.File({
     humanReadableUnhandledException: true,
     json: !isDev,
     level: isDev ? 'debug' : 'info',
-    filename: 'log/error.log',
-    maxsize: 2 * 1024 * 1024 // MB
+    filename: 'log/be.log',
+    maxsize: 100 * 1024 * 1024 // MB
   }));
 
   const logger = new winston.Logger({
