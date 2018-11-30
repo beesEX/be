@@ -2,6 +2,7 @@ const DATABASE_DOCUMENTS = {
   USERS: 'users',
   ORDERS: 'orders',
   TRANSACTIONS: 'transactions',
+  BALANCES: 'balances',
   TRADES: 'trades',
   OHLCV1M: 'ohlcv1m',
   OHLCV5M: 'ohlcv5m',

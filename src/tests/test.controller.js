@@ -5,9 +5,13 @@
 const logger = require('../logger');
 const {DATABASE_DOCUMENTS} = require('../app.constants');
 const db = require('../db');
+const balanceSchema = require('./balance.schema');
+
 const Router = require('koa-router');
 const txService = require('../wealth-management/transaction.service');
 const beesV8 = require('../trading-engine/beesV8');
+
+const balanceService = db.createService(DATABASE_DOCUMENTS.TRANSACTIONS, balanceSchema);
 
 const router = new Router();
 

@@ -1,10 +1,12 @@
 const logger = require('../logger');
 
 const { schema, TRANSACTION_TYPE } = require('./transaction.schema');
+
 const constants = require('../app.constants');
 const db = require('../db');
 
 const service = db.createService(constants.DATABASE_DOCUMENTS.TRANSACTIONS, schema);
+const balancesCollection = db.get(constants.DATABASE_DOCUMENTS.BALANCES);
 
 const CREDIT_AVAIL = [TRANSACTION_TYPE.DEPOSIT, TRANSACTION_TYPE.BUY, TRANSACTION_TYPE.RELEASED];
 const DEBIT_AVAIL = [TRANSACTION_TYPE.WITHDRAW, TRANSACTION_TYPE.SELL, TRANSACTION_TYPE.LOCKED];
@@ -121,6 +123,8 @@ class TXService {
         if (availableCreditSum !== undefined) {
           this._creditAvailSumMap.set(key, availableCreditSum + amount);
         }
+
+        balancesCollection.update({userId: tx.userId, currency: tx.currency}, { $inc: { available: amount} });
       }
       else {
         const availableCreditSum = this._creditAvailSumMap.get(key);
@@ -132,6 +136,8 @@ class TXService {
         if (totalCreditSum !== undefined) {
           this._creditTotalSumMap.set(key, totalCreditSum + amount);
         }
+
+        balancesCollection.update({userId: tx.userId, currency: tx.currency}, { $inc: { available: amount, total: amount } });
       }
     } else if (DEBIT_AVAIL.includes(type)) {
       if (type === TRANSACTION_TYPE.LOCKED) {
@@ -139,6 +145,8 @@ class TXService {
         if (availableDebitSum !== undefined) {
           this._debitAvailSumMap.set(key, availableDebitSum + amount);
         }
+
+        balancesCollection.update({userId: tx.userId, currency: tx.currency}, { $inc: { available: -amount} });
       }
       else {
         const availableDebitSum = this._debitAvailSumMap.get(key);
@@ -150,6 +158,8 @@ class TXService {
         if (totalDebitSum !== undefined) {
           this._debitTotalSumMap.set(key, totalDebitSum + amount);
         }
+
+        balancesCollection.update({userId: tx.userId, currency: tx.currency}, { $inc: { available: -amount, total: -amount } });
       }
     }
   }

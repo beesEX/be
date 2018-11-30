@@ -18,6 +18,9 @@ const transactions = db.get(DATABASE_DOCUMENTS.TRANSACTIONS);
 transactions.createIndex(['userId', 'currency', 'type']);
 transactions.createIndex(['userId', 'currency', 'createdAt']);
 
+const balances = db.get(DATABASE_DOCUMENTS.BALANCES);
+balances.createIndex(['userId', 'currency']);
+
 const ohlcv1m = db.get(DATABASE_DOCUMENTS.OHLCV1M);
 ohlcv1m.createIndex(['currency', 'baseCurrency', 'time']);
 ohlcv1m.createIndex(['time']);
