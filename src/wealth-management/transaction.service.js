@@ -1,11 +1,13 @@
 const logger = require('../logger');
 
 const { schema, TRANSACTION_TYPE } = require('./transaction.schema');
+const balanceSchema = require('./balance.schema');
 
 const constants = require('../app.constants');
 const db = require('../db');
 
 const service = db.createService(constants.DATABASE_DOCUMENTS.TRANSACTIONS, schema);
+const balanceService = db.createService(constants.DATABASE_DOCUMENTS.BALANCES, balanceSchema);
 const balancesCollection = db.get(constants.DATABASE_DOCUMENTS.BALANCES);
 
 const CREDIT_AVAIL = [TRANSACTION_TYPE.DEPOSIT, TRANSACTION_TYPE.BUY, TRANSACTION_TYPE.RELEASED];
@@ -34,7 +36,7 @@ class TXService {
    * @returns {Promise<number>} Promise of number representing the total balance
    */
   async getBalance(userId, currency) {
-    const creditPromise = service.aggregate([
+    /*const creditPromise = service.aggregate([
       {$match: {userId, currency, type: {$in: CREDIT_TOTAL}}},
       {$group: {_id: null, sum: {$sum: '$amount'}}},
       {$project: {_id: 0, sum: 1}}
@@ -52,7 +54,8 @@ class TXService {
     if (credit.length > 0) creditSum = credit[0].sum;
     if (debit.length > 0) debitSum = debit[0].sum;
 
-    const totalBalance = creditSum - debitSum;
+    const totalBalance = creditSum - debitSum;*/
+    const { total: totalBalance } = await this._getTotalAndAvailableBalance(userId, currency);
 
     if (totalBalance < 0) {
       logger.error(`transaction.service.js getBalance(): system book kepping calculations had errors; ${currency} account of userId=${userId} has negative total balance!`);
@@ -76,7 +79,7 @@ class TXService {
    * @returns {Promise<number>} Promise of number representing the balance available for trading
    */
   async getAvailableBalance(userId, currency) {
-    const creditPromise = service.aggregate([
+    /*const creditPromise = service.aggregate([
       {$match: {userId, currency, type: {$in: CREDIT_AVAIL}}},
       {$group: {_id: null, sum: {$sum: '$amount'}}},
       {$project: {_id: 0, sum: 1}}
@@ -94,7 +97,8 @@ class TXService {
     if (credit.length > 0) creditSum = credit[0].sum;
     if (debit.length > 0) debitSum = debit[0].sum;
 
-    const availableBalance = creditSum - debitSum;
+    const availableBalance = creditSum - debitSum;*/
+    const { available: availableBalance } = await this._getTotalAndAvailableBalance(userId, currency);
 
     if (availableBalance < 0) {
       logger.error(`transaction.service.js getAvailableBalance(): system book kepping calculations had errors; ${currency} account of userId=${userId} has negative available balance!`);
@@ -106,6 +110,11 @@ class TXService {
     return availableBalance;
   }
 
+  _getTotalAndAvailableBalance(userId, currency) {
+    const balances = balanceService.findOne({ userId, currency }, { total: 1, available: 1 });
+    return balances;
+  }
+
   /**
    * Updates the four internal SUM maps according to type of the given tx. The four maps act as cache to accelerate
    * the calculating of balance and available balance of user's currency accounts.
@@ -114,52 +123,22 @@ class TXService {
    * @private
    */
   _updateBalances(tx) {
-    const key = tx.userId + tx.currency;
-    const {type, amount} = tx;
+    const {userId, currency, type, amount} = tx;
 
     if (CREDIT_AVAIL.includes(type)) {
       if (type === TRANSACTION_TYPE.RELEASED) {
-        const availableCreditSum = this._creditAvailSumMap.get(key);
-        if (availableCreditSum !== undefined) {
-          this._creditAvailSumMap.set(key, availableCreditSum + amount);
-        }
-
-        balancesCollection.update({userId: tx.userId, currency: tx.currency}, { $inc: { available: amount} });
+        balancesCollection.update({userId, currency}, { $inc: { available: amount} });
       }
       else {
-        const availableCreditSum = this._creditAvailSumMap.get(key);
-        if (availableCreditSum !== undefined) {
-          this._creditAvailSumMap.set(key, availableCreditSum + amount);
-        }
-
-        const totalCreditSum = this._creditTotalSumMap.get(key);
-        if (totalCreditSum !== undefined) {
-          this._creditTotalSumMap.set(key, totalCreditSum + amount);
-        }
-
-        balancesCollection.update({userId: tx.userId, currency: tx.currency}, { $inc: { available: amount, total: amount } });
+        balancesCollection.update({userId, currency}, { $inc: { available: amount, total: amount } });
       }
-    } else if (DEBIT_AVAIL.includes(type)) {
+    }
+    else if (DEBIT_AVAIL.includes(type)) {
       if (type === TRANSACTION_TYPE.LOCKED) {
-        const availableDebitSum = this._debitAvailSumMap.get(key);
-        if (availableDebitSum !== undefined) {
-          this._debitAvailSumMap.set(key, availableDebitSum + amount);
-        }
-
-        balancesCollection.update({userId: tx.userId, currency: tx.currency}, { $inc: { available: -amount} });
+        balancesCollection.update({userId, currency}, { $inc: { available: -amount} });
       }
       else {
-        const availableDebitSum = this._debitAvailSumMap.get(key);
-        if (availableDebitSum !== undefined) {
-          this._debitAvailSumMap.set(key, availableDebitSum + amount);
-        }
-
-        const totalDebitSum = this._debitTotalSumMap.get(key);
-        if (totalDebitSum !== undefined) {
-          this._debitTotalSumMap.set(key, totalDebitSum + amount);
-        }
-
-        balancesCollection.update({userId: tx.userId, currency: tx.currency}, { $inc: { available: -amount, total: -amount } });
+        balancesCollection.update({userId, currency}, { $inc: { available: -amount, total: -amount } });
       }
     }
   }
