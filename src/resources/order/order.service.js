@@ -46,6 +46,8 @@ module.exports = {
       throw new Error('order book is not ready');
     }
 
+    const t0 = Date.now();
+
     let fundCheckSuccessful = false;
     if (newOrderObject.type === 'LIMIT') {
       const orderId = idGenerator.generate();
@@ -61,6 +63,9 @@ module.exports = {
       }
     }
 
+    const t1 = Date.now();
+    logger.debug(`order.service.js: placeOrder(): fundChecking time=${t1 - t0}ms`);
+
     if (newOrderObject.type === 'LIMIT' && !fundCheckSuccessful) {
       throw new Error('not enought fund available');
     }
@@ -69,6 +74,9 @@ module.exports = {
     newOrderObject.orderbookTS = new Date().getTime();
     const createdOrder = await service.create(newOrderObject);
     logger.info(`order.service.js: placedOrder(): createdOrder = ${JSON.stringify(createdOrder, null, 2)}`);
+
+    const t2 = Date.now();
+    logger.debug(`order.service.js: placeOrder(): new order record persistence time=${t2 - t1}ms`);
 
     const orderPlacedEvent = new OrderPlacedEvent(new Order(createdOrder));
     beesV8.processOrderEvent(orderPlacedEvent);
