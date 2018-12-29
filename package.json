@@ -6,7 +6,7 @@
   "author": "Vu, Duc Tung; Ho, Viet Anh; Ta, Lam Hoang; Le, Ngoc Son",
   "license": "MIT",
   "scripts": {
-    "start": "SET NODE_ENV=development& nodemon --watch src src/app.js",
+    "start": "NODE_ENV=production node src/app.js",
     "test": "run-s test:**",
     "test:eslint": "eslint ./src",
     "test:mocha": "SET NODE_ENV=test& mocha --timeout 20000 --recursive --exit -c -R spec src/**/*.spec.js",
@@ -16,7 +16,6 @@
     "generate-contributors": "all-contributors generate"
   },
   "dependencies": {
-    "@paralect/common-logger": "0.1.10",
     "@paralect/node-mongo": "1.0.0",
     "app-module-path": "2.2.0",
     "bcrypt": "^3.0.2",
@@ -36,7 +35,8 @@
     "lodash": "4.17.10",
     "nodemon": "1.17.3",
     "uuid": "^3.3.2",
-    "zeromq": "^5.1.0"
+    "zeromq": "^5.1.0",
+    "winston": "^2.4.4"
   },
   "devDependencies": {
     "@paralect/eslint-config": "0.1.5",

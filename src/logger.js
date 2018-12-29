@@ -1,34 +1,47 @@
 const winston = require('winston');
 
-const createConsoleLogger = ({isDev = false}) => {
+const createConsoleLogger = ({isDev = false, isProd = false, isTest = false}) => {
   const transports = [];
-  /*transports.push(new winston.transports.Console({
-    colorize: true,
-    humanReadableUnhandledException: true,
-    json: !isDev,
-    level: isDev ? 'debug' : 'info'
-  }));*/
+  if (isProd) {
+    transports.push(new winston.transports.Console({
+      colorize: false,
+      humanReadableUnhandledException: true,
+      json: true,
+      level: 'debug'
+    }));
+  }
 
-  transports.push(new winston.transports.File({
-    humanReadableUnhandledException: true,
-    json: !isDev,
-    level: isDev ? 'debug' : 'info',
-    filename: 'log/be.log',
-    maxsize: 100 * 1024 * 1024 // MB
-  }));
+  if (isDev) {
+    transports.push(new winston.transports.File({
+      humanReadableUnhandledException: true,
+      json: false,
+      level: 'debug',
+      filename: 'log/be.log',
+      maxsize: 100 * 1024 * 1024 // ~ 100MB
+    }));
+  }
+
+  if (isTest) {
+    transports.push(new winston.transports.Console({
+      colorize: true,
+      humanReadableUnhandledException: true,
+      json: false,
+      level: 'debug'
+    }));
+  }
 
   const logger = new winston.Logger({
     exitOnError: false,
     transports
   });
 
-  logger.debug('[logger] Configured console based logger');
+  logger.debug('[logger] Configured');
 
   return logger;
 };
 
 
-const logger = createConsoleLogger({isDev: process.env.NODE_ENV === 'development'});
+const logger = createConsoleLogger({isDev: process.env.NODE_ENV === 'development', isProd: process.env.NODE_ENV === 'production', isTest: process.env.NODE_ENV === 'test'});
 
 const requestNamespace = require('./config/requestNamespace');
 
